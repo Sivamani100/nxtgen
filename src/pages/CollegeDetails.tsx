@@ -6,41 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Star, MapPin, Phone, Mail, Globe, Heart, BookOpen, Users, DollarSign, Award, Building } from "lucide-react";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  city: string;
-  state: string;
-  type: string;
-  affiliation: string;
-  established_year: number;
-  rating: number;
-  total_fees_min: number;
-  total_fees_max: number;
-  placement_percentage: number;
-  highest_package: number;
-  average_package: number;
-  campus_area: string;
-  website_url: string;
-  contact_email: string;
-  contact_phone: string;
-  description: string;
-  facilities: any[];
-  accreditation: any[];
-}
-
-interface Course {
-  id: number;
-  course_name: string;
-  branch: string;
-  duration: string;
-  seats_total: number;
-  fees_per_year: number;
-  cutoff_rank_general: number;
-  exam_accepted: string;
-}
+type College = Database['public']['Tables']['colleges']['Row'];
+type Course = Database['public']['Tables']['courses']['Row'];
 
 const CollegeDetails = () => {
   const { id } = useParams();
@@ -62,7 +31,7 @@ const CollegeDetails = () => {
       const { data, error } = await supabase
         .from('colleges')
         .select('*')
-        .eq('id', id)
+        .eq('id', parseInt(id!))
         .single();
 
       if (error) throw error;
@@ -80,7 +49,7 @@ const CollegeDetails = () => {
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('college_id', id)
+        .eq('college_id', parseInt(id!))
         .order('course_name', { ascending: true });
 
       if (error) throw error;
@@ -259,7 +228,7 @@ const CollegeDetails = () => {
               <h3 className="font-semibold text-gray-800 mb-3">Fees Structure</h3>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600 mb-1">
-                  ₹{(college.total_fees_min / 100000).toFixed(1)}L - ₹{(college.total_fees_max / 100000).toFixed(1)}L
+                  ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
                 </div>
                 <div className="text-sm text-gray-600">Total Course Fees</div>
               </div>
@@ -289,7 +258,7 @@ const CollegeDetails = () => {
                   </div>
                   <div>
                     <span className="text-gray-600">Fees/Year:</span>
-                    <span className="ml-1 font-medium">₹{(course.fees_per_year / 100000).toFixed(1)}L</span>
+                    <span className="ml-1 font-medium">₹{course.fees_per_year ? (course.fees_per_year / 100000).toFixed(1) : '0'}L</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Cutoff:</span>
@@ -317,11 +286,11 @@ const CollegeDetails = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <div className="text-xl font-bold text-blue-600 mb-1">₹{(college.highest_package / 100000).toFixed(1)}L</div>
+                    <div className="text-xl font-bold text-blue-600 mb-1">₹{college.highest_package ? (college.highest_package / 100000).toFixed(1) : '0'}L</div>
                     <div className="text-xs text-gray-600">Highest Package</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-purple-600 mb-1">₹{(college.average_package / 100000).toFixed(1)}L</div>
+                    <div className="text-xl font-bold text-purple-600 mb-1">₹{college.average_package ? (college.average_package / 100000).toFixed(1) : '0'}L</div>
                     <div className="text-xs text-gray-600">Average Package</div>
                   </div>
                 </div>
