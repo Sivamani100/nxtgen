@@ -14,9 +14,10 @@ import Search from "./pages/Search";
 import Notifications from "./pages/Notifications";
 import Favorites from "./pages/Favorites";
 import News from "./pages/News";
-import Profile from "./pages/Profile";
+import ProfilePage from "./pages/ProfilePage";
 import Predictor from "./pages/Predictor";
 import Colleges from "./pages/Colleges";
+import CollegeDetails from "./pages/CollegeDetails";
 import ForgotPassword from "./pages/ForgotPassword";
 
 const queryClient = new QueryClient();
@@ -37,9 +38,10 @@ const App = () => (
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/news" element={<News />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/predictor" element={<Predictor />} />
           <Route path="/colleges" element={<Colleges />} />
+          <Route path="/college-details/:id" element={<CollegeDetails />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

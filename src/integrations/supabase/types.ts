@@ -9,6 +9,203 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admissions: {
+        Row: {
+          category: string
+          closing_rank: number | null
+          college_id: number | null
+          course_id: number | null
+          created_at: string | null
+          exam_name: string
+          id: number
+          opening_rank: number | null
+          round_number: number | null
+          year: number
+        }
+        Insert: {
+          category: string
+          closing_rank?: number | null
+          college_id?: number | null
+          course_id?: number | null
+          created_at?: string | null
+          exam_name: string
+          id?: number
+          opening_rank?: number | null
+          round_number?: number | null
+          year: number
+        }
+        Update: {
+          category?: string
+          closing_rank?: number | null
+          college_id?: number | null
+          course_id?: number | null
+          created_at?: string | null
+          exam_name?: string
+          id?: number
+          opening_rank?: number | null
+          round_number?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admissions_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admissions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      colleges: {
+        Row: {
+          accreditation: Json | null
+          affiliation: string | null
+          average_package: number | null
+          campus_area: string | null
+          city: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          description: string | null
+          established_year: number | null
+          facilities: Json | null
+          highest_package: number | null
+          id: number
+          image_url: string | null
+          location: string
+          name: string
+          placement_percentage: number | null
+          ranking: Json | null
+          rating: number | null
+          state: string
+          total_fees_max: number | null
+          total_fees_min: number | null
+          type: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          accreditation?: Json | null
+          affiliation?: string | null
+          average_package?: number | null
+          campus_area?: string | null
+          city: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          established_year?: number | null
+          facilities?: Json | null
+          highest_package?: number | null
+          id?: number
+          image_url?: string | null
+          location: string
+          name: string
+          placement_percentage?: number | null
+          ranking?: Json | null
+          rating?: number | null
+          state: string
+          total_fees_max?: number | null
+          total_fees_min?: number | null
+          type: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          accreditation?: Json | null
+          affiliation?: string | null
+          average_package?: number | null
+          campus_area?: string | null
+          city?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          established_year?: number | null
+          facilities?: Json | null
+          highest_package?: number | null
+          id?: number
+          image_url?: string | null
+          location?: string
+          name?: string
+          placement_percentage?: number | null
+          ranking?: Json | null
+          rating?: number | null
+          state?: string
+          total_fees_max?: number | null
+          total_fees_min?: number | null
+          type?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          branch: string
+          college_id: number | null
+          course_name: string
+          created_at: string | null
+          cutoff_rank_general: number | null
+          cutoff_rank_obc: number | null
+          cutoff_rank_sc: number | null
+          cutoff_rank_st: number | null
+          duration: string
+          exam_accepted: string
+          fees_per_year: number | null
+          id: number
+          seats_available: number | null
+          seats_total: number | null
+        }
+        Insert: {
+          branch: string
+          college_id?: number | null
+          course_name: string
+          created_at?: string | null
+          cutoff_rank_general?: number | null
+          cutoff_rank_obc?: number | null
+          cutoff_rank_sc?: number | null
+          cutoff_rank_st?: number | null
+          duration: string
+          exam_accepted: string
+          fees_per_year?: number | null
+          id?: number
+          seats_available?: number | null
+          seats_total?: number | null
+        }
+        Update: {
+          branch?: string
+          college_id?: number | null
+          course_name?: string
+          created_at?: string | null
+          cutoff_rank_general?: number | null
+          cutoff_rank_obc?: number | null
+          cutoff_rank_sc?: number | null
+          cutoff_rank_st?: number | null
+          duration?: string
+          exam_accepted?: string
+          fees_per_year?: number | null
+          id?: number
+          seats_available?: number | null
+          seats_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string | null
@@ -110,7 +307,12 @@ export type Database = {
           date: string | null
           description: string | null
           details: Json | null
+          event_date: string | null
+          event_location: string | null
           id: number
+          image_url: string | null
+          is_featured: boolean | null
+          source: string | null
           title: string
         }
         Insert: {
@@ -119,7 +321,12 @@ export type Database = {
           date?: string | null
           description?: string | null
           details?: Json | null
+          event_date?: string | null
+          event_location?: string | null
           id?: number
+          image_url?: string | null
+          is_featured?: boolean | null
+          source?: string | null
           title: string
         }
         Update: {
@@ -128,10 +335,44 @@ export type Database = {
           date?: string | null
           description?: string | null
           details?: Json | null
+          event_date?: string | null
+          event_location?: string | null
           id?: number
+          image_url?: string | null
+          is_featured?: boolean | null
+          source?: string | null
           title?: string
         }
         Relationships: []
+      }
+      user_college_favorites: {
+        Row: {
+          college_id: number | null
+          created_at: string | null
+          id: number
+          user_id: string | null
+        }
+        Insert: {
+          college_id?: number | null
+          created_at?: string | null
+          id?: number
+          user_id?: string | null
+        }
+        Update: {
+          college_id?: number | null
+          created_at?: string | null
+          id?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_college_favorites_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
