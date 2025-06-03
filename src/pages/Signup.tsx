@@ -145,7 +145,7 @@ const Signup = () => {
             <Checkbox
               id="terms"
               checked={agreeTerms}
-              onCheckedChange={setAgreeTerms}
+              onCheckedChange={(checked) => setAgreeTerms(checked === true)}
             />
             <Label htmlFor="terms" className="text-sm">
               I agree to the{" "}
