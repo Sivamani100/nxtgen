@@ -40,7 +40,7 @@ const Index = () => {
         .from('profiles')
         .select('tutorial_completed')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (!profile?.tutorial_completed) {
         setShowOnboarding(true);

@@ -25,9 +25,10 @@ const News = () => {
   const fetchNews = async () => {
     try {
       const { data, error } = await supabase
-        .from('news')
+        .from('resources')
         .select('*')
-        .order('published_at', { ascending: false })
+        .eq('category', 'News')
+        .order('created_at', { ascending: false })
         .limit(20);
 
       if (error) {
@@ -35,7 +36,15 @@ const News = () => {
         return;
       }
 
-      setArticles(data || []);
+      // Transform resources to news articles format
+      const newsArticles = data?.map(resource => ({
+        id: resource.id,
+        title: resource.title,
+        content: resource.description || '',
+        published_at: resource.created_at || new Date().toISOString()
+      })) || [];
+
+      setArticles(newsArticles);
     } catch (error) {
       console.error('Error fetching news:', error);
     } finally {

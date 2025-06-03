@@ -9,7 +9,130 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      favorites: {
+        Row: {
+          created_at: string | null
+          id: number
+          resource_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          resource_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          resource_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: number
+          message: string
+          read: boolean | null
+          resource_id: number | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: number
+          message: string
+          read?: boolean | null
+          resource_id?: number | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: number
+          message?: string
+          read?: boolean | null
+          resource_id?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          academic_field: string | null
+          created_at: string | null
+          email: string
+          id: string
+          notification_preferences: Json | null
+          tutorial_completed: boolean | null
+        }
+        Insert: {
+          academic_field?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          notification_preferences?: Json | null
+          tutorial_completed?: boolean | null
+        }
+        Update: {
+          academic_field?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          notification_preferences?: Json | null
+          tutorial_completed?: boolean | null
+        }
+        Relationships: []
+      }
+      resources: {
+        Row: {
+          category: string
+          created_at: string | null
+          date: string | null
+          description: string | null
+          details: Json | null
+          id: number
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          details?: Json | null
+          id?: number
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          details?: Json | null
+          id?: number
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
