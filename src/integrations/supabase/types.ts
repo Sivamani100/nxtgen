@@ -276,26 +276,53 @@ export type Database = {
       profiles: {
         Row: {
           academic_field: string | null
+          budget_max: number | null
+          budget_min: number | null
           created_at: string | null
           email: string
+          full_name: string | null
           id: string
           notification_preferences: Json | null
+          phone_number: string | null
+          preferred_branches: string[] | null
+          preferred_course: string | null
+          preferred_locations: string[] | null
+          profile_completion_percentage: number | null
+          profile_picture_url: string | null
           tutorial_completed: boolean | null
         }
         Insert: {
           academic_field?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
           created_at?: string | null
           email: string
+          full_name?: string | null
           id?: string
           notification_preferences?: Json | null
+          phone_number?: string | null
+          preferred_branches?: string[] | null
+          preferred_course?: string | null
+          preferred_locations?: string[] | null
+          profile_completion_percentage?: number | null
+          profile_picture_url?: string | null
           tutorial_completed?: boolean | null
         }
         Update: {
           academic_field?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
           created_at?: string | null
           email?: string
+          full_name?: string | null
           id?: string
           notification_preferences?: Json | null
+          phone_number?: string | null
+          preferred_branches?: string[] | null
+          preferred_course?: string | null
+          preferred_locations?: string[] | null
+          profile_completion_percentage?: number | null
+          profile_picture_url?: string | null
           tutorial_completed?: boolean | null
         }
         Relationships: []
@@ -379,7 +406,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_profile_completion: {
+        Args: { profile_id: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
