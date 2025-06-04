@@ -1,36 +1,38 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Heart, Share, ExternalLink, Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Star, MapPin, Heart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-interface Favorite {
+interface SavedCollege {
   id: number;
-  resource_id: number;
+  college_id: number;
   created_at: string;
-  resources: {
+  colleges: {
     id: number;
-    category: string;
-    title: string;
-    description: string;
-    date: string;
-    details: any;
+    name: string;
+    location: string;
+    rating: number;
+    type: string;
+    total_fees_min: number;
+    total_fees_max: number;
+    placement_percentage: number;
   };
 }
 
 const Favorites = () => {
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [savedColleges, setSavedColleges] = useState<SavedCollege[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchFavorites();
+    fetchSavedColleges();
   }, []);
 
-  const fetchFavorites = async () => {
+  const fetchSavedColleges = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -39,147 +41,129 @@ const Favorites = () => {
       }
 
       const { data, error } = await supabase
-        .from('favorites')
+        .from('user_college_favorites')
         .select(`
           id,
-          resource_id,
+          college_id,
           created_at,
-          resources!inner (
+          colleges (
             id,
-            category,
-            title,
-            description,
-            date,
-            details
+            name,
+            location,
+            rating,
+            type,
+            total_fees_min,
+            total_fees_max,
+            placement_percentage
           )
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching favorites:', error);
-        toast.error("Error loading favorites");
-        return;
-      }
-
-      setFavorites(data || []);
+      if (error) throw error;
+      setSavedColleges(data || []);
     } catch (error) {
-      console.error('Error fetching favorites:', error);
-      toast.error("An unexpected error occurred");
+      console.error('Error fetching saved colleges:', error);
+      toast.error('Failed to load saved colleges');
     } finally {
       setLoading(false);
     }
   };
 
-  const removeFavorite = async (favoriteId: number) => {
+  const handleRemoveFromFavorites = async (favoriteId: number) => {
     try {
       const { error } = await supabase
-        .from('favorites')
+        .from('user_college_favorites')
         .delete()
         .eq('id', favoriteId);
 
-      if (error) {
-        console.error('Error removing favorite:', error);
-        toast.error("Error removing favorite");
-        return;
-      }
+      if (error) throw error;
 
-      setFavorites(prev => prev.filter(fav => fav.id !== favoriteId));
-      toast.success("Removed from favorites");
+      setSavedColleges(prev => prev.filter(item => item.id !== favoriteId));
+      toast.success('College removed from favorites');
     } catch (error) {
-      console.error('Error removing favorite:', error);
-      toast.error("An unexpected error occurred");
+      console.error('Error removing from favorites:', error);
+      toast.error('Failed to remove college');
     }
   };
 
-  const handleShare = (resource: any) => {
-    if (navigator.share) {
-      navigator.share({
-        title: resource.title,
-        text: resource.description,
-        url: window.location.href
-      });
-    } else {
-      navigator.clipboard.writeText(`${resource.title} - ${window.location.href}`);
-      toast.success("Link copied to clipboard");
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm p-4">
         <div className="flex items-center max-w-md mx-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/profile')} className="mr-3">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-lg font-semibold">Saved Resources</h1>
+          <h1 className="text-lg font-semibold">Saved Colleges</h1>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-md mx-auto p-4">
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+        {savedColleges.length === 0 ? (
+          <div className="text-center py-8">
+            <Heart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <div className="text-gray-500 mb-2">No saved colleges yet</div>
+            <div className="text-sm text-gray-400 mb-4">
+              Start saving colleges you're interested in
+            </div>
+            <Button onClick={() => navigate('/colleges')} className="bg-green-600 hover:bg-green-700">
+              Browse Colleges
+            </Button>
           </div>
-        ) : favorites.length > 0 ? (
+        ) : (
           <div className="space-y-4">
             <div className="text-sm text-gray-600 mb-4">
-              {favorites.length} saved resources
+              {savedColleges.length} saved college{savedColleges.length !== 1 ? 's' : ''}
             </div>
-            {favorites.map((favorite) => (
-              <Card key={favorite.id} className="p-4">
+            
+            {savedColleges.map((item) => (
+              <Card key={item.id} className="p-4">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded inline-block mb-2">
-                      {favorite.resources.category}
+                  <div className="flex-1 cursor-pointer" onClick={() => navigate(`/college-details/${item.colleges.id}`)}>
+                    <h3 className="font-semibold text-gray-800 mb-1">{item.colleges.name}</h3>
+                    <div className="flex items-center text-sm text-gray-600 mb-1">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {item.colleges.location}
                     </div>
-                    <h3 className="font-medium text-gray-800 mb-1">{favorite.resources.title}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{favorite.resources.description}</p>
-                    <div className="text-xs text-gray-500">
-                      Saved on {new Date(favorite.created_at).toLocaleDateString()}
+                    <div className="flex items-center space-x-3 text-sm mb-2">
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                        <span className="font-medium">{item.colleges.rating}/5.0</span>
+                      </div>
+                      <span className="text-green-600">
+                        ₹{item.colleges.total_fees_min ? (item.colleges.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{item.colleges.total_fees_max ? (item.colleges.total_fees_max / 100000).toFixed(1) : '0'}L
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{item.colleges.type}</span>
+                      <span className="text-xs text-gray-600">{item.colleges.placement_percentage}% placement</span>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFavorite(favorite.id)}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleRemoveFromFavorites(item.id)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-                <div className="flex items-center space-x-2 mt-3">
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                    <ExternalLink className="w-3 h-3 mr-1" />
-                    View Details
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleShare(favorite.resources)}
-                  >
-                    <Share className="w-3 h-3 mr-1" />
-                    Share
-                  </Button>
+                
+                <div className="text-xs text-gray-500 mt-2">
+                  Saved on {new Date(item.created_at).toLocaleDateString()}
                 </div>
               </Card>
             ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <div className="text-gray-500 mb-2">No saved resources yet</div>
-            <div className="text-sm text-gray-400 mb-4">
-              Start exploring and save resources you're interested in
-            </div>
-            <Button 
-              onClick={() => navigate('/search')}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Explore Resources
-            </Button>
           </div>
         )}
       </div>

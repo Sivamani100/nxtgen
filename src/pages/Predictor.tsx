@@ -1,346 +1,331 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calculator, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { TrendingUp, Target, Award, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
 import { toast } from "sonner";
 
 interface PredictionResult {
-  estimatedRank?: number;
-  colleges?: any[];
-  message: string;
+  exam: string;
+  marks: number;
+  predictedRank: string;
+  eligibleColleges: College[];
+}
+
+interface College {
+  id: number;
+  name: string;
+  location: string;
+  cutoff_rank: number;
+  course_name: string;
+  branch: string;
 }
 
 const Predictor = () => {
-  const [activeTab, setActiveTab] = useState('rank');
-  const [formData, setFormData] = useState({
-    rank: '',
-    course: '',
-    branch: '',
-    category: '',
-    location: '',
-    board: '',
-    examType: '',
-    marks: '',
-  });
-  const [result, setResult] = useState<PredictionResult | null>(null);
+  const [exam, setExam] = useState('');
+  const [marks, setMarks] = useState('');
+  const [category, setCategory] = useState('general');
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const predictRank = (examType: string, marksObtained: number): string => {
+    switch (examType) {
+      case 'jee_main':
+        if (marksObtained >= 286) return "1-100";
+        if (marksObtained >= 250) return "100-500";
+        if (marksObtained >= 200) return "500-1,500";
+        if (marksObtained >= 160) return "1,500-5,000";
+        if (marksObtained >= 140) return "5,000-10,000";
+        if (marksObtained >= 120) return "10,000-20,000";
+        if (marksObtained >= 100) return "20,000-35,000";
+        if (marksObtained >= 80) return "35,000-60,000";
+        if (marksObtained >= 60) return "60,000-100,000";
+        if (marksObtained >= 40) return "100,000-150,000";
+        return "150,000+";
 
-  const calculateRankFromMarks = (marks: number, examType: string) => {
-    // Realistic rank prediction based on historical data
-    let estimatedRank = 0;
-    
-    if (examType === 'jee-main') {
-      if (marks >= 280) estimatedRank = Math.floor(Math.random() * 1000) + 1;
-      else if (marks >= 250) estimatedRank = Math.floor(Math.random() * 5000) + 1000;
-      else if (marks >= 200) estimatedRank = Math.floor(Math.random() * 15000) + 5000;
-      else if (marks >= 150) estimatedRank = Math.floor(Math.random() * 50000) + 20000;
-      else if (marks >= 100) estimatedRank = Math.floor(Math.random() * 100000) + 70000;
-      else estimatedRank = Math.floor(Math.random() * 200000) + 170000;
-    } else if (examType === 'eamcet') {
-      if (marks >= 150) estimatedRank = Math.floor(Math.random() * 500) + 1;
-      else if (marks >= 130) estimatedRank = Math.floor(Math.random() * 2000) + 500;
-      else if (marks >= 110) estimatedRank = Math.floor(Math.random() * 8000) + 2500;
-      else if (marks >= 90) estimatedRank = Math.floor(Math.random() * 20000) + 10000;
-      else if (marks >= 70) estimatedRank = Math.floor(Math.random() * 50000) + 30000;
-      else estimatedRank = Math.floor(Math.random() * 100000) + 80000;
-    } else if (examType === 'neet') {
-      if (marks >= 650) estimatedRank = Math.floor(Math.random() * 100) + 1;
-      else if (marks >= 600) estimatedRank = Math.floor(Math.random() * 1000) + 100;
-      else if (marks >= 550) estimatedRank = Math.floor(Math.random() * 5000) + 1000;
-      else if (marks >= 500) estimatedRank = Math.floor(Math.random() * 20000) + 6000;
-      else if (marks >= 450) estimatedRank = Math.floor(Math.random() * 50000) + 26000;
-      else estimatedRank = Math.floor(Math.random() * 200000) + 76000;
+      case 'jee_advanced':
+        if (marksObtained >= 283) return "1-100";
+        if (marksObtained >= 250) return "100-500";
+        if (marksObtained >= 190) return "500-1,000";
+        if (marksObtained >= 150) return "1,000-5,000";
+        if (marksObtained >= 120) return "5,000-10,000";
+        if (marksObtained >= 90) return "10,000-20,000";
+        if (marksObtained >= 70) return "20,000-30,000";
+        return "30,000+";
+
+      case 'neet':
+        if (marksObtained >= 700) return "1-100";
+        if (marksObtained >= 650) return "100-1,000";
+        if (marksObtained >= 600) return "1,000-5,000";
+        if (marksObtained >= 550) return "5,000-15,000";
+        if (marksObtained >= 500) return "15,000-40,000";
+        if (marksObtained >= 450) return "40,000-75,000";
+        if (marksObtained >= 400) return "75,000-120,000";
+        if (marksObtained >= 350) return "120,000-200,000";
+        return "200,000+";
+
+      case 'eamcet':
+        if (marksObtained >= 150) return "1-100";
+        if (marksObtained >= 140) return "100-500";
+        if (marksObtained >= 130) return "500-1,000";
+        if (marksObtained >= 120) return "1,000-2,000";
+        if (marksObtained >= 110) return "2,000-5,000";
+        if (marksObtained >= 100) return "5,000-10,000";
+        if (marksObtained >= 90) return "10,000-20,000";
+        if (marksObtained >= 80) return "20,000-30,000";
+        if (marksObtained >= 70) return "30,000-50,000";
+        if (marksObtained >= 60) return "50,000-80,000";
+        if (marksObtained >= 50) return "80,000-120,000";
+        if (marksObtained >= 40) return "120,000-150,000+";
+        return "150,000+";
+
+      default:
+        return "Unable to predict";
     }
-    
-    return estimatedRank;
   };
 
-  const handleCalculate = async () => {
-    setLoading(true);
-    
+  const fetchEligibleColleges = async (examType: string, predictedRankRange: string): Promise<College[]> => {
     try {
-      if (activeTab === 'rank') {
-        // Calculate rank based on marks
-        const marks = parseInt(formData.marks);
-        if (!marks || !formData.examType) {
-          toast.error('Please fill in all required fields');
-          setLoading(false);
-          return;
-        }
+      // Extract the upper bound of the rank range for comparison
+      const rankNumber = extractRankNumber(predictedRankRange);
+      
+      const { data: courses, error } = await supabase
+        .from('courses')
+        .select(`
+          id,
+          course_name,
+          branch,
+          cutoff_rank_general,
+          exam_accepted,
+          colleges (
+            id,
+            name,
+            location
+          )
+        `)
+        .ilike('exam_accepted', `%${examType}%`)
+        .gte('cutoff_rank_general', rankNumber)
+        .order('cutoff_rank_general', { ascending: true })
+        .limit(20);
 
-        const estimatedRank = calculateRankFromMarks(marks, formData.examType);
-        
-        setResult({
-          estimatedRank,
-          message: `Based on your marks of ${marks} in ${formData.examType.toUpperCase()}, your estimated rank is ${estimatedRank}. This is calculated based on previous year trends and current competition levels.`
-        });
-      } else {
-        // Find colleges based on rank
-        const rank = parseInt(formData.rank);
-        if (!rank || !formData.course || !formData.branch || !formData.category) {
-          toast.error('Please fill in all required fields');
-          setLoading(false);
-          return;
-        }
+      if (error) throw error;
 
-        // Fetch colleges from database based on criteria
-        const { data: courses, error } = await supabase
-          .from('courses')
-          .select(`
-            *,
-            colleges:college_id (*)
-          `)
-          .eq('course_name', formData.course)
-          .ilike('branch', `%${formData.branch}%`)
-          .lte(`cutoff_rank_${formData.category.toLowerCase()}`, rank)
-          .order('cutoff_rank_general', { ascending: true })
-          .limit(10);
-
-        if (error) throw error;
-
-        const eligibleColleges = courses?.map(course => ({
-          ...course.colleges,
-          course_details: {
-            course_name: course.course_name,
-            branch: course.branch,
-            cutoff_rank: course[`cutoff_rank_${formData.category.toLowerCase()}`],
-            fees_per_year: course.fees_per_year
-          }
-        })) || [];
-
-        setResult({
-          colleges: eligibleColleges,
-          message: `Found ${eligibleColleges.length} colleges that you can get admission with rank ${rank} in ${formData.category} category.`
-        });
-      }
+      return courses?.map(course => ({
+        id: course.colleges?.id || 0,
+        name: course.colleges?.name || '',
+        location: course.colleges?.location || '',
+        cutoff_rank: course.cutoff_rank_general || 0,
+        course_name: course.course_name,
+        branch: course.branch
+      })) || [];
     } catch (error) {
-      console.error('Error in calculation:', error);
-      toast.error('Something went wrong. Please try again.');
+      console.error('Error fetching colleges:', error);
+      return [];
+    }
+  };
+
+  const extractRankNumber = (rankRange: string): number => {
+    const match = rankRange.match(/(\d+)/);
+    return match ? parseInt(match[1]) : 999999;
+  };
+
+  const handlePredict = async () => {
+    if (!exam || !marks) {
+      toast.error('Please fill all fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const marksNum = parseInt(marks);
+      const predictedRank = predictRank(exam, marksNum);
+      const eligibleColleges = await fetchEligibleColleges(exam, predictedRank);
+
+      setPrediction({
+        exam,
+        marks: marksNum,
+        predictedRank,
+        eligibleColleges
+      });
+    } catch (error) {
+      console.error('Error predicting rank:', error);
+      toast.error('Failed to predict rank');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getExamFullName = (examCode: string): string => {
+    const examNames: { [key: string]: string } = {
+      'jee_main': 'JEE Main',
+      'jee_advanced': 'JEE Advanced',
+      'neet': 'NEET',
+      'eamcet': 'EAMCET'
+    };
+    return examNames[examCode] || examCode;
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm p-4">
-        <div className="flex items-center max-w-md mx-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-lg font-semibold">Predict Your College</h1>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="bg-white border-b">
-        <div className="max-w-md mx-auto flex">
-          <Button
-            variant="ghost"
-            className={`flex-1 py-3 border-b-2 ${
-              activeTab === 'rank' 
-                ? 'border-green-500 text-green-600' 
-                : 'border-transparent text-gray-500'
-            }`}
-            onClick={() => setActiveTab('rank')}
-          >
-            Estimate Rank
-          </Button>
-          <Button
-            variant="ghost"
-            className={`flex-1 py-3 border-b-2 ${
-              activeTab === 'college' 
-                ? 'border-green-500 text-green-600' 
-                : 'border-transparent text-gray-500'
-            }`}
-            onClick={() => setActiveTab('college')}
-          >
-            Predict College
-          </Button>
+        <div className="max-w-md mx-auto">
+          <h1 className="text-lg font-semibold">Rank Predictor</h1>
+          <p className="text-sm text-gray-600">Predict your rank and find eligible colleges</p>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-md mx-auto p-4 pb-20">
-        {activeTab === 'rank' ? (
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Enter Your Details</h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="examType">Exam Type</Label>
-                <Select onValueChange={(value) => handleInputChange('examType', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Exam type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="jee-main">JEE Main</SelectItem>
-                    <SelectItem value="jee-advanced">JEE Advanced</SelectItem>
-                    <SelectItem value="neet">NEET</SelectItem>
-                    <SelectItem value="eamcet">EAMCET</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="marks">Marks Obtained</Label>
-                <Input
-                  id="marks"
-                  type="number"
-                  placeholder="Enter your marks"
-                  value={formData.marks}
-                  onChange={(e) => handleInputChange('marks', e.target.value)}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {formData.examType === 'jee-main' && 'Out of 300'}
-                  {formData.examType === 'eamcet' && 'Out of 160'}
-                  {formData.examType === 'neet' && 'Out of 720'}
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select onValueChange={(value) => handleInputChange('category', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">General</SelectItem>
-                    <SelectItem value="obc">OBC</SelectItem>
-                    <SelectItem value="sc">SC</SelectItem>
-                    <SelectItem value="st">ST</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button 
-                onClick={handleCalculate}
-                className="w-full h-12 bg-green-600 hover:bg-green-700"
-                disabled={loading}
-              >
-                <Calculator className="w-4 h-4 mr-2" />
-                {loading ? 'Calculating...' : 'Calculate Rank'}
-              </Button>
+        {/* Input Form */}
+        <Card className="p-4 mb-6">
+          <h2 className="font-semibold text-gray-800 mb-4">Enter Your Details</h2>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="exam">Select Exam</Label>
+              <Select value={exam} onValueChange={setExam}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose exam" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="jee_main">JEE Main</SelectItem>
+                  <SelectItem value="jee_advanced">JEE Advanced</SelectItem>
+                  <SelectItem value="neet">NEET</SelectItem>
+                  <SelectItem value="eamcet">EAMCET</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </Card>
-        ) : (
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Find Colleges Based on Rank</h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="rank">Your Rank</Label>
-                <Input
-                  id="rank"
-                  type="number"
-                  placeholder="20,000"
-                  value={formData.rank}
-                  onChange={(e) => handleInputChange('rank', e.target.value)}
-                />
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="course">Course</Label>
-                  <Select onValueChange={(value) => handleInputChange('course', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="B.Tech">B.Tech</SelectItem>
-                      <SelectItem value="MBBS">MBBS</SelectItem>
-                      <SelectItem value="BDS">BDS</SelectItem>
-                    </SelectContent>
-                  </Select>
+            <div>
+              <Label htmlFor="marks">Your Marks</Label>
+              <Input
+                id="marks"
+                type="number"
+                value={marks}
+                onChange={(e) => setMarks(e.target.value)}
+                placeholder="Enter your marks"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="category">Category</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">General</SelectItem>
+                  <SelectItem value="obc">OBC</SelectItem>
+                  <SelectItem value="sc">SC</SelectItem>
+                  <SelectItem value="st">ST</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button 
+              onClick={handlePredict} 
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={loading}
+            >
+              {loading ? 'Predicting...' : 'Predict Rank'}
+            </Button>
+          </div>
+        </Card>
+
+        {/* Prediction Results */}
+        {prediction && (
+          <div className="space-y-4">
+            <Card className="p-4">
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-3">
+                  <Target className="w-8 h-8 text-green-600 mr-2" />
+                  <h3 className="text-lg font-semibold text-gray-800">Rank Prediction</h3>
                 </div>
-
-                <div>
-                  <Label htmlFor="branch">Branch</Label>
-                  <Select onValueChange={(value) => handleInputChange('branch', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Computer Science">Computer Science</SelectItem>
-                      <SelectItem value="Electronics">Electronics</SelectItem>
-                      <SelectItem value="Mechanical">Mechanical</SelectItem>
-                      <SelectItem value="Civil">Civil</SelectItem>
-                      <SelectItem value="Information Technology">IT</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="text-2xl font-bold text-green-600 mb-2">
+                  {prediction.predictedRank}
+                </div>
+                <div className="text-sm text-gray-600">
+                  Based on {prediction.marks} marks in {getExamFullName(prediction.exam)}
                 </div>
               </div>
+            </Card>
 
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select onValueChange={(value) => handleInputChange('category', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">General</SelectItem>
-                    <SelectItem value="obc">OBC</SelectItem>
-                    <SelectItem value="sc">SC</SelectItem>
-                    <SelectItem value="st">ST</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Eligible Colleges */}
+            <Card className="p-4">
+              <div className="flex items-center mb-3">
+                <Award className="w-5 h-5 text-blue-600 mr-2" />
+                <h3 className="font-semibold text-gray-800">Eligible Colleges</h3>
               </div>
+              
+              {prediction.eligibleColleges.length > 0 ? (
+                <div className="space-y-3">
+                  {prediction.eligibleColleges.map((college, index) => (
+                    <div key={index} className="border-l-4 border-green-500 pl-3 py-2">
+                      <h4 className="font-medium text-gray-800">{college.name}</h4>
+                      <p className="text-sm text-gray-600">{college.course_name} - {college.branch}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                        <span>{college.location}</span>
+                        <span>Cutoff: {college.cutoff_rank}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-3"
+                    onClick={() => navigate('/colleges')}
+                  >
+                    View All Colleges
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-500 mb-2">No colleges found for this rank range</p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/colleges')}
+                  >
+                    Browse All Colleges
+                  </Button>
+                </div>
+              )}
+            </Card>
 
-              <Button 
-                onClick={handleCalculate}
-                className="w-full h-12 bg-green-600 hover:bg-green-700"
-                disabled={loading}
-              >
-                {loading ? 'Searching...' : 'Find Colleges'}
-              </Button>
-            </div>
-          </Card>
+            {/* Tips */}
+            <Card className="p-4 bg-blue-50 border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-2">💡 Tips for Better Prediction</h3>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• Predictions are based on previous year trends</li>
+                <li>• Actual ranks may vary based on paper difficulty</li>
+                <li>• Consider backup colleges with higher cutoffs</li>
+                <li>• Check state quota and home state benefits</li>
+              </ul>
+            </Card>
+          </div>
         )}
 
-        {/* Results */}
-        {result && (
-          <Card className="p-4 mt-4">
-            <h3 className="font-semibold text-gray-800 mb-3">Results</h3>
-            <p className="text-sm text-gray-600 mb-4">{result.message}</p>
-            
-            {result.estimatedRank && (
-              <div className="text-center p-4 bg-green-50 rounded">
-                <div className="text-2xl font-bold text-green-600 mb-1">{result.estimatedRank}</div>
-                <div className="text-sm text-gray-600">Your Estimated Rank</div>
-              </div>
-            )}
-
-            {result.colleges && result.colleges.length > 0 && (
-              <div className="space-y-3">
-                {result.colleges.map((college, index) => (
-                  <div key={index} className="p-3 bg-gray-50 rounded">
-                    <h4 className="font-medium text-sm">{college.name}</h4>
-                    <p className="text-xs text-gray-600">{college.location}</p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs">Cutoff: {college.course_details.cutoff_rank}</span>
-                      <Button 
-                        size="sm" 
-                        className="text-xs bg-green-600 hover:bg-green-700"
-                        onClick={() => navigate(`/college-details/${college.id}`)}
-                      >
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+        {/* Exam Info Cards */}
+        {!prediction && (
+          <div className="space-y-3">
+            <h3 className="font-semibold text-gray-800">Quick Exam Info</h3>
+            <Card className="p-3">
+              <h4 className="font-medium text-sm mb-1">JEE Main 2025</h4>
+              <p className="text-xs text-gray-600">Total marks: 300 | 200+ for top NITs</p>
+            </Card>
+            <Card className="p-3">
+              <h4 className="font-medium text-sm mb-1">NEET 2025</h4>
+              <p className="text-xs text-gray-600">Total marks: 720 | 600+ for govt medical</p>
+            </Card>
+            <Card className="p-3">
+              <h4 className="font-medium text-sm mb-1">EAMCET 2025</h4>
+              <p className="text-xs text-gray-600">Total marks: 160 | 45 marks ≈ 150k+ rank</p>
+            </Card>
+          </div>
         )}
       </div>
 

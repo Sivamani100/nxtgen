@@ -7,29 +7,69 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Edit, Save, Camera, Home as HomeIcon, Users, BookOpen, Newspaper, User, LogOut } from "lucide-react";
+import { Edit, Save, Camera, Home as HomeIcon, Users, BookOpen, Newspaper, User, LogOut, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface Profile {
   id: string;
   email: string;
+  full_name: string;
+  phone_number: string;
   academic_field: string;
+  preferred_course: string;
+  preferred_branches: string[];
+  preferred_locations: string[];
+  budget_min: number;
+  budget_max: number;
+  profile_picture_url: string;
+  profile_completion_percentage: number;
   tutorial_completed: boolean;
   notification_preferences: any;
 }
 
+const INDIAN_CITIES = [
+  'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Pune', 'Ahmedabad',
+  'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Thane', 'Bhopal', 'Visakhapatnam',
+  'Pimpri-Chinchwad', 'Patna', 'Vadodara', 'Ghaziabad', 'Ludhiana', 'Agra', 'Nashik',
+  'Faridabad', 'Meerut', 'Rajkot', 'Kalyan-Dombivali', 'Vasai-Virar', 'Varanasi', 'Srinagar',
+  'Dhanbad', 'Jodhpur', 'Amritsar', 'Raipur', 'Allahabad', 'Coimbatore', 'Jabalpur',
+  'Gwalior', 'Vijayawada', 'Madurai', 'Gurgaon', 'Navi Mumbai', 'Aurangabad', 'Solapur',
+  'Ranchi', 'Jalandhar', 'Tiruchirappalli', 'Bhubaneswar', 'Salem', 'Warangal', 'Mira-Bhayandar',
+  'Thiruvananthapuram', 'Bhiwandi', 'Saharanpur', 'Guntur', 'Amravati', 'Bikaner', 'Noida',
+  'Jamshedpur', 'Bhilai Nagar', 'Cuttack', 'Firozabad', 'Kochi', 'Nellore', 'Bhavnagar',
+  'Dehradun', 'Durgapur', 'Asansol', 'Rourkela', 'Nanded', 'Kolhapur', 'Ajmer', 'Akola',
+  'Gulbarga', 'Jamnagar', 'Ujjain', 'Loni', 'Siliguri', 'Jhansi', 'Ulhasnagar', 'Jammu',
+  'Sangli-Miraj & Kupwad', 'Mangalore', 'Erode', 'Belgaum', 'Ambattur', 'Tirunelveli',
+  'Malegaon', 'Gaya', 'Jalgaon', 'Udaipur', 'Maheshtala'
+];
+
+const ENGINEERING_BRANCHES = [
+  'Computer Science Engineering', 'Information Technology', 'Electronics and Communication Engineering',
+  'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Chemical Engineering',
+  'Aerospace Engineering', 'Automobile Engineering', 'Biotechnology Engineering',
+  'Environmental Engineering', 'Industrial Engineering', 'Materials Engineering',
+  'Mining Engineering', 'Nuclear Engineering', 'Petroleum Engineering', 'Software Engineering',
+  'Biomedical Engineering', 'Agricultural Engineering', 'Food Technology',
+  'Textile Engineering', 'Marine Engineering', 'Metallurgical Engineering',
+  'Production Engineering', 'Robotics Engineering', 'Data Science and Engineering',
+  'Artificial Intelligence and Machine Learning', 'Cyber Security', 'Electronics and Instrumentation',
+  'Information Science Engineering', 'Telecommunication Engineering'
+];
+
 const ProfilePage = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [savedCollegesCount, setSavedCollegesCount] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    full_name: '',
     email: '',
-    phone: '',
+    phone_number: '',
     academic_field: '',
     preferred_course: '',
-    preferred_branches: [],
-    preferred_locations: [],
+    preferred_branches: [] as string[],
+    preferred_locations: [] as string[],
     budget_min: '',
     budget_max: '',
   });
@@ -37,6 +77,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchSavedCollegesCount();
   }, []);
 
   const fetchProfile = async () => {
@@ -57,21 +98,59 @@ const ProfilePage = () => {
       
       setProfile(data);
       setFormData({
-        name: user.user_metadata?.name || '',
+        full_name: data.full_name || '',
         email: data.email,
-        phone: user.user_metadata?.phone || '',
+        phone_number: data.phone_number || '',
         academic_field: data.academic_field || '',
-        preferred_course: '',
-        preferred_branches: [],
-        preferred_locations: [],
-        budget_min: '',
-        budget_max: '',
+        preferred_course: data.preferred_course || '',
+        preferred_branches: data.preferred_branches || [],
+        preferred_locations: data.preferred_locations || [],
+        budget_min: data.budget_min?.toString() || '',
+        budget_max: data.budget_max?.toString() || '',
       });
+      
+      // Calculate and update profile completion
+      await updateProfileCompletion(user.id);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSavedCollegesCount = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count, error } = await supabase
+        .from('user_college_favorites')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setSavedCollegesCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching saved colleges count:', error);
+    }
+  };
+
+  const updateProfileCompletion = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('calculate_profile_completion', { profile_id: userId });
+
+      if (error) throw error;
+
+      await supabase
+        .from('profiles')
+        .update({ profile_completion_percentage: data })
+        .eq('id', userId);
+
+      setProfile(prev => prev ? { ...prev, profile_completion_percentage: data } : null);
+    } catch (error) {
+      console.error('Error updating profile completion:', error);
     }
   };
 
@@ -83,7 +162,14 @@ const ProfilePage = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
+          full_name: formData.full_name,
+          phone_number: formData.phone_number,
           academic_field: formData.academic_field,
+          preferred_course: formData.preferred_course,
+          preferred_branches: formData.preferred_branches,
+          preferred_locations: formData.preferred_locations,
+          budget_min: formData.budget_min ? parseInt(formData.budget_min) : null,
+          budget_max: formData.budget_max ? parseInt(formData.budget_max) : null,
         })
         .eq('id', user.id);
 
@@ -91,10 +177,49 @@ const ProfilePage = () => {
 
       toast.success('Profile updated successfully');
       setIsEditing(false);
-      fetchProfile();
+      await fetchProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-pictures')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ profile_picture_url: data.publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      await fetchProfile();
+      toast.success('Profile picture updated successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload profile picture');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -109,8 +234,41 @@ const ProfilePage = () => {
     }
   };
 
-  const getInitials = (email: string) => {
-    return email.substring(0, 2).toUpperCase();
+  const addPreferredBranch = (branch: string) => {
+    if (!formData.preferred_branches.includes(branch)) {
+      setFormData(prev => ({
+        ...prev,
+        preferred_branches: [...prev.preferred_branches, branch]
+      }));
+    }
+  };
+
+  const removePreferredBranch = (branch: string) => {
+    setFormData(prev => ({
+      ...prev,
+      preferred_branches: prev.preferred_branches.filter(b => b !== branch)
+    }));
+  };
+
+  const addPreferredLocation = (location: string) => {
+    if (!formData.preferred_locations.includes(location)) {
+      setFormData(prev => ({
+        ...prev,
+        preferred_locations: [...prev.preferred_locations, location]
+      }));
+    }
+  };
+
+  const removePreferredLocation = (location: string) => {
+    setFormData(prev => ({
+      ...prev,
+      preferred_locations: prev.preferred_locations.filter(l => l !== location)
+    }));
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
 
   if (loading) {
@@ -126,17 +284,13 @@ const ProfilePage = () => {
       {/* Header */}
       <div className="bg-white shadow-sm p-4">
         <div className="flex items-center justify-between max-w-md mx-auto">
-          <div className="flex items-center">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="text-lg font-semibold">Profile</h1>
-          </div>
+          <h1 className="text-lg font-semibold">Profile</h1>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={() => isEditing ? handleSave() : setIsEditing(!isEditing)}
             className="p-2"
+            disabled={uploading}
           >
             {isEditing ? <Save className="w-5 h-5" /> : <Edit className="w-5 h-5" />}
           </Button>
@@ -149,29 +303,53 @@ const ProfilePage = () => {
         <Card className="p-6 mb-6">
           <div className="text-center">
             <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-green-400 rounded-full mx-auto mb-3 flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">
-                  {profile ? getInitials(profile.email) : 'U'}
-                </span>
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-green-400 rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden">
+                {profile?.profile_picture_url ? (
+                  <img 
+                    src={profile.profile_picture_url} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-white font-bold text-2xl">
+                    {getInitials(formData.full_name || profile?.email || 'User')}
+                  </span>
+                )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute bottom-0 right-1/2 transform translate-x-1/2 translate-y-1/2 p-2"
-                disabled={!isEditing}
-              >
-                <Camera className="w-4 h-4" />
-              </Button>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                id="profile-picture"
+                disabled={uploading}
+              />
+              <label htmlFor="profile-picture">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute bottom-0 right-1/2 transform translate-x-1/2 translate-y-1/2 p-2 cursor-pointer"
+                  disabled={uploading}
+                  asChild
+                >
+                  <span>
+                    <Camera className="w-4 h-4" />
+                  </span>
+                </Button>
+              </label>
             </div>
-            <h3 className="font-semibold text-gray-800 text-lg">{formData.name || 'User'}</h3>
+            <h3 className="font-semibold text-gray-800 text-lg">{formData.full_name || 'User'}</h3>
             <p className="text-sm text-gray-600">{formData.email}</p>
-            <div className="flex items-center justify-center mt-3">
-              <div className="text-center mr-6">
-                <div className="text-lg font-bold text-green-600">75%</div>
+            <div className="flex items-center justify-center mt-3 space-x-6">
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-600">{profile?.profile_completion_percentage || 0}%</div>
                 <div className="text-xs text-gray-600">Profile Complete</div>
               </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-blue-600">12</div>
+              <div 
+                className="text-center cursor-pointer"
+                onClick={() => navigate('/favorites')}
+              >
+                <div className="text-lg font-bold text-blue-600">{savedCollegesCount}</div>
                 <div className="text-xs text-gray-600">Saved Colleges</div>
               </div>
             </div>
@@ -183,13 +361,14 @@ const ProfilePage = () => {
           <h3 className="font-semibold text-gray-800 mb-3">Personal Information</h3>
           <div className="space-y-3">
             <div>
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="full_name">Full Name</Label>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                id="full_name"
+                value={formData.full_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
                 disabled={!isEditing}
                 className={!isEditing ? 'bg-gray-50' : ''}
+                placeholder="Enter your full name"
               />
             </div>
             <div>
@@ -202,11 +381,11 @@ const ProfilePage = () => {
               />
             </div>
             <div>
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phone_number">Phone Number</Label>
               <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                id="phone_number"
+                value={formData.phone_number}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
                 disabled={!isEditing}
                 className={!isEditing ? 'bg-gray-50' : ''}
                 placeholder="Enter your phone number"
@@ -252,6 +431,10 @@ const ProfilePage = () => {
                   <SelectItem value="mbbs">MBBS</SelectItem>
                   <SelectItem value="bds">BDS</SelectItem>
                   <SelectItem value="bsc">B.Sc</SelectItem>
+                  <SelectItem value="bcom">B.Com</SelectItem>
+                  <SelectItem value="bba">BBA</SelectItem>
+                  <SelectItem value="mtech">M.Tech</SelectItem>
+                  <SelectItem value="mba">MBA</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -261,37 +444,69 @@ const ProfilePage = () => {
         {/* Preferences */}
         <Card className="p-4 mb-4">
           <h3 className="font-semibold text-gray-800 mb-3">Preferences</h3>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
               <Label>Preferred Branches</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {['Computer Science', 'Electronics', 'Mechanical', 'Civil'].map((branch) => (
-                  <span key={branch} className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+              <div className="flex flex-wrap gap-2 mt-2 mb-2">
+                {formData.preferred_branches.map((branch) => (
+                  <span key={branch} className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded flex items-center">
                     {branch}
+                    {isEditing && (
+                      <button 
+                        onClick={() => removePreferredBranch(branch)}
+                        className="ml-1 text-blue-500 hover:text-blue-700"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
                   </span>
                 ))}
-                {isEditing && (
-                  <Button variant="outline" size="sm" className="text-xs">
-                    + Add Branch
-                  </Button>
-                )}
               </div>
+              {isEditing && (
+                <Select onValueChange={addPreferredBranch}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Add branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ENGINEERING_BRANCHES.filter(branch => !formData.preferred_branches.includes(branch)).map((branch) => (
+                      <SelectItem key={branch} value={branch}>{branch}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
+            
             <div>
               <Label>Preferred Locations</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {['Visakhapatnam', 'Hyderabad', 'Chennai'].map((location) => (
-                  <span key={location} className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">
+              <div className="flex flex-wrap gap-2 mt-2 mb-2">
+                {formData.preferred_locations.map((location) => (
+                  <span key={location} className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded flex items-center">
                     {location}
+                    {isEditing && (
+                      <button 
+                        onClick={() => removePreferredLocation(location)}
+                        className="ml-1 text-green-500 hover:text-green-700"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
                   </span>
                 ))}
-                {isEditing && (
-                  <Button variant="outline" size="sm" className="text-xs">
-                    + Add Location
-                  </Button>
-                )}
               </div>
+              {isEditing && (
+                <Select onValueChange={addPreferredLocation}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Add location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDIAN_CITIES.filter(city => !formData.preferred_locations.includes(city)).map((city) => (
+                      <SelectItem key={city} value={city}>{city}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
+            
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="budget_min">Budget Min (₹)</Label>
@@ -302,6 +517,7 @@ const ProfilePage = () => {
                   disabled={!isEditing}
                   className={!isEditing ? 'bg-gray-50' : ''}
                   placeholder="50,000"
+                  type="number"
                 />
               </div>
               <div>
@@ -313,6 +529,7 @@ const ProfilePage = () => {
                   disabled={!isEditing}
                   className={!isEditing ? 'bg-gray-50' : ''}
                   placeholder="2,00,000"
+                  type="number"
                 />
               </div>
             </div>

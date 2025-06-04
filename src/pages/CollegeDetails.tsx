@@ -18,11 +18,13 @@ const CollegeDetails = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchCollegeDetails();
       fetchCourses();
+      checkIfSaved();
     }
   }, [id]);
 
@@ -59,6 +61,26 @@ const CollegeDetails = () => {
     }
   };
 
+  const checkIfSaved = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_college_favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('college_id', parseInt(id!))
+        .single();
+
+      if (data) {
+        setIsSaved(true);
+      }
+    } catch (error) {
+      // No error handling needed - just means college is not saved
+    }
+  };
+
   const handleSaveCollege = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -67,15 +89,30 @@ const CollegeDetails = () => {
         return;
       }
 
-      const { error } = await supabase
-        .from('user_college_favorites')
-        .insert({
-          user_id: user.id,
-          college_id: parseInt(id!)
-        });
+      if (isSaved) {
+        // Remove from favorites
+        const { error } = await supabase
+          .from('user_college_favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('college_id', parseInt(id!));
 
-      if (error) throw error;
-      toast.success('College saved to favorites');
+        if (error) throw error;
+        setIsSaved(false);
+        toast.success('College removed from favorites');
+      } else {
+        // Add to favorites
+        const { error } = await supabase
+          .from('user_college_favorites')
+          .insert({
+            user_id: user.id,
+            college_id: parseInt(id!)
+          });
+
+        if (error) throw error;
+        setIsSaved(true);
+        toast.success('College saved to favorites');
+      }
     } catch (error) {
       console.error('Error saving college:', error);
       toast.error('Failed to save college');
@@ -136,11 +173,11 @@ const CollegeDetails = () => {
             <Button 
               size="sm" 
               variant="outline" 
-              className="flex-1"
+              className={`flex-1 ${isSaved ? 'bg-red-50 border-red-200 text-red-600' : ''}`}
               onClick={handleSaveCollege}
             >
-              <Heart className="w-4 h-4 mr-1" />
-              Save
+              <Heart className={`w-4 h-4 mr-1 ${isSaved ? 'fill-red-500 text-red-500' : ''}`} />
+              {isSaved ? 'Saved' : 'Save'}
             </Button>
             <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
               Apply Now

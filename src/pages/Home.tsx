@@ -3,80 +3,153 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Search, Bell, User, Heart, Newspaper, Home as HomeIcon, BookOpen, Calendar, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Bell, Search, Star, MapPin, TrendingUp, Calendar, Award, Heart, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
+import { toast } from "sonner";
 
 interface College {
   id: number;
   name: string;
   location: string;
   rating: number;
-  image_url: string;
+  type: string;
+  total_fees_min: number;
+  total_fees_max: number;
+  placement_percentage: number;
 }
 
 interface NewsItem {
   id: number;
   title: string;
   description: string;
-  created_at: string;
   category: string;
-  source: string;
-}
-
-interface Event {
-  id: number;
-  title: string;
-  description: string;
-  event_date: string;
-  event_location: string;
+  created_at: string;
+  external_link?: string;
 }
 
 const Home = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [topColleges, setTopColleges] = useState<College[]>([]);
-  const [latestNews, setLatestNews] = useState<NewsItem[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchHomeData();
+    fetchUserProfile();
+    fetchColleges();
+    fetchNews();
+    fetchNotificationCount();
   }, []);
 
-  const fetchHomeData = async () => {
+  useEffect(() => {
+    if (userProfile) {
+      fetchFilteredColleges();
+    }
+  }, [userProfile]);
+
+  const fetchUserProfile = async () => {
     try {
-      // Fetch top colleges
-      const { data: colleges } = await supabase
-        .from('colleges')
-        .select('id, name, location, rating, image_url')
-        .order('rating', { ascending: false })
-        .limit(5);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
 
-      // Fetch latest news
-      const { data: news } = await supabase
-        .from('resources')
-        .select('id, title, description, created_at, category, source')
-        .eq('category', 'News')
-        .order('created_at', { ascending: false })
-        .limit(3);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-      // Fetch upcoming events
-      const { data: events } = await supabase
-        .from('resources')
-        .select('id, title, description, event_date, event_location')
-        .eq('category', 'Event')
-        .gte('event_date', new Date().toISOString().split('T')[0])
-        .order('event_date', { ascending: true })
-        .limit(3);
-
-      setTopColleges(colleges || []);
-      setLatestNews(news || []);
-      setUpcomingEvents(events || []);
+      if (error) throw error;
+      setUserProfile(data);
     } catch (error) {
-      console.error('Error fetching home data:', error);
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const fetchFilteredColleges = async () => {
+    try {
+      let query = supabase
+        .from('colleges')
+        .select('*')
+        .order('rating', { ascending: false })
+        .limit(10);
+
+      // Apply filters based on user preferences
+      if (userProfile?.preferred_locations && userProfile.preferred_locations.length > 0) {
+        query = query.in('city', userProfile.preferred_locations);
+      }
+
+      if (userProfile?.budget_min && userProfile?.budget_max) {
+        query = query
+          .gte('total_fees_min', userProfile.budget_min)
+          .lte('total_fees_max', userProfile.budget_max);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setColleges(data || []);
+    } catch (error) {
+      console.error('Error fetching filtered colleges:', error);
+      // Fallback to all colleges if filtering fails
+      fetchColleges();
+    }
+  };
+
+  const fetchColleges = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('colleges')
+        .select('*')
+        .order('rating', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setColleges(data || []);
+    } catch (error) {
+      console.error('Error fetching colleges:', error);
+      toast.error('Failed to load colleges');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchNews = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('resources')
+        .select('*')
+        .in('category', ['News', 'Event'])
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setNews(data || []);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+    }
+  };
+
+  const fetchNotificationCount = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (error) throw error;
+      setUnreadNotifications(count || 0);
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
     }
   };
 
@@ -86,18 +159,10 @@ const Home = () => {
     }
   };
 
-  const getDaysLeft = (eventDate: string) => {
-    const today = new Date();
-    const event = new Date(eventDate);
-    const diffTime = event.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
       </div>
     );
   }
@@ -106,131 +171,168 @@ const Home = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm p-4">
-        <div className="flex items-center justify-between max-w-md mx-auto">
-          <div className="text-xl font-bold text-green-600">NXTGEN</div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/profile')}
-            className="p-2"
-          >
-            <User className="w-6 h-6" />
-          </Button>
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-lg font-semibold text-gray-800">Welcome Back!</h1>
+              <p className="text-sm text-gray-600">Find your perfect college</p>
+            </div>
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2"
+                onClick={() => navigate('/notifications')}
+              >
+                <Bell className="w-5 h-5" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {unreadNotifications}
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search colleges, courses, news..."
+              className="pl-10"
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Search 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer"
+              onClick={handleSearch}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Content */}
       <div className="max-w-md mx-auto p-4 pb-20">
-        {/* Search Bar */}
-        <div className="relative mb-6">
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search colleges, courses..."
-            className="pl-10"
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          />
-          <Search 
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer"
-            onClick={handleSearch}
-          />
-        </div>
-
         {/* Quick Actions */}
-        <Card className="p-4 mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              className="h-16 flex flex-col items-center justify-center space-y-1 border-green-200"
-              onClick={() => navigate('/predictor')}
-            >
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <BookOpen className="w-4 h-4 text-green-600" />
-              </div>
-              <span className="text-xs">Predict Your Rank</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-16 flex flex-col items-center justify-center space-y-1 border-blue-200"
-              onClick={() => navigate('/colleges')}
-            >
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users className="w-4 h-4 text-blue-600" />
-              </div>
-              <span className="text-xs">Find Colleges</span>
-            </Button>
-          </div>
-        </Card>
-
-        {/* Top Colleges */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800">Top Colleges in AP</h3>
-            <Button variant="link" className="text-green-600 text-sm p-0" onClick={() => navigate('/colleges')}>View All</Button>
-          </div>
-          <div className="flex space-x-3 overflow-x-auto pb-2">
-            {topColleges.map((college) => (
-              <Card key={college.id} className="flex-shrink-0 w-48 p-3 cursor-pointer" onClick={() => navigate(`/college-details/${college.id}`)}>
-                <div className="h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded mb-2 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm text-center px-2">{college.name.substring(0, 20)}</span>
-                </div>
-                <h4 className="font-medium text-sm">{college.name}</h4>
-                <p className="text-xs text-gray-600">{college.location}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-yellow-500 text-xs">★ {college.rating}</span>
-                  <Button size="sm" className="text-xs h-6 bg-green-600 hover:bg-green-700">View</Button>
-                </div>
-              </Card>
-            ))}
-          </div>
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <Button
+            variant="outline"
+            className="h-16 flex-col space-y-1"
+            onClick={() => navigate('/predictor')}
+          >
+            <TrendingUp className="w-5 h-5 text-green-600" />
+            <span className="text-xs">Rank Predictor</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-16 flex-col space-y-1"
+            onClick={() => navigate('/colleges')}
+          >
+            <Award className="w-5 h-5 text-blue-600" />
+            <span className="text-xs">Browse Colleges</span>
+          </Button>
         </div>
 
-        {/* Latest News */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800">Latest News</h3>
-            <Button variant="link" className="text-green-600 text-sm p-0" onClick={() => navigate('/news')}>View All</Button>
-          </div>
-          <div className="space-y-3">
-            {latestNews.map((news) => (
-              <Card key={news.id} className="p-3 cursor-pointer" onClick={() => navigate('/news')}>
-                <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded inline-block mb-2">{news.category}</div>
-                <h4 className="font-medium text-sm mb-1">{news.title}</h4>
-                <p className="text-xs text-gray-600 mb-1">{new Date(news.created_at).toLocaleDateString()}</p>
-                <p className="text-xs text-gray-600 line-clamp-2">{news.description}</p>
-                <Button variant="link" className="text-green-600 text-xs p-0 h-auto">Read More</Button>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Upcoming Events */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800">Upcoming Events</h3>
-            <Button variant="link" className="text-green-600 text-sm p-0" onClick={() => navigate('/news')}>View All</Button>
-          </div>
-          <div className="space-y-3">
-            {upcomingEvents.map((event) => (
-              <Card key={event.id} className="p-3">
-                <div className="flex items-center space-x-3">
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-green-600">{new Date(event.event_date).toLocaleDateString('en-US', { month: 'short' })}</div>
-                    <div className="text-xs text-gray-600">{new Date(event.event_date).toLocaleDateString('en-US', { day: '2-digit' })}</div>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-sm">{event.title}</h4>
-                    <p className="text-xs text-gray-600">{event.event_location}</p>
-                    <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded inline-block mt-1">
-                      {getDaysLeft(event.event_date)} Days left
+        {/* Latest News Section */}
+        {news.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-gray-800">Latest Updates</h2>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/news')}>
+                View all
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {news.slice(0, 2).map((item) => (
+                <Card key={item.id} className="p-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm text-gray-800 mb-1">{item.title}</h4>
+                      <p className="text-xs text-gray-600 mb-2">{item.description}</p>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                          {item.category}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recommended Colleges */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-800">
+              {userProfile?.preferred_locations?.length > 0 || userProfile?.budget_min ? 
+                'Recommended For You' : 'Top Colleges'}
+            </h2>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')}>
+              View all
+            </Button>
+          </div>
+          <div className="space-y-3">
+            {colleges.map((college) => (
+              <Card key={college.id} className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/college-details/${college.id}`)}>
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-800 mb-1">{college.name}</h3>
+                    <div className="flex items-center text-sm text-gray-600 mb-1">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {college.location}
+                    </div>
+                    <div className="flex items-center space-x-3 text-sm">
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                        <span className="font-medium">{college.rating}/5.0</span>
+                      </div>
+                      <span className="text-green-600">
+                        ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
+                      </span>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="p-1">
+                    <Heart className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{college.type}</span>
+                  <span className="text-xs text-gray-600">{college.placement_percentage}% placement</span>
                 </div>
               </Card>
             ))}
           </div>
         </div>
+
+        {/* User Preferences Info */}
+        {userProfile && (userProfile.preferred_locations?.length > 0 || userProfile.budget_min) && (
+          <Card className="p-4 mb-6 bg-green-50 border-green-200">
+            <h3 className="font-semibold text-green-800 mb-2">Your Preferences</h3>
+            <div className="space-y-1 text-sm text-green-700">
+              {userProfile.preferred_locations?.length > 0 && (
+                <p>📍 Locations: {userProfile.preferred_locations.join(', ')}</p>
+              )}
+              {userProfile.budget_min && userProfile.budget_max && (
+                <p>💰 Budget: ₹{(userProfile.budget_min / 100000).toFixed(1)}L - ₹{(userProfile.budget_max / 100000).toFixed(1)}L</p>
+              )}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-green-600 p-0 h-auto mt-2"
+                onClick={() => navigate('/profile')}
+              >
+                Update preferences →
+              </Button>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Bottom Navigation */}

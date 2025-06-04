@@ -5,50 +5,39 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Search, MapPin, Star, Eye, Heart, Trash2, Filter, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Filter, Star, MapPin, Heart, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  city: string;
-  state: string;
-  type: string;
-  rating: number;
-  image_url: string;
-  total_fees_min: number;
-  total_fees_max: number;
-  description: string;
-}
-
-interface SavedCollege {
-  id: number;
-  college_id: number;
-  colleges: College;
-}
+type College = Database['public']['Tables']['colleges']['Row'];
 
 const Colleges = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [colleges, setColleges] = useState<College[]>([]);
-  const [savedColleges, setSavedColleges] = useState<SavedCollege[]>([]);
+  const [filteredColleges, setFilteredColleges] = useState<College[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [searchResults, setSearchResults] = useState<College[]>([]);
-  const [showSearch, setShowSearch] = useState(false);
+  const [filters, setFilters] = useState({
+    type: 'all',
+    state: 'all',
+    sortBy: 'rating'
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchColleges();
-    fetchSavedColleges();
   }, []);
+
+  useEffect(() => {
+    filterColleges();
+  }, [searchQuery, filters, colleges]);
 
   const fetchColleges = async () => {
     try {
       const { data, error } = await supabase
         .from('colleges')
         .select('*')
-        .order('rating', { ascending: false })
-        .limit(20);
+        .order('rating', { ascending: false });
 
       if (error) throw error;
       setColleges(data || []);
@@ -60,51 +49,49 @@ const Colleges = () => {
     }
   };
 
-  const fetchSavedColleges = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  const filterColleges = () => {
+    let filtered = [...colleges];
 
-      const { data, error } = await supabase
-        .from('user_college_favorites')
-        .select(`
-          id,
-          college_id,
-          colleges:college_id (*)
-        `)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setSavedColleges(data || []);
-    } catch (error) {
-      console.error('Error fetching saved colleges:', error);
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(college =>
+        college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        college.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        college.city.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
+
+    // Apply type filter
+    if (filters.type !== 'all') {
+      filtered = filtered.filter(college => college.type === filters.type);
+    }
+
+    // Apply state filter
+    if (filters.state !== 'all') {
+      filtered = filtered.filter(college => college.state === filters.state);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'fees_low':
+          return (a.total_fees_min || 0) - (b.total_fees_min || 0);
+        case 'fees_high':
+          return (b.total_fees_min || 0) - (a.total_fees_min || 0);
+        case 'placement':
+          return (b.placement_percentage || 0) - (a.placement_percentage || 0);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredColleges(filtered);
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setShowSearch(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('colleges')
-        .select('*')
-        .or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%`)
-        .order('rating', { ascending: false });
-
-      if (error) throw error;
-      setSearchResults(data || []);
-      setShowSearch(true);
-    } catch (error) {
-      console.error('Error searching colleges:', error);
-      toast.error('Search failed');
-    }
-  };
-
-  const handleSaveCollege = async (collegeId: number) => {
+  const handleSaveCollege = async (collegeId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -119,36 +106,25 @@ const Colleges = () => {
           college_id: collegeId
         });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') {
+          toast.error('College already saved');
+        } else {
+          throw error;
+        }
+        return;
+      }
+
       toast.success('College saved to favorites');
-      fetchSavedColleges();
     } catch (error) {
       console.error('Error saving college:', error);
       toast.error('Failed to save college');
     }
   };
 
-  const handleRemoveCollege = async (favoriteId: number) => {
-    try {
-      const { error } = await supabase
-        .from('user_college_favorites')
-        .delete()
-        .eq('id', favoriteId);
-
-      if (error) throw error;
-      toast.success('College removed from favorites');
-      setSavedColleges(prev => prev.filter(college => college.id !== favoriteId));
-    } catch (error) {
-      console.error('Error removing college:', error);
-      toast.error('Failed to remove college');
-    }
-  };
-
-  const formatFees = (min: number, max: number) => {
-    if (min && max) {
-      return `₹${(min / 100000).toFixed(1)}L - ₹${(max / 100000).toFixed(1)}L`;
-    }
-    return 'Fees not available';
+  const getUniqueStates = () => {
+    const states = [...new Set(colleges.map(college => college.state))];
+    return states.sort();
   };
 
   if (loading) {
@@ -159,163 +135,118 @@ const Colleges = () => {
     );
   }
 
-  const displayColleges = showSearch ? searchResults : colleges;
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm p-4">
-        <div className="flex items-center max-w-md mx-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-lg font-semibold">Colleges</h1>
+        <div className="max-w-md mx-auto">
+          <h1 className="text-lg font-semibold mb-4">Browse Colleges</h1>
+          
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search colleges..."
+              className="pl-10"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          </div>
+
+          {/* Filters */}
+          <div className="grid grid-cols-3 gap-2">
+            <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="Government">Government</SelectItem>
+                <SelectItem value="Private">Private</SelectItem>
+                <SelectItem value="Autonomous">Autonomous</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filters.state} onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="State" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All States</SelectItem>
+                {getUniqueStates().map((state) => (
+                  <SelectItem key={state} value={state}>{state}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">Rating</SelectItem>
+                <SelectItem value="fees_low">Fees (Low)</SelectItem>
+                <SelectItem value="fees_high">Fees (High)</SelectItem>
+                <SelectItem value="placement">Placement</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
+      {/* Results */}
       <div className="max-w-md mx-auto p-4 pb-20">
-        {/* Search Bar */}
-        <div className="relative mb-6">
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search colleges..."
-            className="pl-10"
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          />
-          <Search 
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer"
-            onClick={handleSearch}
-          />
+        <div className="text-sm text-gray-600 mb-4">
+          {filteredColleges.length} colleges found
+        </div>
+        
+        <div className="space-y-4">
+          {filteredColleges.map((college) => (
+            <Card key={college.id} className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/college-details/${college.id}`)}>
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-800 mb-1">{college.name}</h3>
+                  <div className="flex items-center text-sm text-gray-600 mb-1">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {college.location}, {college.state}
+                  </div>
+                  <div className="flex items-center space-x-3 text-sm mb-2">
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                      <span className="font-medium">{college.rating}/5.0</span>
+                    </div>
+                    <span className="text-green-600">
+                      ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
+                    </span>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-1"
+                  onClick={(e) => handleSaveCollege(college.id, e)}
+                >
+                  <Heart className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{college.type}</span>
+                <span className="text-xs text-gray-600">{college.placement_percentage}% placement</span>
+              </div>
+            </Card>
+          ))}
         </div>
 
-        {/* Saved Colleges */}
-        {savedColleges.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-800">Saved Colleges</h3>
-              <Button variant="link" className="text-green-600 text-sm p-0">View All</Button>
-            </div>
-            <div className="flex space-x-3 overflow-x-auto pb-2">
-              {savedColleges.map((savedCollege) => (
-                <Card key={savedCollege.id} className="flex-shrink-0 w-48 p-3">
-                  <div className="h-24 bg-gradient-to-br from-blue-400 to-green-600 rounded mb-2 relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-1 right-1 p-1 h-auto text-white hover:bg-white/20"
-                      onClick={() => handleRemoveCollege(savedCollege.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                    <div className="flex items-center justify-center h-full">
-                      <span className="text-white font-bold text-xs text-center px-2">
-                        {savedCollege.colleges.name.substring(0, 15)}
-                      </span>
-                    </div>
-                  </div>
-                  <h4 className="font-medium text-sm">{savedCollege.colleges.name}</h4>
-                  <div className="flex items-center text-xs text-gray-600 mb-2">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    {savedCollege.colleges.city}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Star className="w-3 h-3 text-yellow-500 mr-1" />
-                      <span className="text-xs">{savedCollege.colleges.rating}</span>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="text-xs h-6 bg-green-600 hover:bg-green-700"
-                      onClick={() => navigate(`/college-details/${savedCollege.colleges.id}`)}
-                    >
-                      <Eye className="w-3 h-3 mr-1" />
-                      View
-                    </Button>
-                  </div>
-                </Card>
-              ))}
+        {filteredColleges.length === 0 && (
+          <div className="text-center py-8">
+            <div className="text-gray-500 mb-2">No colleges found</div>
+            <div className="text-sm text-gray-400">
+              Try adjusting your search criteria
             </div>
           </div>
         )}
-
-        {/* Colleges List */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800">
-              {showSearch ? `Search Results (${searchResults.length})` : 'All Colleges'}
-            </h3>
-            {showSearch && (
-              <Button 
-                variant="link" 
-                className="text-green-600 text-sm p-0"
-                onClick={() => {
-                  setShowSearch(false);
-                  setSearchQuery('');
-                  setSearchResults([]);
-                }}
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-          
-          <div className="space-y-3">
-            {displayColleges.map((college) => (
-              <Card key={college.id} className="p-4 cursor-pointer hover:shadow-md transition-shadow">
-                <div className="flex items-start space-x-3">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-green-600 rounded flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-bold text-xs text-center">
-                      {college.name.substring(0, 8)}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-sm mb-1">{college.name}</h4>
-                    <div className="flex items-center text-xs text-gray-600 mb-1">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {college.location}
-                    </div>
-                    <div className="flex items-center mb-2">
-                      <Star className="w-3 h-3 text-yellow-500 mr-1" />
-                      <span className="text-xs mr-3">{college.rating}</span>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{college.type}</span>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-2">{formatFees(college.total_fees_min, college.total_fees_max)}</p>
-                    <div className="flex items-center justify-between">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs h-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSaveCollege(college.id);
-                        }}
-                      >
-                        <Heart className="w-3 h-3 mr-1" />
-                        Save
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="text-xs h-6 bg-green-600 hover:bg-green-700"
-                        onClick={() => navigate(`/college-details/${college.id}`)}
-                      >
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          {displayColleges.length === 0 && showSearch && (
-            <div className="text-center py-8">
-              <div className="text-gray-500 mb-2">No colleges found</div>
-              <div className="text-sm text-gray-400">Try searching with different keywords</div>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Bottom Navigation */}
