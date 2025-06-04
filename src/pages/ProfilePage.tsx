@@ -91,7 +91,23 @@ const ProfilePage = () => {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          id,
+          email,
+          academic_field,
+          tutorial_completed,
+          notification_preferences,
+          created_at,
+          full_name,
+          phone_number,
+          preferred_course,
+          preferred_branches,
+          preferred_locations,
+          budget_min,
+          budget_max,
+          profile_picture_url,
+          profile_completion_percentage
+        `)
         .eq('id', user.id)
         .single();
 
