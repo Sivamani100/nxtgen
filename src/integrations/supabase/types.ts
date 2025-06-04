@@ -63,12 +63,93 @@ export type Database = {
           },
         ]
       }
+      college_course_mapping: {
+        Row: {
+          additional_info: string | null
+          college_id: number | null
+          course_id: number | null
+          created_at: string | null
+          id: number
+          is_available: boolean | null
+        }
+        Insert: {
+          additional_info?: string | null
+          college_id?: number | null
+          course_id?: number | null
+          created_at?: string | null
+          id?: number
+          is_available?: boolean | null
+        }
+        Update: {
+          additional_info?: string | null
+          college_id?: number | null
+          course_id?: number | null
+          created_at?: string | null
+          id?: number
+          is_available?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "college_course_mapping_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "college_course_mapping_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      college_recruiters: {
+        Row: {
+          college_id: number | null
+          created_at: string | null
+          id: number
+          logo_url: string | null
+          package_offered: number | null
+          recruiter_name: string
+          roles_offered: string[] | null
+        }
+        Insert: {
+          college_id?: number | null
+          created_at?: string | null
+          id?: number
+          logo_url?: string | null
+          package_offered?: number | null
+          recruiter_name: string
+          roles_offered?: string[] | null
+        }
+        Update: {
+          college_id?: number | null
+          created_at?: string | null
+          id?: number
+          logo_url?: string | null
+          package_offered?: number | null
+          recruiter_name?: string
+          roles_offered?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "college_recruiters_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colleges: {
         Row: {
           accreditation: Json | null
           affiliation: string | null
           average_package: number | null
           campus_area: string | null
+          campus_tour_video_url: string | null
           city: string
           contact_email: string | null
           contact_phone: string | null
@@ -96,6 +177,7 @@ export type Database = {
           affiliation?: string | null
           average_package?: number | null
           campus_area?: string | null
+          campus_tour_video_url?: string | null
           city: string
           contact_email?: string | null
           contact_phone?: string | null
@@ -123,6 +205,7 @@ export type Database = {
           affiliation?: string | null
           average_package?: number | null
           campus_area?: string | null
+          campus_tour_video_url?: string | null
           city?: string
           contact_email?: string | null
           contact_phone?: string | null

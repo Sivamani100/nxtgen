@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -228,8 +229,31 @@ const ProfilePage = () => {
       const file = event.target.files?.[0];
       if (!file) return;
 
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size must be less than 5MB');
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Only JPEG, PNG, WebP, and GIF files are allowed');
+        return;
+      }
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
+      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
+
+      // Delete existing profile picture if it exists
+      if (profile?.profile_picture_url) {
+        const oldPath = profile.profile_picture_url.split('/').pop();
+        if (oldPath) {
+          await supabase.storage
+            .from('profile-pictures')
+            .remove([`${user.id}/${oldPath}`]);
+        }
+      }
 
       const { error: uploadError } = await supabase.storage
         .from('profile-pictures')
@@ -601,7 +625,7 @@ const ProfilePage = () => {
         </Button>
       </div>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - Updated with larger icons (24px) */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-around py-2">
@@ -611,7 +635,7 @@ const ProfilePage = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/home')}
             >
-              <HomeIcon className="w-5 h-5" />
+              <HomeIcon className="w-6 h-6" />
               <span className="text-xs">Home</span>
             </Button>
             <Button
@@ -620,7 +644,7 @@ const ProfilePage = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/colleges')}
             >
-              <Users className="w-5 h-5" />
+              <Users className="w-6 h-6" />
               <span className="text-xs">Colleges</span>
             </Button>
             <Button
@@ -629,7 +653,7 @@ const ProfilePage = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/predictor')}
             >
-              <BookOpen className="w-5 h-5" />
+              <BookOpen className="w-6 h-6" />
               <span className="text-xs">Predictor</span>
             </Button>
             <Button
@@ -638,7 +662,7 @@ const ProfilePage = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/news')}
             >
-              <Newspaper className="w-5 h-5" />
+              <Newspaper className="w-6 h-6" />
               <span className="text-xs">News</span>
             </Button>
             <Button
@@ -646,7 +670,7 @@ const ProfilePage = () => {
               size="sm"
               className="flex flex-col items-center space-y-1 p-2 text-green-600"
             >
-              <User className="w-5 h-5" />
+              <User className="w-6 h-6" />
               <span className="text-xs">Profile</span>
             </Button>
           </div>
