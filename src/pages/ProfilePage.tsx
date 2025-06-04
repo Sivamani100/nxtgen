@@ -13,18 +13,19 @@ import { toast } from "sonner";
 interface Profile {
   id: string;
   email: string;
-  full_name: string;
-  phone_number: string;
-  academic_field: string;
-  preferred_course: string;
-  preferred_branches: string[];
-  preferred_locations: string[];
-  budget_min: number;
-  budget_max: number;
-  profile_picture_url: string;
-  profile_completion_percentage: number;
-  tutorial_completed: boolean;
+  full_name: string | null;
+  phone_number: string | null;
+  academic_field: string | null;
+  preferred_course: string | null;
+  preferred_branches: string[] | null;
+  preferred_locations: string[] | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  profile_picture_url: string | null;
+  profile_completion_percentage: number | null;
+  tutorial_completed: boolean | null;
   notification_preferences: any;
+  created_at: string | null;
 }
 
 const INDIAN_CITIES = [
@@ -96,17 +97,36 @@ const ProfilePage = () => {
 
       if (error) throw error;
       
-      setProfile(data);
-      setFormData({
-        full_name: data.full_name || '',
+      // Handle the data properly with null checks
+      const profileData: Profile = {
+        id: data.id,
         email: data.email,
-        phone_number: data.phone_number || '',
-        academic_field: data.academic_field || '',
-        preferred_course: data.preferred_course || '',
-        preferred_branches: data.preferred_branches || [],
-        preferred_locations: data.preferred_locations || [],
-        budget_min: data.budget_min?.toString() || '',
-        budget_max: data.budget_max?.toString() || '',
+        full_name: data.full_name || null,
+        phone_number: data.phone_number || null,
+        academic_field: data.academic_field || null,
+        preferred_course: data.preferred_course || null,
+        preferred_branches: data.preferred_branches || null,
+        preferred_locations: data.preferred_locations || null,
+        budget_min: data.budget_min || null,
+        budget_max: data.budget_max || null,
+        profile_picture_url: data.profile_picture_url || null,
+        profile_completion_percentage: data.profile_completion_percentage || null,
+        tutorial_completed: data.tutorial_completed || null,
+        notification_preferences: data.notification_preferences,
+        created_at: data.created_at || null
+      };
+      
+      setProfile(profileData);
+      setFormData({
+        full_name: profileData.full_name || '',
+        email: profileData.email,
+        phone_number: profileData.phone_number || '',
+        academic_field: profileData.academic_field || '',
+        preferred_course: profileData.preferred_course || '',
+        preferred_branches: profileData.preferred_branches || [],
+        preferred_locations: profileData.preferred_locations || [],
+        budget_min: profileData.budget_min?.toString() || '',
+        budget_max: profileData.budget_max?.toString() || '',
       });
       
       // Calculate and update profile completion
