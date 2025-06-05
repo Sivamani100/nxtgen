@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,7 +51,7 @@ const CollegeDetails = () => {
       const { data, error } = await supabase
         .from('colleges')
         .select('*')
-        .eq('id', id)
+        .eq('id', parseInt(id!))
         .single();
 
       if (error) throw error;
@@ -70,7 +69,7 @@ const CollegeDetails = () => {
       const { data, error } = await supabase
         .from('college_recruiters')
         .select('*')
-        .eq('college_id', id);
+        .eq('college_id', parseInt(id!));
 
       if (error) throw error;
       setRecruiters(data || []);
@@ -87,7 +86,7 @@ const CollegeDetails = () => {
           *,
           courses(course_name, branch, duration, fees_per_year)
         `)
-        .eq('college_id', id)
+        .eq('college_id', parseInt(id!))
         .eq('is_available', true);
 
       if (error) throw error;
