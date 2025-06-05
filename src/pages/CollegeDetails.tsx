@@ -87,7 +87,7 @@ const CollegeDetails = () => {
         .select(`
           *,
           courses(course_name, branch, duration, fees_per_year)
-        `)
+  `)
         .eq('college_id', parseInt(id!))
         .eq('is_available', true);
 
@@ -129,10 +129,8 @@ const CollegeDetails = () => {
     }
   };
 
-  // Function to extract video ID and create embed URL
   const getEmbedUrl = (url: string): string => {
     try {
-      // Handle various YouTube URL formats
       const videoIdMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=))([^&\n?]+)/);
       const videoId = videoIdMatch ? videoIdMatch[1] : null;
 
@@ -142,7 +140,6 @@ const CollegeDetails = () => {
         return '';
       }
 
-      // Return the correct embed URL
       return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
     } catch (error) {
       console.error('Error processing YouTube URL:', error);
@@ -383,7 +380,7 @@ const CollegeDetails = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <DollarSign className="w-4 h-4 text-green-600 mr-2" />
-                  <span className="text-gray-700 text-sm">Fee Range</span>
+                  <span className="text-gray-700 text-base">Fee Range</span>
                 </div>
                 <span className="font-bold text-base">
                   ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
@@ -393,7 +390,7 @@ const CollegeDetails = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <TrendingUp className="w-4 h-4 text-blue-600 mr-2" />
-                  <span className="text-gray-700 text-sm">Placement Rate</span>
+                  <span className="text-gray-700 text-base">Placement Rate</span>
                 </div>
                 <span className="font-bold text-base text-blue-600">{college.placement_percentage}%</span>
               </div>
@@ -401,7 +398,7 @@ const CollegeDetails = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Award className="w-4 h-4 text-purple-600 mr-2" />
-                  <span className="text-gray-700 text-sm">Highest Package</span>
+                  <span className="text-gray-700 text-base">Highest Package</span>
                 </div>
                 <span className="font-bold text-base text-purple-600">
                   ₹{college.highest_package ? (college.highest_package / 100000).toFixed(1) : '0'}L
@@ -411,7 +408,7 @@ const CollegeDetails = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Users className="w-4 h-4 text-orange-600 mr-2" />
-                  <span className="text-gray-700 text-sm">Average Package</span>
+                  <span className="text-gray-700 text-base">Average Package</span>
                 </div>
                 <span className="font-bold text-base text-orange-600">
                   ₹{college.average_package ? (college.average_package / 100000).toFixed(1) : '0'}L
@@ -422,7 +419,7 @@ const CollegeDetails = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Building className="w-4 h-4 text-gray-600 mr-2" />
-                    <span className="text-gray-700 text-sm">Campus Area</span>
+                    <span className="text-gray-700 text-base">Campus Area</span>
                   </div>
                   <span className="font-bold text-base">{college.campus_area} acres</span>
                 </div>
@@ -437,8 +434,8 @@ const CollegeDetails = () => {
                 <div className="flex items-center">
                   <Mail className="w-4 h-4 text-blue-600 mr-3" />
                   <div>
-                    <span className="text-gray-600 block text-sm">Email</span>
-                    <a href={`mailto:${college.contact_email}`} className="text-blue-600 hover:underline font-medium text-sm">
+                    <span className="text-gray-600 block text-base">Email</span>
+                    <a href={`mailto:${college.contact_email}`} className="text-blue-600 hover:underline font-medium text-base">
                       {college.contact_email}
                     </a>
                   </div>
@@ -449,10 +446,8 @@ const CollegeDetails = () => {
                 <div className="flex items-center">
                   <Phone className="w-4 h-4 text-green-600 mr-3" />
                   <div>
-                    <span className="text-gray-600 block text-sm">Phone</span>
-                    <a href={`tel:${college.contact_phone}`} className="text-green-600 hover:underline font-medium text-sm">
-                      {college.contact_phone}
-                    </a>
+                    <span className="text-gray-600 block text-base">Phone</span>
+                    <a href={`tel:${college.contact_phone}`} className="text-green-600 hover:underline font-medium text-base ">{college.contact_phone}</a>
                   </div>
                 </div>
               )}
@@ -460,10 +455,10 @@ const CollegeDetails = () => {
               <div className="flex items-start">
                 <MapPin className="w-4 h-4 text-red-600 mr-3 mt-1" />
                 <div>
-                  <span className="text-gray-600 block text-sm">Address</span>
-                  <span className="font-medium text-sm">{college.location}</span>
+                  <span className="text-gray-600 block text-base">Address</span>
+                  <span className="font-medium text-base">{college.location}</span>
                   <br />
-                  <span className="text-gray-600 text-sm">{college.city}, {college.state}</span>
+                  <span className="text-gray-600 text-base">{college.city}, {college.state}</span>
                 </div>
               </div>
             </div>
@@ -499,7 +494,7 @@ const CollegeDetails = () => {
                   </div>
                   {recruiter.roles_offered && recruiter.roles_offered.length > 0 && (
                     <div>
-                      <p className="text-xs text-gray-600 mb-2">Roles Offered:</p>
+                      <p className="text_xs text-gray-600 mb-2">Roles Offered:</p>
                       <div className="flex flex-wrap gap-1">
                         {recruiter.roles_offered.map((role, index) => (
                           <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
@@ -515,15 +510,15 @@ const CollegeDetails = () => {
           </Card>
         )}
 
-        {/* Additional Information Grid */}
+        {/* Facilities, Accreditation, Rankings */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Facilities */}
           {college.facilities && Array.isArray(college.facilities) && college.facilities.length > 0 && (
             <Card className="p-4">
-              <h3 className="text-base font-bold text-gray-900 mb-3">Facilities</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Facilities</h3>
               <div className="grid grid-cols-2 gap-2">
                 {(college.facilities as string[]).map((facility, index) => (
-                  <div key={index} className="bg-gray-100 p-2 rounded text-center text-xs font-medium">
+                  <div key={index} className="bg-gray-100 p-2 rounded text-center text-base font-medium">
                     {String(facility)}
                   </div>
                 ))}
@@ -534,10 +529,10 @@ const CollegeDetails = () => {
           {/* Accreditation */}
           {college.accreditation && Array.isArray(college.accreditation) && college.accreditation.length > 0 && (
             <Card className="p-4">
-              <h3 className="text-base font-bold text-gray-900 mb-3">Accreditation</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Accreditation</h3>
               <div className="space-y-1">
                 {(college.accreditation as string[]).map((acc, index) => (
-                  <div key={index} className="text-xs text-gray-700 font-medium">• {String(acc)}</div>
+                  <div key={index} className="text-gray-700 text-base font-medium">• {String(acc)}</div>
                 ))}
               </div>
             </Card>
@@ -546,12 +541,12 @@ const CollegeDetails = () => {
           {/* Rankings */}
           {college.ranking && typeof college.ranking === 'object' && Object.keys(college.ranking).length > 0 && (
             <Card className="p-4">
-              <h3 className="text-base font-bold text-gray-900 mb-3">Rankings</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Rankings</h3>
               <div className="space-y-2">
                 {Object.entries(college.ranking as Record<string, any>).map(([key, value]) => (
                   <div key={key} className="flex items-center justify-between">
-                    <span className="text-xs text-gray-700 capitalize">{key.replace('_', ' ')}</span>
-                    <span className="text-xs font-bold text-blue-600">{String(value)}</span>
+                    <span className="text-gray-700 text-base capitalize">{key.replace('_', ' ')}</span>
+                    <span className="text-base font-bold text-blue-600">{String(value)}</span>
                   </div>
                 ))}
               </div>
