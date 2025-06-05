@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Bell, Search, Star, MapPin, TrendingUp, Calendar, Award, Heart, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
+import { Bell, Search, Star, MapPin, TrendingUp, Award, Heart, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
 import { toast } from "sonner";
 
 interface College {
@@ -79,7 +79,6 @@ const Home = () => {
         .order('rating', { ascending: false })
         .limit(10);
 
-      // Apply filters based on user preferences
       if (userProfile?.preferred_locations && userProfile.preferred_locations.length > 0) {
         query = query.in('city', userProfile.preferred_locations);
       }
@@ -96,7 +95,6 @@ const Home = () => {
       setColleges(data || []);
     } catch (error) {
       console.error('Error fetching filtered colleges:', error);
-      // Fallback to all colleges if filtering fails
       fetchColleges();
     }
   };
@@ -174,8 +172,8 @@ const Home = () => {
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-lg font-semibold text-gray-800">Welcome Back!</h1>
-              <p className="text-sm text-gray-600">Find your perfect college</p>
+              <h1 className="text-2xl font-bold text-gray-900">Welcome Back!</h1>
+              <p className="text-base text-gray-600">Find your perfect college</p>
             </div>
             <div className="relative">
               <Button 
@@ -184,9 +182,9 @@ const Home = () => {
                 className="p-2"
                 onClick={() => navigate('/notifications')}
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-6 h-6" />
                 {unreadNotifications > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                     {unreadNotifications}
                   </span>
                 )}
@@ -200,7 +198,7 @@ const Home = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search colleges, courses, news..."
-              className="pl-10"
+              className="pl-10 text-base"
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
             <Search 
@@ -212,24 +210,24 @@ const Home = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto p-4 pb-20">
+      <div className="max-w-md mx-auto p-4 pb-24">
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Button
             variant="outline"
-            className="h-16 flex-col space-y-1"
+            className="h-20 flex-col space-y-2 border-2 hover:border-green-500"
             onClick={() => navigate('/predictor')}
           >
-            <TrendingUp className="w-5 h-5 text-green-600" />
-            <span className="text-xs">Rank Predictor</span>
+            <TrendingUp className="w-6 h-6 text-green-600" />
+            <span className="text-sm font-semibold">Rank Predictor</span>
           </Button>
           <Button
             variant="outline"
-            className="h-16 flex-col space-y-1"
+            className="h-20 flex-col space-y-2 border-2 hover:border-blue-500"
             onClick={() => navigate('/colleges')}
           >
-            <Award className="w-5 h-5 text-blue-600" />
-            <span className="text-xs">Browse Colleges</span>
+            <Award className="w-6 h-6 text-blue-600" />
+            <span className="text-sm font-semibold">Browse Colleges</span>
           </Button>
         </div>
 
@@ -237,24 +235,24 @@ const Home = () => {
         {news.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-gray-800">Latest Updates</h2>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/news')}>
+              <h2 className="text-xl font-bold text-gray-900">Latest Updates</h2>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/news')} className="text-green-600 font-medium">
                 View all
               </Button>
             </div>
             <div className="space-y-3">
               {news.slice(0, 2).map((item) => (
-                <Card key={item.id} className="p-3">
+                <Card key={item.id} className="p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-sm text-gray-800 mb-1">{item.title}</h4>
-                      <p className="text-xs text-gray-600 mb-2">{item.description}</p>
+                      <h4 className="text-base font-bold text-gray-900 mb-1">{item.title}</h4>
+                      <p className="text-sm text-gray-600 mb-2">{item.description}</p>
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
                           {item.category}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 font-medium">
                           {new Date(item.created_at).toLocaleDateString()}
                         </span>
                       </div>
@@ -269,11 +267,11 @@ const Home = () => {
         {/* Recommended Colleges */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-800">
+            <h2 className="text-xl font-bold text-gray-900">
               {userProfile?.preferred_locations?.length > 0 || userProfile?.budget_min ? 
                 'Recommended For You' : 'Top Colleges'}
             </h2>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')} className="text-green-600 font-medium">
               View all
             </Button>
           </div>
@@ -283,17 +281,17 @@ const Home = () => {
                     onClick={() => navigate(`/college-details/${college.id}`)}>
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-800 mb-1">{college.name}</h3>
-                    <div className="flex items-center text-sm text-gray-600 mb-1">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h3>
+                    <div className="flex items-center text-base text-gray-600 mb-1">
                       <MapPin className="w-4 h-4 mr-1" />
                       {college.location}
                     </div>
                     <div className="flex items-center space-x-3 text-sm">
                       <div className="flex items-center">
                         <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                        <span className="font-medium">{college.rating}/5.0</span>
+                        <span className="font-bold text-gray-900">{college.rating}/5.0</span>
                       </div>
-                      <span className="text-green-600">
+                      <span className="font-bold text-green-600">
                         ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
                       </span>
                     </div>
@@ -303,8 +301,8 @@ const Home = () => {
                   </Button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{college.type}</span>
-                  <span className="text-xs text-gray-600">{college.placement_percentage}% placement</span>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">{college.type}</span>
+                  <span className="text-xs font-bold text-blue-600">{college.placement_percentage}% placement</span>
                 </div>
               </Card>
             ))}
@@ -314,18 +312,18 @@ const Home = () => {
         {/* User Preferences Info */}
         {userProfile && (userProfile.preferred_locations?.length > 0 || userProfile.budget_min) && (
           <Card className="p-4 mb-6 bg-green-50 border-green-200">
-            <h3 className="font-semibold text-green-800 mb-2">Your Preferences</h3>
-            <div className="space-y-1 text-sm text-green-700">
+            <h3 className="text-lg font-bold text-green-900 mb-2">Your Preferences</h3>
+            <div className="space-y-1 text-sm text-green-800">
               {userProfile.preferred_locations?.length > 0 && (
-                <p>📍 Locations: {userProfile.preferred_locations.join(', ')}</p>
+                <p className="font-medium">📍 Locations: {userProfile.preferred_locations.join(', ')}</p>
               )}
               {userProfile.budget_min && userProfile.budget_max && (
-                <p>💰 Budget: ₹{(userProfile.budget_min / 100000).toFixed(1)}L - ₹{(userProfile.budget_max / 100000).toFixed(1)}L</p>
+                <p className="font-medium">💰 Budget: ₹{(userProfile.budget_min / 100000).toFixed(1)}L - ₹{(userProfile.budget_max / 100000).toFixed(1)}L</p>
               )}
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-green-600 p-0 h-auto mt-2"
+                className="text-green-700 p-0 h-auto mt-2 font-medium"
                 onClick={() => navigate('/profile')}
               >
                 Update preferences →
@@ -344,44 +342,44 @@ const Home = () => {
               size="sm"
               className="flex flex-col items-center space-y-1 p-2 text-green-600"
             >
-              <HomeIcon className="w-5 h-5" />
-              <span className="text-xs">Home</span>
+              <HomeIcon className="w-6 h-6" />
+              <span className="text-xs font-medium">Home</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
               onClick={() => navigate('/colleges')}
             >
-              <Users className="w-5 h-5" />
-              <span className="text-xs">Colleges</span>
+              <Users className="w-6 h-6" />
+              <span className="text-xs font-medium">Colleges</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
               onClick={() => navigate('/predictor')}
             >
-              <BookOpen className="w-5 h-5" />
-              <span className="text-xs">Predictor</span>
+              <BookOpen className="w-6 h-6" />
+              <span className="text-xs font-medium">Predictor</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
               onClick={() => navigate('/news')}
             >
-              <Newspaper className="w-5 h-5" />
-              <span className="text-xs">News</span>
+              <Newspaper className="w-6 h-6" />
+              <span className="text-xs font-medium">News</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
               onClick={() => navigate('/profile')}
             >
-              <User className="w-5 h-5" />
-              <span className="text-xs">Profile</span>
+              <User className="w-6 h-6" />
+              <span className="text-xs font-medium">Profile</span>
             </Button>
           </div>
         </div>

@@ -4,7 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ExternalLink, Calendar, Home as HomeIcon, Users, BookOpen, Newspaper, User, Heart, Share, Bookmark } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Calendar, ExternalLink, Bookmark, BookmarkCheck, Share2, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
 import { toast } from "sonner";
 
 interface NewsItem {
@@ -12,39 +14,39 @@ interface NewsItem {
   title: string;
   description: string;
   category: string;
-  external_link?: string;
-  source?: string;
   created_at: string;
-  event_date?: string;
-  event_location?: string;
+  external_link?: string;
+  is_featured: boolean;
+  image_url?: string;
+  source?: string;
 }
 
 const News = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
-  const [savedNews, setSavedNews] = useState<NewsItem[]>([]);
+  const [filteredNews, setFilteredNews] = useState<NewsItem[]>([]);
+  const [savedNews, setSavedNews] = useState<Set<number>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [showSaved, setShowSaved] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('All');
-  const [savedNewsIds, setSavedNewsIds] = useState<Set<number>>(new Set());
-  const [viewMode, setViewMode] = useState<'news' | 'saved'>('news');
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchNews();
     fetchSavedNews();
-  }, [activeTab]);
+  }, []);
+
+  useEffect(() => {
+    filterNews();
+  }, [news, searchQuery, categoryFilter, showSaved, savedNews]);
 
   const fetchNews = async () => {
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('resources')
         .select('*')
+        .in('category', ['News', 'Event', 'Scholarship', 'Admission'])
         .order('created_at', { ascending: false });
-
-      if (activeTab !== 'All') {
-        query = query.eq('category', activeTab);
-      }
-
-      const { data, error } = await query;
 
       if (error) throw error;
       setNews(data || []);
@@ -61,55 +63,54 @@ const News = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get saved news IDs
-      const { data: savedData, error: savedError } = await supabase
+      const { data, error } = await supabase
         .from('saved_news')
         .select('resource_id')
         .eq('user_id', user.id);
 
-      if (savedError) throw savedError;
+      if (error) throw error;
       
-      const savedIds = new Set(savedData?.map(item => item.resource_id) || []);
-      setSavedNewsIds(savedIds);
-
-      // Get full saved news data
-      if (savedIds.size > 0) {
-        const { data: newsData, error: newsError } = await supabase
-          .from('resources')
-          .select('*')
-          .in('id', Array.from(savedIds))
-          .order('created_at', { ascending: false });
-
-        if (newsError) throw newsError;
-        setSavedNews(newsData || []);
-      } else {
-        setSavedNews([]);
-      }
+      const savedIds = new Set(data?.map(item => item.resource_id) || []);
+      setSavedNews(savedIds);
     } catch (error) {
       console.error('Error fetching saved news:', error);
     }
   };
 
-  const handleReadMore = (item: NewsItem) => {
-    if (item.external_link) {
-      window.open(item.external_link, '_blank', 'noopener,noreferrer');
-    } else {
-      toast.info('No external link available for this article');
+  const filterNews = () => {
+    let filtered = [...news];
+
+    if (showSaved) {
+      filtered = filtered.filter(item => savedNews.has(item.id));
     }
+
+    if (searchQuery) {
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(item => item.category === categoryFilter);
+    }
+
+    setFilteredNews(filtered);
   };
 
-  const handleSave = async (newsId: number) => {
+  const handleSaveNews = async (newsId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error('Please login to save articles');
+        toast.error('Please login to save news');
         return;
       }
 
-      const isSaved = savedNewsIds.has(newsId);
+      const isSaved = savedNews.has(newsId);
 
       if (isSaved) {
-        // Unsave the article
         const { error } = await supabase
           .from('saved_news')
           .delete()
@@ -117,18 +118,15 @@ const News = () => {
           .eq('resource_id', newsId);
 
         if (error) throw error;
-
-        setSavedNewsIds(prev => {
+        
+        setSavedNews(prev => {
           const newSet = new Set(prev);
           newSet.delete(newsId);
           return newSet;
         });
         
-        // Remove from saved news list
-        setSavedNews(prev => prev.filter(item => item.id !== newsId));
-        toast.success('Article removed from saved');
+        toast.success('News removed from saved');
       } else {
-        // Save the article
         const { error } = await supabase
           .from('saved_news')
           .insert({
@@ -136,76 +134,41 @@ const News = () => {
             resource_id: newsId
           });
 
-        if (error) {
-          if (error.code === '23505') {
-            toast.error('Article already saved');
-          } else {
-            throw error;
-          }
-          return;
-        }
-
-        setSavedNewsIds(prev => new Set([...prev, newsId]));
+        if (error) throw error;
         
-        // Add to saved news list
-        const savedItem = news.find(item => item.id === newsId);
-        if (savedItem) {
-          setSavedNews(prev => [savedItem, ...prev]);
-        }
-        toast.success('Article saved to favorites');
+        setSavedNews(prev => new Set([...prev, newsId]));
+        toast.success('News saved successfully');
       }
     } catch (error) {
-      console.error('Error saving article:', error);
-      toast.error('Failed to save article');
+      console.error('Error saving news:', error);
+      toast.error('Failed to save news');
     }
   };
 
-  const handleShare = (item: NewsItem) => {
-    const shareUrl = `${window.location.origin}/news?article=${item.id}`;
-    const shareText = `${item.title} - ${item.description}`;
-
+  const handleShare = async (newsItem: NewsItem, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
     if (navigator.share) {
-      navigator.share({
-        title: item.title,
-        text: shareText,
-        url: shareUrl
-      });
+      try {
+        await navigator.share({
+          title: newsItem.title,
+          text: newsItem.description,
+          url: newsItem.external_link || window.location.href,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
     } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-      toast.success('Share link copied to clipboard');
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(newsItem.external_link || window.location.href);
+      toast.success('Link copied to clipboard');
     }
   };
 
-  const tabs = ['All', 'News', 'Event', 'Scholarship', 'Admission'];
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'Event':
-        return <Calendar className="w-4 h-4" />;
-      case 'Scholarship':
-        return <BookOpen className="w-4 h-4" />;
-      default:
-        return <Newspaper className="w-4 h-4" />;
-    }
+  const getUniqueCategories = () => {
+    const categories = [...new Set(news.map(item => item.category))];
+    return categories.sort();
   };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'News':
-        return 'bg-blue-100 text-blue-700';
-      case 'Event':
-        return 'bg-purple-100 text-purple-700';
-      case 'Scholarship':
-        return 'bg-green-100 text-green-700';
-      case 'Admission':
-        return 'bg-orange-100 text-orange-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const currentNews = viewMode === 'news' ? news : savedNews;
 
   if (loading) {
     return (
@@ -219,167 +182,181 @@ const News = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm p-4">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-lg font-semibold">Latest News & Updates</h1>
-            <Button
-              variant={viewMode === 'saved' ? 'default' : 'outline'}
+            <h1 className="text-2xl font-bold text-gray-900">Latest News & Updates</h1>
+            <Button 
+              variant={showSaved ? "default" : "outline"}
               size="sm"
-              onClick={() => setViewMode(viewMode === 'news' ? 'saved' : 'news')}
+              onClick={() => setShowSaved(!showSaved)}
+              className={showSaved ? "bg-green-600 hover:bg-green-700" : ""}
             >
-              <Bookmark className="w-4 h-4 mr-1" />
-              {viewMode === 'news' ? 'Saved' : 'All News'}
+              {showSaved ? <BookmarkCheck className="w-4 h-4 mr-2" /> : <Bookmark className="w-4 h-4 mr-2" />}
+              {showSaved ? 'All News' : 'Saved'}
             </Button>
           </div>
           
-          {/* Tabs - only show when viewing all news */}
-          {viewMode === 'news' && (
-            <div className="flex overflow-x-auto space-x-1">
-              {tabs.map((tab) => (
-                <Button
-                  key={tab}
-                  variant={activeTab === tab ? 'default' : 'ghost'}
-                  size="sm"
-                  className={`flex-shrink-0 px-3 py-2 text-xs ${
-                    activeTab === tab 
-                      ? 'bg-green-600 text-white' 
-                      : 'text-gray-600'
-                  }`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab}
-                </Button>
-              ))}
+          {/* Search and Filters */}
+          <div className="flex flex-col lg:flex-row gap-3">
+            <div className="relative flex-1">
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search news and updates..."
+                className="pl-10 text-base"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             </div>
-          )}
+            
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full lg:w-48">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {getUniqueCategories().map((category) => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto p-4 pb-20">
-        {currentNews.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-gray-500 mb-2">
-              {viewMode === 'saved' ? 'No saved news found' : 'No news found'}
-            </div>
-            <div className="text-sm text-gray-400">
-              {viewMode === 'saved' 
-                ? 'Save articles by tapping the heart icon'
-                : 'Check back later for updates'
-              }
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {currentNews.map((item) => (
-              <Card key={item.id} className="overflow-hidden">
-                {/* Header with category and date */}
-                <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-green-50">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className={`flex items-center px-2 py-1 rounded text-xs ${getCategoryColor(item.category)}`}>
-                      {getCategoryIcon(item.category)}
-                      <span className="ml-1">{item.category}</span>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(item.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  {item.source && (
-                    <div className="text-xs text-gray-600">
-                      Source: {item.source}
-                    </div>
+      <div className="max-w-4xl mx-auto p-4 pb-24">
+        <div className="text-sm font-medium text-gray-700 mb-4">
+          {showSaved ? `${filteredNews.length} saved items` : `${filteredNews.length} news found`}
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {filteredNews.map((item) => (
+            <Card 
+              key={item.id} 
+              className={`p-4 cursor-pointer hover:shadow-md transition-shadow ${item.is_featured ? 'border-green-500 border-2' : ''}`}
+              onClick={() => item.external_link && window.open(item.external_link, '_blank')}
+            >
+              {item.image_url && (
+                <img 
+                  src={item.image_url} 
+                  alt={item.title}
+                  className="w-full h-48 object-cover rounded mb-4"
+                />
+              )}
+              
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className={`text-xs px-2 py-1 rounded font-medium ${
+                    item.category === 'News' ? 'bg-blue-100 text-blue-800' :
+                    item.category === 'Event' ? 'bg-purple-100 text-purple-800' :
+                    item.category === 'Scholarship' ? 'bg-green-100 text-green-800' :
+                    item.category === 'Admission' ? 'bg-orange-100 text-orange-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {item.category}
+                  </span>
+                  {item.is_featured && (
+                    <span className="text-xs bg-red-500 text-white px-2 py-1 rounded font-bold">
+                      Featured
+                    </span>
                   )}
                 </div>
                 
-                {/* Content */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-800 mb-2 leading-tight">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3 leading-relaxed">
-                    {item.description}
-                  </p>
-                  
-                  {/* Event specific info */}
-                  {item.category === 'Event' && (item.event_date || item.event_location) && (
-                    <div className="bg-purple-50 p-3 rounded mb-3">
-                      {item.event_date && (
-                        <div className="flex items-center text-xs text-purple-700 mb-1">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {new Date(item.event_date).toLocaleDateString()}
-                        </div>
-                      )}
-                      {item.event_location && (
-                        <div className="text-xs text-purple-600">
-                          📍 {item.event_location}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Action buttons */}
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      size="sm" 
-                      className="bg-green-600 hover:bg-green-700 flex-1"
-                      onClick={() => handleReadMore(item)}
-                    >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      Read Full Article
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleSave(item.id)}
-                      className={savedNewsIds.has(item.id) ? 'bg-red-50 text-red-600 border-red-200' : ''}
-                    >
-                      <Heart className={`w-3 h-3 ${savedNewsIds.has(item.id) ? 'fill-red-600' : ''}`} />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleShare(item)}
-                    >
-                      <Share className="w-3 h-3" />
-                    </Button>
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-auto"
+                    onClick={(e) => handleShare(item, e)}
+                  >
+                    <Share2 className="w-4 h-4 text-gray-500" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-auto"
+                    onClick={(e) => handleSaveNews(item.id, e)}
+                  >
+                    {savedNews.has(item.id) ? (
+                      <BookmarkCheck className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Bookmark className="w-4 h-4 text-gray-500" />
+                    )}
+                  </Button>
                 </div>
-              </Card>
-            ))}
+              </div>
+              
+              <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+              <p className="text-gray-600 mb-3 line-clamp-3">{item.description}</p>
+              
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center text-gray-500">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  {new Date(item.created_at).toLocaleDateString()}
+                </div>
+                
+                {item.source && (
+                  <span className="text-xs text-gray-500 font-medium">
+                    Source: {item.source}
+                  </span>
+                )}
+                
+                {item.external_link && (
+                  <div className="flex items-center text-blue-600 font-medium">
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    <span className="text-sm">Read more</span>
+                  </div>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {filteredNews.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-xl font-medium text-gray-600 mb-2">
+              {showSaved ? 'No saved news found' : 'No news found'}
+            </div>
+            <div className="text-sm text-gray-500">
+              {showSaved 
+                ? 'Start saving news articles to see them here' 
+                : 'Try adjusting your search criteria'
+              }
+            </div>
           </div>
         )}
       </div>
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-around py-2">
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
               onClick={() => navigate('/home')}
             >
               <HomeIcon className="w-6 h-6" />
-              <span className="text-xs">Home</span>
+              <span className="text-xs font-medium">Home</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
               onClick={() => navigate('/colleges')}
             >
               <Users className="w-6 h-6" />
-              <span className="text-xs">Colleges</span>
+              <span className="text-xs font-medium">Colleges</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
               onClick={() => navigate('/predictor')}
             >
               <BookOpen className="w-6 h-6" />
-              <span className="text-xs">Predictor</span>
+              <span className="text-xs font-medium">Predictor</span>
             </Button>
             <Button
               variant="ghost"
@@ -387,16 +364,16 @@ const News = () => {
               className="flex flex-col items-center space-y-1 p-2 text-green-600"
             >
               <Newspaper className="w-6 h-6" />
-              <span className="text-xs">News</span>
+              <span className="text-xs font-medium">News</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
               onClick={() => navigate('/profile')}
             >
               <User className="w-6 h-6" />
-              <span className="text-xs">Profile</span>
+              <span className="text-xs font-medium">Profile</span>
             </Button>
           </div>
         </div>
