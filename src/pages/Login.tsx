@@ -51,17 +51,17 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-xl font-bold text-gray-900 mb-2" style={{ fontSize: '20px' }}>Welcome back !</h1>
-          <p className="text-gray-600" style={{ fontSize: '15px' }}>Ready to gain previous Experience</p>
+      <Card className="w-full max-w-md p-8 shadow-lg">
+        <div className="text-center mb-6">
+          <div className="text-3xl font-bold text-green-600 mb-2">Welcome back!</div>
+          <p className="text-gray-600">Ready to gain previous Experience</p>
           
           {/* Illustration */}
           <div className="my-6 flex justify-center">
             <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
               <div className="text-center">
-                <div className="text-4xl mb-2">👩‍💻</div>
-                <div className="text-xs text-gray-400">Learning Experience</div>
+                <div className="text-sm text-gray-500">👩‍💻</div>
+                <div className="text-xs text-gray-400 mt-2">Learning Experience</div>
               </div>
             </div>
           </div>
@@ -69,20 +69,19 @@ const Login = () => {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <Label htmlFor="email" className="text-gray-700" style={{ fontSize: '15px' }}>Email</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
-              className="mt-1 h-12 text-base"
-              style={{ fontSize: '15px' }}
+              className="mt-1"
             />
           </div>
 
           <div>
-            <Label htmlFor="password" className="text-gray-700" style={{ fontSize: '15px' }}>Password</Label>
+            <Label htmlFor="password">Password</Label>
             <div className="relative mt-1">
               <Input
                 id="password"
@@ -90,14 +89,12 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                className="h-12 text-base pr-10"
-                style={{ fontSize: '15px' }}
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -109,16 +106,15 @@ const Login = () => {
             <Button
               variant="link"
               onClick={() => navigate('/forgot-password')}
-              className="text-green-600 hover:underline p-0 h-auto"
-              style={{ fontSize: '15px' }}
+              className="text-green-600 hover:underline p-0 text-sm"
             >
               Forgotten Password ?
             </Button>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <input type="checkbox" id="terms" className="rounded w-4 h-4" />
-            <Label htmlFor="terms" className="text-gray-700" style={{ fontSize: '15px' }}>
+          <div className="flex items-center space-x-2 text-sm">
+            <input type="checkbox" id="terms" className="rounded" />
+            <Label htmlFor="terms">
               I Agree App{" "}
               <a href="/terms" className="text-green-600 hover:underline">Terms</a>
               {" "}and{" "}
@@ -128,28 +124,26 @@ const Login = () => {
 
           <Button
             type="submit"
-            className="w-full h-12 bg-green-600 hover:bg-green-700 rounded-full font-medium"
+            className="w-full h-12 bg-green-600 hover:bg-green-700"
             disabled={loading}
-            style={{ fontSize: '15px' }}
           >
             {loading ? "Signing in..." : "Login and continue"}
           </Button>
         </form>
 
         <div className="text-center mt-6">
-          <p className="text-gray-600" style={{ fontSize: '15px' }}>
+          <p className="text-sm text-gray-600">
             Don't have an account?{" "}
             <Button
               variant="link"
               onClick={() => navigate('/signup')}
-              className="text-green-600 hover:underline p-0 h-auto font-medium"
-              style={{ fontSize: '15px' }}
+              className="text-green-600 hover:underline p-0"
             >
               sign up !
             </Button>
           </p>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

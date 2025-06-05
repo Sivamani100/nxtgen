@@ -1,24 +1,56 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpen, GraduationCap, Newspaper, Search, User, Bell, Target, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Bell, Search, Star, MapPin, TrendingUp, Award, Heart, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
 import { toast } from "sonner";
 
+interface College {
+  id: number;
+  name: string;
+  location: string;
+  rating: number;
+  type: string;
+  total_fees_min: number;
+  total_fees_max: number;
+  placement_percentage: number;
+}
+
+interface NewsItem {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  created_at: string;
+  external_link?: string;
+}
+
 const Home = () => {
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState<any>(null);
-  const [recentNews, setRecentNews] = useState<any[]>([]);
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUserData();
-    fetchRecentNews();
+    fetchUserProfile();
+    fetchColleges();
+    fetchNews();
+    fetchNotificationCount();
   }, []);
 
-  const fetchUserData = async () => {
+  useEffect(() => {
+    if (userProfile) {
+      fetchFilteredColleges();
+    }
+  }, [userProfile]);
+
+  const fetchUserProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -33,26 +65,95 @@ const Home = () => {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      setUserProfile(data);
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const fetchFilteredColleges = async () => {
+    try {
+      let query = supabase
+        .from('colleges')
+        .select('*')
+        .order('rating', { ascending: false })
+        .limit(10);
+
+      if (userProfile?.preferred_locations && userProfile.preferred_locations.length > 0) {
+        query = query.in('city', userProfile.preferred_locations);
+      }
+
+      if (userProfile?.budget_min && userProfile?.budget_max) {
+        query = query
+          .gte('total_fees_min', userProfile.budget_min)
+          .lte('total_fees_max', userProfile.budget_max);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setColleges(data || []);
+    } catch (error) {
+      console.error('Error fetching filtered colleges:', error);
+      fetchColleges();
+    }
+  };
+
+  const fetchColleges = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('colleges')
+        .select('*')
+        .order('rating', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setColleges(data || []);
+    } catch (error) {
+      console.error('Error fetching colleges:', error);
+      toast.error('Failed to load colleges');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchRecentNews = async () => {
+  const fetchNews = async () => {
     try {
       const { data, error } = await supabase
-        .from('news_articles')
+        .from('resources')
         .select('*')
+        .in('category', ['News', 'Event'])
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(5);
 
       if (error) throw error;
-      setRecentNews(data || []);
+      setNews(data || []);
     } catch (error) {
       console.error('Error fetching news:', error);
+    }
+  };
+
+  const fetchNotificationCount = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (error) throw error;
+      setUnreadNotifications(count || 0);
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
+    }
+  };
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -64,167 +165,97 @@ const Home = () => {
     );
   }
 
-  const quickActions = [
-    {
-      icon: BookOpen,
-      title: "Colleges",
-      description: "Explore colleges",
-      action: () => navigate('/colleges'),
-      color: "bg-blue-500"
-    },
-    {
-      icon: Target,
-      title: "Predictor",
-      description: "Predict admission",
-      action: () => navigate('/predictor'),
-      color: "bg-green-500"
-    },
-    {
-      icon: Newspaper,
-      title: "News",
-      description: "Latest updates",
-      action: () => navigate('/news'),
-      color: "bg-purple-500"
-    },
-    {
-      icon: Search,
-      title: "Search",
-      description: "Find courses",
-      action: () => navigate('/search'),
-      color: "bg-orange-500"
-    }
-  ];
-
-  const bottomNavItems = [
-    {
-      icon: BookOpen,
-      label: "Colleges",
-      action: () => navigate('/colleges'),
-      active: false
-    },
-    {
-      icon: Target,
-      label: "Predictor", 
-      action: () => navigate('/predictor'),
-      active: false
-    },
-    {
-      icon: GraduationCap,
-      label: "Home",
-      action: () => navigate('/home'),
-      active: true
-    },
-    {
-      icon: Newspaper,
-      label: "News",
-      action: () => navigate('/news'),
-      active: false
-    },
-    {
-      icon: User,
-      label: "Profile",
-      action: () => navigate('/profile-page'),
-      active: false
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-500 to-blue-500 p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold" style={{ fontSize: '20px' }}>
-              Welcome back, {profile?.full_name || 'Student'}!
-            </h1>
-            <p className="text-white/80" style={{ fontSize: '15px' }}>
-              Ready to explore your educational journey?
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/notifications')}
-            className="text-white hover:bg-white/20"
-          >
-            <Bell className="w-6 h-6" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="p-4 space-y-6">
-        {/* Quick Actions */}
-        <div>
-          <h2 className="text-lg font-bold text-gray-900 mb-4" style={{ fontSize: '20px' }}>Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {quickActions.map((action, index) => (
-              <Card 
-                key={index} 
-                className="p-4 cursor-pointer hover:shadow-md transition-shadow"
-                onClick={action.action}
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className={`p-3 rounded-full ${action.color} text-white mb-3`}>
-                    <action.icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-gray-900" style={{ fontSize: '15px' }}>{action.title}</h3>
-                  <p className="text-sm text-gray-600" style={{ fontSize: '15px' }}>{action.description}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Statistics */}
-        <Card className="p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4" style={{ fontSize: '20px' }}>Your Progress</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600" style={{ fontSize: '20px' }}>150+</div>
-              <p className="text-sm text-gray-600" style={{ fontSize: '15px' }}>Colleges Available</p>
+      <div className="bg-white shadow-sm p-4">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Welcome Back!</h1>
+              <p className="text-base text-gray-600">Find your perfect college</p>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600" style={{ fontSize: '20px' }}>85%</div>
-              <p className="text-sm text-gray-600" style={{ fontSize: '15px' }}>Success Rate</p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Recent News */}
-        {recentNews.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900" style={{ fontSize: '20px' }}>Latest News</h2>
+            <div className="relative">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => navigate('/news')}
-                className="text-green-600"
+                className="p-2"
+                onClick={() => navigate('/notifications')}
               >
-                <span style={{ fontSize: '15px' }}>View All</span>
+                <Bell className="w-6 h-6" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {unreadNotifications}
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search colleges, courses, news..."
+              className="pl-10 text-base"
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Search 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer"
+              onClick={handleSearch}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-md mx-auto p-4 pb-24">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <Button
+            variant="outline"
+            className="h-20 flex-col space-y-2 border-2 hover:border-green-500"
+            onClick={() => navigate('/predictor')}
+          >
+            <TrendingUp className="w-6 h-6 text-green-600" />
+            <span className="text-sm font-semibold">Rank Predictor</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-20 flex-col space-y-2 border-2 hover:border-blue-500"
+            onClick={() => navigate('/colleges')}
+          >
+            <Award className="w-6 h-6 text-blue-600" />
+            <span className="text-sm font-semibold">Browse Colleges</span>
+          </Button>
+        </div>
+
+        {/* Latest News Section */}
+        {news.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-gray-900">Latest Updates</h2>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/news')} className="text-green-600 font-medium">
+                View all
               </Button>
             </div>
             <div className="space-y-3">
-              {recentNews.slice(0, 2).map((article) => (
-                <Card key={article.id} className="p-4">
+              {news.slice(0, 2).map((item) => (
+                <Card key={item.id} className="p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start space-x-3">
-                    {article.image_url && (
-                      <img 
-                        src={article.image_url} 
-                        alt={article.title}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                    )}
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 line-clamp-2" style={{ fontSize: '15px' }}>
-                        {article.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2" style={{ fontSize: '15px' }}>
-                        {article.summary}
-                      </p>
-                      <span className="text-xs text-green-600 font-medium" style={{ fontSize: '15px' }}>
-                        {article.category}
-                      </span>
+                      <h4 className="text-base font-bold text-gray-900 mb-1">{item.title}</h4>
+                      <p className="text-sm text-gray-600 mb-2">{item.description}</p>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
+                          {item.category}
+                        </span>
+                        <span className="text-xs text-gray-500 font-medium">
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -233,39 +264,124 @@ const Home = () => {
           </div>
         )}
 
-        {/* Featured */}
-        <Card className="p-6 bg-gradient-to-r from-green-50 to-blue-50">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-500 rounded-full">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900" style={{ fontSize: '15px' }}>Trending Now</h3>
-              <p className="text-sm text-gray-600" style={{ fontSize: '15px' }}>Engineering admissions are open!</p>
-            </div>
+        {/* Recommended Colleges */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-bold text-gray-900">
+              {userProfile?.preferred_locations?.length > 0 || userProfile?.budget_min ? 
+                'Recommended For You' : 'Top Colleges'}
+            </h2>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')} className="text-green-600 font-medium">
+              View all
+            </Button>
           </div>
-        </Card>
+          <div className="space-y-3">
+            {colleges.map((college) => (
+              <Card key={college.id} className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/college-details/${college.id}`)}>
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h3>
+                    <div className="flex items-center text-base text-gray-600 mb-1">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {college.location}
+                    </div>
+                    <div className="flex items-center space-x-3 text-sm">
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                        <span className="font-bold text-gray-900">{college.rating}/5.0</span>
+                      </div>
+                      <span className="font-bold text-green-600">
+                        ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
+                      </span>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="p-1">
+                    <Heart className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">{college.type}</span>
+                  <span className="text-xs font-bold text-blue-600">{college.placement_percentage}% placement</span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* User Preferences Info */}
+        {userProfile && (userProfile.preferred_locations?.length > 0 || userProfile.budget_min) && (
+          <Card className="p-4 mb-6 bg-green-50 border-green-200">
+            <h3 className="text-lg font-bold text-green-900 mb-2">Your Preferences</h3>
+            <div className="space-y-1 text-sm text-green-800">
+              {userProfile.preferred_locations?.length > 0 && (
+                <p className="font-medium">📍 Locations: {userProfile.preferred_locations.join(', ')}</p>
+              )}
+              {userProfile.budget_min && userProfile.budget_max && (
+                <p className="font-medium">💰 Budget: ₹{(userProfile.budget_min / 100000).toFixed(1)}L - ₹{(userProfile.budget_max / 100000).toFixed(1)}L</p>
+              )}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-green-700 p-0 h-auto mt-2 font-medium"
+                onClick={() => navigate('/profile')}
+              >
+                Update preferences →
+              </Button>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
-        <div className="flex items-center justify-around">
-          {bottomNavItems.map((item, index) => (
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-around py-2">
             <Button
-              key={index}
               variant="ghost"
               size="sm"
-              onClick={item.action}
-              className={`flex flex-col items-center py-2 px-3 ${
-                item.active 
-                  ? 'text-green-600 bg-green-50' 
-                  : 'text-gray-600 hover:text-green-600'
-              }`}
+              className="flex flex-col items-center space-y-1 p-2 text-green-600"
             >
-              <item.icon className="w-7 h-7 mb-1" />
-              <span className="text-xs" style={{ fontSize: '15px' }}>{item.label}</span>
+              <HomeIcon className="w-6 h-6" />
+              <span className="text-xs font-medium">Home</span>
             </Button>
-          ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
+              onClick={() => navigate('/colleges')}
+            >
+              <Users className="w-6 h-6" />
+              <span className="text-xs font-medium">Colleges</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
+              onClick={() => navigate('/predictor')}
+            >
+              <BookOpen className="w-6 h-6" />
+              <span className="text-xs font-medium">Predictor</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
+              onClick={() => navigate('/news')}
+            >
+              <Newspaper className="w-6 h-6" />
+              <span className="text-xs font-medium">News</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
+              onClick={() => navigate('/profile')}
+            >
+              <User className="w-6 h-6" />
+              <span className="text-xs font-medium">Profile</span>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
