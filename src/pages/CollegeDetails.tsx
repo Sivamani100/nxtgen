@@ -38,6 +38,7 @@ const CollegeDetails = () => {
   const [courseMappings, setCourseMappings] = useState<CourseMapping[]>([]);
   const [loading, setLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -128,6 +129,28 @@ const CollegeDetails = () => {
     }
   };
 
+  // Function to extract video ID and create embed URL
+  const getEmbedUrl = (url: string): string => {
+    try {
+      // Handle various YouTube URL formats
+      const videoIdMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=))([^&\n?]+)/);
+      const videoId = videoIdMatch ? videoIdMatch[1] : null;
+
+      if (!videoId) {
+        console.error('Invalid YouTube URL:', url);
+        setVideoError('Invalid YouTube URL. Please provide a valid video link.');
+        return '';
+      }
+
+      // Return the correct embed URL
+      return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
+    } catch (error) {
+      console.error('Error processing YouTube URL:', error);
+      setVideoError('Unable to load the video. Please try again later.');
+      return '';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -197,7 +220,7 @@ const CollegeDetails = () => {
                     <Star className="w-4 h-4 text-yellow-500 mr-1" />
                     <span className="text-lg font-bold text-gray-900">{college.rating}</span>
                   </div>
-                  <span classNameName="text-xs text-gray-600">Rating</span>
+                  <span className="text-xs text-gray-600">Rating</span>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-green-600">
@@ -267,7 +290,7 @@ const CollegeDetails = () => {
               onClick={() => setShowVideo(true)}
             >
               <img
-                src={college.image_url || '/fallback-image.jpg'} // Use college image or a fallback as thumbnail
+                src={college.image_url || '/fallback-image.jpg'}
                 alt="Campus Tour Thumbnail"
                 className="w-full h-40 object-cover"
               />
@@ -287,14 +310,26 @@ const CollegeDetails = () => {
                   Close
                 </Button>
               </div>
-              <div className="relative pt-[56.25%]">
-                <iframe
-                  src={college.campus_tour_video_url}
-                  className="absolute top-0 left-0 w-full h-full"
-                  allowFullScreen
-                  title="Campus Tour Video"
-                />
-              </div>
+              {videoError ? (
+                <div className="text-center text-red-600 p-4">
+                  <p>{videoError}</p>
+                  <p>Please check if the video is publicly accessible and embedding is allowed.</p>
+                </div>
+              ) : (
+                <div className="relative pt-[56.25%]">
+                  <iframe
+                    src={getEmbedUrl(college.campus_tour_video_url)}
+                    className="absolute top-0 left-0 w-full h-full"
+                    allowFullScreen
+                    title="Campus Tour Video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    onError={(e) => {
+                      console.error('Iframe error:', e);
+                      setVideoError('Failed to load the video. The video might be restricted or unavailable.');
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}
