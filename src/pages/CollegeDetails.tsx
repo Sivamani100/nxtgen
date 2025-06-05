@@ -37,6 +37,7 @@ const CollegeDetails = () => {
   const [recruiters, setRecruiters] = useState<Recruiter[]>([]);
   const [courseMappings, setCourseMappings] = useState<CourseMapping[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -176,6 +177,11 @@ const CollegeDetails = () => {
                 src={college.image_url} 
                 alt={college.name}
                 className="w-full lg:w-48 h-48 object-cover rounded-lg"
+                onError={(e) => {
+                  console.error('Image failed to load:', college.image_url);
+                  e.currentTarget.src = '/fallback-image.jpg'; // Add a fallback image
+                }}
+                loading="lazy"
               />
             )}
             <div className="flex-1">
@@ -223,17 +229,17 @@ const CollegeDetails = () => {
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {college.website_url && (
             <Button 
               variant="outline" 
               onClick={() => window.open(college.website_url!, '_blank')}
-              className="flex items-center justify-center p-4 h-auto"
+              className="flex items-center justify-center py-2 h-auto"
             >
-              <Globe className="w-5 h-5 mr-2" />
+              <Globe className="w-4 h-4 mr-2" />
               <div>
-                <div className="font-semibold">Visit Website</div>
-                <div className="text-sm text-gray-600">Official college website</div>
+                <div className="font-semibold text-sm">Visit Website</div>
+                <div className="text-xs text-gray-600">Official site</div>
               </div>
             </Button>
           )}
@@ -241,12 +247,12 @@ const CollegeDetails = () => {
           {college.apply_link && (
             <Button 
               onClick={() => window.open(college.apply_link!, '_blank')}
-              className="flex items-center justify-center p-4 h-auto bg-green-600 hover:bg-green-700"
+              className="flex items-center justify-center py-2 h-auto bg-green-600 hover:bg-green-700"
             >
-              <ExternalLink className="w-5 h-5 mr-2" />
+              <ExternalLink className="w-4 h-4 mr-2" />
               <div>
-                <div className="font-semibold">Apply Now</div>
-                <div className="text-sm opacity-90">Start your application</div>
+                <div className="font-semibold text-sm">Apply Now</div>
+                <div className="text-xs opacity-90">Start application</div>
               </div>
             </Button>
           )}
@@ -254,18 +260,40 @@ const CollegeDetails = () => {
           {college.campus_tour_video_url && (
             <Button 
               variant="outline"
-              onClick={() => window.open(college.campus_tour_video_url!, '_blank')}
-              className="flex items-center justify-center p-4 h-auto"
+              onClick={() => setShowVideo(true)}
+              className="flex items-center justify-center py-2 h-auto"
             >
-              <Play className="w-5 h-5 mr-2" />
+              <Play className="w-4 h-4 mr-2" />
               <div>
-                <div className="font-semibold">Campus Tour</div>
-                <div className="text-sm text-gray-600">Virtual campus visit</div>
+                <div className="font-semibold text-sm">Campus Tour</div>
+                <div className="text-xs text-gray-600">Virtual tour</div>
               </div>
             </Button>
           )}
         </div>
 
+        {/* Video Modal */}
+        {showVideo && college.campus_tour_video_url && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-4 rounded-lg max-w-3xl w-full">
+              <div className="flex justify-end">
+                <Button variant="ghost" onClick={() => setShowVideo(false)}>
+                  Close
+                </Button>
+              </div>
+              <div className="relative pt-[56.25%]">
+                <iframe
+                  src={college.campus_tour_video_url}
+                  className="absolute top-0 left-0 w-full h-full"
+                  allowFullScreen
+                  title="Campus Tour Video"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Rest of the component remains the same */}
         {/* Description */}
         {college.description && (
           <Card className="p-6">
@@ -415,6 +443,11 @@ const CollegeDetails = () => {
                         src={recruiter.logo_url} 
                         alt={recruiter.recruiter_name}
                         className="w-12 h-12 object-contain rounded mr-3"
+                        onError={(e) => {
+                          console.error('Recruiter image failed to load:', recruiter.logo_url);
+                          e.currentTarget.src = '/fallback-logo.jpg'; // Add a fallback logo
+                        }}
+                        loading="lazy"
                       />
                     )}
                     <div>
