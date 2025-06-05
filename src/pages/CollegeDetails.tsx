@@ -128,15 +128,6 @@ const CollegeDetails = () => {
     }
   };
 
-  const getVideoId = (url) => {
-    if (!url) return null;
-    const match = url.match(/embed\/([^?]+)/);
-    return match ? match[1] : null;
-  };
-
-  const videoId = college?.campus_tour_video_url ? getVideoId(college.campus_tour_video_url) : null;
-  const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/0.jpg` : null;
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -149,7 +140,7 @@ const CollegeDetails = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">College not found</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">College not found</h2>
           <Button onClick={() => navigate('/colleges')} className="bg-green-600 hover:bg-green-700">
             Browse Colleges
           </Button>
@@ -167,7 +158,7 @@ const CollegeDetails = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')} className="mr-3">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-xl font-bold text-gray-900">College Details</h1>
+            <h1 className="text-lg font-bold text-gray-900">College Details</h1>
           </div>
           <Button onClick={handleSaveCollege} variant="outline" size="sm">
             <Heart className="w-4 h-4 mr-2" />
@@ -196,42 +187,42 @@ const CollegeDetails = () => {
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">{college.name}</h1>
               <div className="flex items-center text-gray-600 mb-3">
-                <MapPin className="w-5 h-5 mr-2" />
-                <span className="text-lg">{college.location}</span>
+                <MapPin className="w-4 h-4 mr-2" />
+                <span className="text-base">{college.location}</span>
               </div>
               
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div className="text-center">
                   <div className="flex items-center justify-center">
-                    <Star className="w-5 h-5 text-yellow-500 mr-1" />
-                    <span className="text-xl font-bold text-gray-900">{college.rating}</span>
+                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                    <span className="text-lg font-bold text-gray-900">{college.rating}</span>
                   </div>
-                  <span className="text-sm text-gray-600">Rating</span>
+                  <span classNameName="text-xs text-gray-600">Rating</span>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-green-600">
+                  <div className="text-lg font-bold text-green-600">
                     ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L
                   </div>
-                  <span className="text-sm text-gray-600">Min Fees</span>
+                  <span className="text-xs text-gray-600">Min Fees</span>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-blue-600">{college.placement_percentage}%</div>
-                  <span className="text-sm text-gray-600">Placement</span>
+                  <div className="text-lg font-bold text-blue-600">{college.placement_percentage}%</div>
+                  <span className="text-xs text-gray-600">Placement</span>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-purple-600">
+                  <div className="text-lg font-bold text-purple-600">
                     ₹{college.highest_package ? (college.highest_package / 100000).toFixed(1) : '0'}L
                   </div>
-                  <span className="text-sm text-gray-600">Highest Package</span>
+                  <span className="text-xs text-gray-600">Highest Package</span>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">{college.type}</span>
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">{college.type}</span>
                 {college.affiliation && (
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">{college.affiliation}</span>
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">{college.affiliation}</span>
                 )}
-                <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">Est. {college.established_year}</span>
+                <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Est. {college.established_year}</span>
               </div>
             </div>
           </div>
@@ -267,28 +258,21 @@ const CollegeDetails = () => {
           )}
         </div>
 
-        {/* Description */}
-        {college.description && (
-          <Card className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">About</h2>
-            <p className="text-base text-gray-700 leading-relaxed">{college.description}</p>
-          </Card>
-        )}
-
-        {/* Campus Tour */}
-        {college.campus_tour_video_url && thumbnailUrl && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-900">Campus Tour</h2>
-            <div className="relative cursor-pointer" onClick={() => setShowVideo(true)}>
-              <img 
-                src={thumbnailUrl} 
-                alt="Campus Tour" 
-                className="w-full h-40 object-cover rounded-lg"
+        {/* Campus Tour Video */}
+        {college.campus_tour_video_url && (
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-gray-900">Campus Tour</h2>
+            <div 
+              className="relative cursor-pointer rounded-lg overflow-hidden"
+              onClick={() => setShowVideo(true)}
+            >
+              <img
+                src={college.image_url || '/fallback-image.jpg'} // Use college image or a fallback as thumbnail
+                alt="Campus Tour Thumbnail"
+                className="w-full h-40 object-cover"
               />
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white p-2 rounded-full">
-                  <Play className="w-6 h-6 text-black" />
-                </div>
+                <Play className="w-12 h-12 text-white bg-black bg-opacity-50 rounded-full p-3" />
               </div>
             </div>
           </div>
@@ -315,6 +299,14 @@ const CollegeDetails = () => {
           </div>
         )}
 
+        {/* Description */}
+        {college.description && (
+          <Card className="p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">About</h2>
+            <p className="text-gray-700 leading-relaxed text-base">{college.description}</p>
+          </Card>
+        )}
+
         {/* Available Courses */}
         {courseMappings.length > 0 && (
           <Card className="p-6">
@@ -337,7 +329,7 @@ const CollegeDetails = () => {
                       </span>
                     </div>
                     {mapping.additional_info && (
-                      <p className="text-sm text-blue-700 bg-blue-50 p-2 rounded">
+                      <p className="text-xs text-blue-700 bg-blue-50 p-2 rounded">
                         {mapping.additional_info}
                       </p>
                     )}
@@ -347,6 +339,190 @@ const CollegeDetails = () => {
             </div>
           </Card>
         )}
+
+        {/* Key Statistics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Key Statistics</h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <DollarSign className="w-4 h-4 text-green-600 mr-2" />
+                  <span className="text-gray-700 text-sm">Fee Range</span>
+                </div>
+                <span className="font-bold text-base">
+                  ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <TrendingUp className="w-4 h-4 text-blue-600 mr-2" />
+                  <span className="text-gray-700 text-sm">Placement Rate</span>
+                </div>
+                <span className="font-bold text-base text-blue-600">{college.placement_percentage}%</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Award className="w-4 h-4 text-purple-600 mr-2" />
+                  <span className="text-gray-700 text-sm">Highest Package</span>
+                </div>
+                <span className="font-bold text-base text-purple-600">
+                  ₹{college.highest_package ? (college.highest_package / 100000).toFixed(1) : '0'}L
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Users className="w-4 h-4 text-orange-600 mr-2" />
+                  <span className="text-gray-700 text-sm">Average Package</span>
+                </div>
+                <span className="font-bold text-base text-orange-600">
+                  ₹{college.average_package ? (college.average_package / 100000).toFixed(1) : '0'}L
+                </span>
+              </div>
+              
+              {college.campus_area && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Building className="w-4 h-4 text-gray-600 mr-2" />
+                    <span className="text-gray-700 text-sm">Campus Area</span>
+                  </div>
+                  <span className="font-bold text-base">{college.campus_area} acres</span>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Contact Information</h2>
+            <div className="space-y-4">
+              {college.contact_email && (
+                <div className="flex items-center">
+                  <Mail className="w-4 h-4 text-blue-600 mr-3" />
+                  <div>
+                    <span className="text-gray-600 block text-sm">Email</span>
+                    <a href={`mailto:${college.contact_email}`} className="text-blue-600 hover:underline font-medium text-sm">
+                      {college.contact_email}
+                    </a>
+                  </div>
+                </div>
+              )}
+              
+              {college.contact_phone && (
+                <div className="flex items-center">
+                  <Phone className="w-4 h-4 text-green-600 mr-3" />
+                  <div>
+                    <span className="text-gray-600 block text-sm">Phone</span>
+                    <a href={`tel:${college.contact_phone}`} className="text-green-600 hover:underline font-medium text-sm">
+                      {college.contact_phone}
+                    </a>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-start">
+                <MapPin className="w-4 h-4 text-red-600 mr-3 mt-1" />
+                <div>
+                  <span className="text-gray-600 block text-sm">Address</span>
+                  <span className="font-medium text-sm">{college.location}</span>
+                  <br />
+                  <span className="text-gray-600 text-sm">{college.city}, {college.state}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Top Recruiters */}
+        {recruiters.length > 0 && (
+          <Card className="p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Top Recruiters</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {recruiters.map((recruiter) => (
+                <div key={recruiter.id} className="bg-gray-50 p-4 rounded-lg border">
+                  <div className="flex items-center mb-3">
+                    {recruiter.logo_url && (
+                      <img 
+                        src={recruiter.logo_url} 
+                        alt={recruiter.recruiter_name}
+                        className="w-12 h-12 object-contain rounded mr-3"
+                        onError={(e) => {
+                          console.error('Recruiter image failed to load:', recruiter.logo_url);
+                          e.currentTarget.src = '/fallback-logo.jpg';
+                        }}
+                        loading="lazy"
+                      />
+                    )}
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900">{recruiter.recruiter_name}</h3>
+                      <p className="text-xs text-green-600 font-semibold">
+                        Package: ₹{(recruiter.package_offered / 100000).toFixed(1)}L
+                      </p>
+                    </div>
+                  </div>
+                  {recruiter.roles_offered && recruiter.roles_offered.length > 0 && (
+                    <div>
+                      <p className="text-xs text-gray-600 mb-2">Roles Offered:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {recruiter.roles_offered.map((role, index) => (
+                          <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Additional Information Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Facilities */}
+          {college.facilities && Array.isArray(college.facilities) && college.facilities.length > 0 && (
+            <Card className="p-4">
+              <h3 className="text-base font-bold text-gray-900 mb-3">Facilities</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {(college.facilities as string[]).map((facility, index) => (
+                  <div key={index} className="bg-gray-100 p-2 rounded text-center text-xs font-medium">
+                    {String(facility)}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Accreditation */}
+          {college.accreditation && Array.isArray(college.accreditation) && college.accreditation.length > 0 && (
+            <Card className="p-4">
+              <h3 className="text-base font-bold text-gray-900 mb-3">Accreditation</h3>
+              <div className="space-y-1">
+                {(college.accreditation as string[]).map((acc, index) => (
+                  <div key={index} className="text-xs text-gray-700 font-medium">• {String(acc)}</div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Rankings */}
+          {college.ranking && typeof college.ranking === 'object' && Object.keys(college.ranking).length > 0 && (
+            <Card className="p-4">
+              <h3 className="text-base font-bold text-gray-900 mb-3">Rankings</h3>
+              <div className="space-y-2">
+                {Object.entries(college.ranking as Record<string, any>).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="text-xs text-gray-700 capitalize">{key.replace('_', ' ')}</span>
+                    <span className="text-xs font-bold text-blue-600">{String(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
