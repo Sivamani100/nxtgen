@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ExternalLink, Calendar, Home as HomeIcon, Users, BookOpen, Newspaper, User, Heart, Share } from "lucide-react";
+import { ExternalLink, Calendar, Home as HomeIcon, Users, BookOpen, Newspaper, User, Heart, Share, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 
 interface NewsItem {
@@ -21,9 +21,11 @@ interface NewsItem {
 
 const News = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [savedNews, setSavedNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
-  const [savedNews, setSavedNews] = useState<Set<number>>(new Set());
+  const [savedNewsIds, setSavedNewsIds] = useState<Set<number>>(new Set());
+  const [viewMode, setViewMode] = useState<'news' | 'saved'>('news');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,15 +61,30 @@ const News = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      // Get saved news IDs
+      const { data: savedData, error: savedError } = await supabase
         .from('saved_news')
         .select('resource_id')
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (savedError) throw savedError;
       
-      const savedIds = new Set(data?.map(item => item.resource_id) || []);
-      setSavedNews(savedIds);
+      const savedIds = new Set(savedData?.map(item => item.resource_id) || []);
+      setSavedNewsIds(savedIds);
+
+      // Get full saved news data
+      if (savedIds.size > 0) {
+        const { data: newsData, error: newsError } = await supabase
+          .from('resources')
+          .select('*')
+          .in('id', Array.from(savedIds))
+          .order('created_at', { ascending: false });
+
+        if (newsError) throw newsError;
+        setSavedNews(newsData || []);
+      } else {
+        setSavedNews([]);
+      }
     } catch (error) {
       console.error('Error fetching saved news:', error);
     }
@@ -89,7 +106,7 @@ const News = () => {
         return;
       }
 
-      const isSaved = savedNews.has(newsId);
+      const isSaved = savedNewsIds.has(newsId);
 
       if (isSaved) {
         // Unsave the article
@@ -101,11 +118,14 @@ const News = () => {
 
         if (error) throw error;
 
-        setSavedNews(prev => {
+        setSavedNewsIds(prev => {
           const newSet = new Set(prev);
           newSet.delete(newsId);
           return newSet;
         });
+        
+        // Remove from saved news list
+        setSavedNews(prev => prev.filter(item => item.id !== newsId));
         toast.success('Article removed from saved');
       } else {
         // Save the article
@@ -125,7 +145,13 @@ const News = () => {
           return;
         }
 
-        setSavedNews(prev => new Set([...prev, newsId]));
+        setSavedNewsIds(prev => new Set([...prev, newsId]));
+        
+        // Add to saved news list
+        const savedItem = news.find(item => item.id === newsId);
+        if (savedItem) {
+          setSavedNews(prev => [savedItem, ...prev]);
+        }
         toast.success('Article saved to favorites');
       }
     } catch (error) {
@@ -179,6 +205,8 @@ const News = () => {
     }
   };
 
+  const currentNews = viewMode === 'news' ? news : savedNews;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -192,41 +220,58 @@ const News = () => {
       {/* Header */}
       <div className="bg-white shadow-sm p-4">
         <div className="max-w-md mx-auto">
-          <h1 className="text-lg font-semibold mb-4">Latest News & Updates</h1>
-          
-          {/* Tabs */}
-          <div className="flex overflow-x-auto space-x-1">
-            {tabs.map((tab) => (
-              <Button
-                key={tab}
-                variant={activeTab === tab ? 'default' : 'ghost'}
-                size="sm"
-                className={`flex-shrink-0 px-3 py-2 text-xs ${
-                  activeTab === tab 
-                    ? 'bg-green-600 text-white' 
-                    : 'text-gray-600'
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </Button>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-lg font-semibold">Latest News & Updates</h1>
+            <Button
+              variant={viewMode === 'saved' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode(viewMode === 'news' ? 'saved' : 'news')}
+            >
+              <Bookmark className="w-4 h-4 mr-1" />
+              {viewMode === 'news' ? 'Saved' : 'All News'}
+            </Button>
           </div>
+          
+          {/* Tabs - only show when viewing all news */}
+          {viewMode === 'news' && (
+            <div className="flex overflow-x-auto space-x-1">
+              {tabs.map((tab) => (
+                <Button
+                  key={tab}
+                  variant={activeTab === tab ? 'default' : 'ghost'}
+                  size="sm"
+                  className={`flex-shrink-0 px-3 py-2 text-xs ${
+                    activeTab === tab 
+                      ? 'bg-green-600 text-white' 
+                      : 'text-gray-600'
+                  }`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-md mx-auto p-4 pb-20">
-        {news.length === 0 ? (
+        {currentNews.length === 0 ? (
           <div className="text-center py-8">
-            <div className="text-gray-500 mb-2">No news found</div>
+            <div className="text-gray-500 mb-2">
+              {viewMode === 'saved' ? 'No saved news found' : 'No news found'}
+            </div>
             <div className="text-sm text-gray-400">
-              Check back later for updates
+              {viewMode === 'saved' 
+                ? 'Save articles by tapping the heart icon'
+                : 'Check back later for updates'
+              }
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            {news.map((item) => (
+            {currentNews.map((item) => (
               <Card key={item.id} className="overflow-hidden">
                 {/* Header with category and date */}
                 <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-green-50">
@@ -286,9 +331,9 @@ const News = () => {
                       size="sm" 
                       variant="outline"
                       onClick={() => handleSave(item.id)}
-                      className={savedNews.has(item.id) ? 'bg-red-50 text-red-600 border-red-200' : ''}
+                      className={savedNewsIds.has(item.id) ? 'bg-red-50 text-red-600 border-red-200' : ''}
                     >
-                      <Heart className={`w-3 h-3 ${savedNews.has(item.id) ? 'fill-red-600' : ''}`} />
+                      <Heart className={`w-3 h-3 ${savedNewsIds.has(item.id) ? 'fill-red-600' : ''}`} />
                     </Button>
                     <Button 
                       size="sm" 

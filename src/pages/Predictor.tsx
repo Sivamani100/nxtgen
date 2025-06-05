@@ -1,226 +1,197 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, Target, Award, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
+import { ArrowLeft, Calculator, TrendingUp, BookOpen, Home as HomeIcon, Users, Newspaper, User } from "lucide-react";
 import { toast } from "sonner";
-
-interface PredictionResult {
-  exam: string;
-  marks: number;
-  ipeMarks?: number;
-  predictedRank: string;
-  eligibleColleges: College[];
-}
-
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  cutoff_rank: number;
-  course_name: string;
-  branch: string;
-}
 
 const Predictor = () => {
   const [exam, setExam] = useState('');
   const [marks, setMarks] = useState('');
   const [ipeMarks, setIpeMarks] = useState('');
-  const [category, setCategory] = useState('general');
-  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [category, setCategory] = useState('');
+  const [result, setResult] = useState<{
+    finalScore?: number;
+    rank: string;
+    colleges: string[];
+  } | null>(null);
   const navigate = useNavigate();
 
-  const predictRank = (examType: string, marksObtained: number, ipeMarksObtained?: number): string => {
-    switch (examType) {
-      case 'jee_main':
-        if (marksObtained >= 286) return "1-100";
-        if (marksObtained >= 250) return "100-500";
-        if (marksObtained >= 200) return "500-1,500";
-        if (marksObtained >= 160) return "1,500-5,000";
-        if (marksObtained >= 140) return "5,000-10,000";
-        if (marksObtained >= 120) return "10,000-20,000";
-        if (marksObtained >= 100) return "20,000-35,000";
-        if (marksObtained >= 80) return "35,000-60,000";
-        if (marksObtained >= 60) return "60,000-100,000";
-        if (marksObtained >= 40) return "100,000-150,000";
-        return "150,000+";
+  const exams = [
+    { value: 'jee-main', label: 'JEE Main' },
+    { value: 'jee-advanced', label: 'JEE Advanced' },
+    { value: 'neet', label: 'NEET' },
+    { value: 'ap-eamcet', label: 'AP EAMCET (EAPCET)' },
+    { value: 'ts-eamcet', label: 'TS EAMCET' }
+  ];
 
-      case 'jee_advanced':
-        if (marksObtained >= 283) return "1-100";
-        if (marksObtained >= 250) return "100-500";
-        if (marksObtained >= 190) return "500-1,000";
-        if (marksObtained >= 150) return "1,000-5,000";
-        if (marksObtained >= 120) return "5,000-10,000";
-        if (marksObtained >= 90) return "10,000-20,000";
-        if (marksObtained >= 70) return "20,000-30,000";
-        return "30,000+";
+  const categories = [
+    { value: 'OC', label: 'OC (Open Category)' },
+    { value: 'BC-A', label: 'BC-A' },
+    { value: 'BC-B', label: 'BC-B' },
+    { value: 'BC-C', label: 'BC-C' },
+    { value: 'BC-D', label: 'BC-D' },
+    { value: 'BC-E', label: 'BC-E' },
+    { value: 'SC', label: 'SC' },
+    { value: 'ST', label: 'ST' }
+  ];
 
-      case 'neet':
-        if (marksObtained >= 700) return "1-100";
-        if (marksObtained >= 650) return "100-1,000";
-        if (marksObtained >= 600) return "1,000-5,000";
-        if (marksObtained >= 550) return "5,000-15,000";
-        if (marksObtained >= 500) return "15,000-40,000";
-        if (marksObtained >= 450) return "40,000-75,000";
-        if (marksObtained >= 400) return "75,000-120,000";
-        if (marksObtained >= 350) return "120,000-200,000";
-        return "200,000+";
-
-      case 'ap_eamcet':
-      case 'ts_eamcet':
-        // Calculate combined score with IPE weightage (75% EAMCET + 25% IPE)
-        if (ipeMarksObtained !== undefined) {
-          const ipeGroupMarks = (ipeMarksObtained / 1000) * 600; // Convert to group marks out of 600
-          const eamcetPercentage = (marksObtained / 160) * 100;
-          const ipePercentage = (ipeGroupMarks / 600) * 100;
-          const combinedScore = (eamcetPercentage * 0.75) + (ipePercentage * 0.25);
-          
-          if (combinedScore >= 92.81) return "1-100";
-          if (combinedScore >= 88.44) return "100-500";
-          if (combinedScore >= 84.06) return "500-1,500";
-          if (combinedScore >= 79.69) return "1,500-3,000";
-          if (combinedScore >= 70.94) return "5,000-10,000";
-          if (combinedScore >= 62.19) return "15,000-25,000";
-          if (combinedScore >= 53.44) return "25,000-40,000";
-          if (combinedScore >= 49.06) return "40,000-60,000";
-          if (combinedScore >= 46.88) return "60,000-80,000";
-          if (combinedScore >= 44.69) return "80,000-100,000";
-          if (combinedScore >= 40.31) return "100,000-120,000";
-          return "120,000+";
-        } else {
-          // Without IPE marks (fallback)
-          if (marksObtained >= 150) return "1-100";
-          if (marksObtained >= 140) return "100-500";
-          if (marksObtained >= 130) return "500-1,000";
-          if (marksObtained >= 120) return "1,000-2,000";
-          if (marksObtained >= 110) return "2,000-5,000";
-          if (marksObtained >= 100) return "5,000-10,000";
-          if (marksObtained >= 90) return "10,000-20,000";
-          if (marksObtained >= 80) return "20,000-30,000";
-          if (marksObtained >= 70) return "30,000-50,000";
-          if (marksObtained >= 60) return "50,000-80,000";
-          if (marksObtained >= 50) return "80,000-120,000";
-          if (marksObtained >= 45) return "120,000-150,000";
-          return "150,000+";
-        }
-
-      default:
-        return "Unable to predict";
+  const calculateAPEAMCETRank = (eamcetMarks: number, ipeMarks: number, category: string) => {
+    // Convert IPE marks to group marks (out of 600)
+    const ipeGroupMarks = (ipeMarks / 1000) * 600;
+    
+    // Calculate final weighted score using the formula
+    const finalScore = (eamcetMarks / 160) * 75 + (ipeGroupMarks / 600) * 25;
+    
+    // Determine rank based on final score and category
+    let rankRange = '';
+    
+    if (finalScore >= 85) {
+      rankRange = category === 'OC' ? '500 – 1,000' : '500 – 2,000';
+    } else if (finalScore >= 80) {
+      rankRange = category === 'OC' ? '1,000 – 2,000' : '1,000 – 3,000';
+    } else if (finalScore >= 75) {
+      rankRange = category === 'OC' ? '2,000 – 4,000' : '2,000 – 5,000';
+    } else if (finalScore >= 70) {
+      rankRange = category === 'OC' ? '4,000 – 6,000' : '3,000 – 6,000';
+    } else if (finalScore >= 65) {
+      rankRange = category === 'OC' ? '6,000 – 9,000' : '5,000 – 10,000';
+    } else if (finalScore >= 60) {
+      rankRange = category === 'OC' ? '9,000 – 13,000' : '8,000 – 15,000';
+    } else if (finalScore >= 55) {
+      rankRange = category === 'OC' ? '13,000 – 18,000' : '10,000 – 20,000';
+    } else if (finalScore >= 50) {
+      rankRange = category === 'OC' ? '18,000 – 25,000' : '15,000 – 30,000';
+    } else if (finalScore >= 45) {
+      rankRange = category === 'OC' ? '25,000 – 35,000' : '20,000 – 40,000';
+    } else if (finalScore >= 40) {
+      rankRange = category === 'OC' ? '35,000 – 45,000' : '30,000 – 50,000';
+    } else if (finalScore >= 35) {
+      rankRange = category === 'OC' ? '45,000 – 60,000' : '40,000 – 70,000';
+    } else {
+      rankRange = category === 'OC' ? '> 60,000' : '> 70,000';
     }
+    
+    return { finalScore, rankRange };
   };
 
-  const fetchEligibleColleges = async (examType: string, predictedRankRange: string): Promise<College[]> => {
-    try {
-      const rankNumber = extractRankNumber(predictedRankRange);
-      
-      const { data: courses, error } = await supabase
-        .from('courses')
-        .select(`
-          id,
-          course_name,
-          branch,
-          cutoff_rank_general,
-          exam_accepted,
-          colleges (
-            id,
-            name,
-            location
-          )
-        `)
-        .ilike('exam_accepted', `%${examType}%`)
-        .gte('cutoff_rank_general', rankNumber)
-        .order('cutoff_rank_general', { ascending: true })
-        .limit(20);
-
-      if (error) throw error;
-
-      return courses?.map(course => ({
-        id: course.colleges?.id || 0,
-        name: course.colleges?.name || '',
-        location: course.colleges?.location || '',
-        cutoff_rank: course.cutoff_rank_general || 0,
-        course_name: course.course_name,
-        branch: course.branch
-      })) || [];
-    } catch (error) {
-      console.error('Error fetching colleges:', error);
-      return [];
-    }
-  };
-
-  const extractRankNumber = (rankRange: string): number => {
-    const match = rankRange.match(/(\d+)/);
-    return match ? parseInt(match[1]) : 999999;
-  };
-
-  const handlePredict = async () => {
-    if (!exam || !marks) {
+  const predictRank = () => {
+    if (!exam || !marks || !category) {
       toast.error('Please fill all required fields');
       return;
     }
 
-    if ((exam === 'ap_eamcet' || exam === 'ts_eamcet') && !ipeMarks) {
-      toast.error('Please enter IPE marks for EAMCET prediction');
-      return;
+    const marksNum = parseInt(marks);
+    const ipeMarksNum = ipeMarks ? parseInt(ipeMarks) : 0;
+
+    let prediction: { finalScore?: number; rank: string; colleges: string[] };
+
+    switch (exam) {
+      case 'jee-main':
+        if (marksNum >= 250) {
+          prediction = {
+            rank: '1 - 10,000',
+            colleges: ['IIT Delhi', 'IIT Bombay', 'IIT Madras', 'IIT Kanpur']
+          };
+        } else if (marksNum >= 200) {
+          prediction = {
+            rank: '10,000 - 50,000',
+            colleges: ['NIT Trichy', 'NIT Warangal', 'IIIT Hyderabad', 'DTU']
+          };
+        } else if (marksNum >= 150) {
+          prediction = {
+            rank: '50,000 - 150,000',
+            colleges: ['State Engineering Colleges', 'Private Universities']
+          };
+        } else {
+          prediction = {
+            rank: '> 150,000',
+            colleges: ['Private Engineering Colleges', 'Regional Colleges']
+          };
+        }
+        break;
+
+      case 'neet':
+        if (marksNum >= 600) {
+          prediction = {
+            rank: '1 - 5,000',
+            colleges: ['AIIMS Delhi', 'JIPMER', 'Government Medical Colleges']
+          };
+        } else if (marksNum >= 550) {
+          prediction = {
+            rank: '5,000 - 25,000',
+            colleges: ['State Medical Colleges', 'Central Universities']
+          };
+        } else if (marksNum >= 500) {
+          prediction = {
+            rank: '25,000 - 100,000',
+            colleges: ['Private Medical Colleges', 'Deemed Universities']
+          };
+        } else {
+          prediction = {
+            rank: '> 100,000',
+            colleges: ['Management Quota', 'Allied Health Sciences']
+          };
+        }
+        break;
+
+      case 'ap-eamcet':
+      case 'ts-eamcet':
+        if (!ipeMarks) {
+          toast.error('IPE marks are required for EAMCET prediction');
+          return;
+        }
+        const eamcetResult = calculateAPEAMCETRank(marksNum, ipeMarksNum, category);
+        prediction = {
+          finalScore: eamcetResult.finalScore,
+          rank: eamcetResult.rankRange,
+          colleges: eamcetResult.finalScore >= 70 
+            ? ['Andhra University', 'JNTU Hyderabad', 'OU Engineering']
+            : eamcetResult.finalScore >= 50
+            ? ['SVCE', 'VNRVJIET', 'CBIT']
+            : ['Private Engineering Colleges', 'Self-financed Colleges']
+        };
+        break;
+
+      default:
+        prediction = {
+          rank: 'Prediction not available',
+          colleges: ['Contact counselor for guidance']
+        };
     }
 
-    setLoading(true);
-    try {
-      const marksNum = parseInt(marks);
-      const ipeMarksNum = ipeMarks ? parseInt(ipeMarks) : undefined;
-      const predictedRank = predictRank(exam, marksNum, ipeMarksNum);
-      const eligibleColleges = await fetchEligibleColleges(exam, predictedRank);
-
-      setPrediction({
-        exam,
-        marks: marksNum,
-        ipeMarks: ipeMarksNum,
-        predictedRank,
-        eligibleColleges
-      });
-    } catch (error) {
-      console.error('Error predicting rank:', error);
-      toast.error('Failed to predict rank');
-    } finally {
-      setLoading(false);
-    }
+    setResult(prediction);
+    toast.success('Rank predicted successfully!');
   };
 
-  const getExamFullName = (examCode: string): string => {
-    const examNames: { [key: string]: string } = {
-      'jee_main': 'JEE Main',
-      'jee_advanced': 'JEE Advanced',
-      'neet': 'NEET',
-      'ap_eamcet': 'AP EAMCET',
-      'ts_eamcet': 'TS EAMCET'
-    };
-    return examNames[examCode] || examCode;
-  };
-
-  const showIpeField = exam === 'ap_eamcet' || exam === 'ts_eamcet';
+  const isEAMCET = exam === 'ap-eamcet' || exam === 'ts-eamcet';
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm p-4">
-        <div className="max-w-md mx-auto">
+        <div className="flex items-center max-w-md mx-auto">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
           <h1 className="text-lg font-semibold">Rank Predictor</h1>
-          <p className="text-sm text-gray-600">Predict your rank and find eligible colleges</p>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-md mx-auto p-4 pb-20">
-        {/* Input Form */}
-        <Card className="p-4 mb-6">
-          <h2 className="font-semibold text-gray-800 mb-4">Enter Your Details</h2>
+        <Card className="p-6 mb-6">
+          <div className="flex items-center mb-4">
+            <Calculator className="w-6 h-6 text-green-600 mr-2" />
+            <h2 className="text-xl font-semibold text-gray-800">Predict Your Rank</h2>
+          </div>
+          
           <div className="space-y-4">
+            {/* Exam Selection */}
             <div>
               <Label htmlFor="exam">Select Exam</Label>
               <Select value={exam} onValueChange={setExam}>
@@ -228,43 +199,47 @@ const Predictor = () => {
                   <SelectValue placeholder="Choose exam" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="jee_main">JEE Main</SelectItem>
-                  <SelectItem value="jee_advanced">JEE Advanced</SelectItem>
-                  <SelectItem value="neet">NEET</SelectItem>
-                  <SelectItem value="ap_eamcet">AP EAMCET</SelectItem>
-                  <SelectItem value="ts_eamcet">TS EAMCET</SelectItem>
+                  {exams.map((examOption) => (
+                    <SelectItem key={examOption.value} value={examOption.value}>
+                      {examOption.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* Marks Input */}
             <div>
-              <Label htmlFor="marks">Your Marks</Label>
+              <Label htmlFor="marks">
+                {isEAMCET ? 'EAMCET Marks (out of 160)' : `${exam.toUpperCase()} Marks`}
+              </Label>
               <Input
                 id="marks"
                 type="number"
                 value={marks}
                 onChange={(e) => setMarks(e.target.value)}
-                placeholder="Enter your marks"
+                placeholder={isEAMCET ? "Enter marks out of 160" : "Enter your marks"}
               />
             </div>
 
-            {showIpeField && (
+            {/* IPE Marks for EAMCET */}
+            {isEAMCET && (
               <div>
-                <Label htmlFor="ipeMarks">IPE Marks (out of 1000)</Label>
+                <Label htmlFor="ipe-marks">IPE Marks (out of 1000)</Label>
                 <Input
-                  id="ipeMarks"
+                  id="ipe-marks"
                   type="number"
                   value={ipeMarks}
                   onChange={(e) => setIpeMarks(e.target.value)}
-                  placeholder="Enter your IPE marks"
-                  max="1000"
+                  placeholder="Enter IPE marks out of 1000"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Required for accurate EAMCET rank prediction (75% EAMCET + 25% IPE)
-                </p>
+                <div className="text-xs text-gray-500 mt-1">
+                  IPE marks are required for accurate EAMCET rank prediction
+                </div>
               </div>
             )}
 
+            {/* Category Selection */}
             <div>
               <Label htmlFor="category">Category</Label>
               <Select value={category} onValueChange={setCategory}>
@@ -272,114 +247,75 @@ const Predictor = () => {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="obc">OBC</SelectItem>
-                  <SelectItem value="sc">SC</SelectItem>
-                  <SelectItem value="st">ST</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <Button 
-              onClick={handlePredict} 
-              className="w-full bg-green-600 hover:bg-green-700"
-              disabled={loading}
-            >
-              {loading ? 'Predicting...' : 'Predict Rank'}
+            <Button onClick={predictRank} className="w-full bg-green-600 hover:bg-green-700">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Predict Rank
             </Button>
           </div>
         </Card>
 
-        {/* Prediction Results */}
-        {prediction && (
-          <div className="space-y-4">
-            <Card className="p-4">
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-3">
-                  <Target className="w-8 h-8 text-green-600 mr-2" />
-                  <h3 className="text-lg font-semibold text-gray-800">Rank Prediction</h3>
-                </div>
-                <div className="text-2xl font-bold text-green-600 mb-2">
-                  {prediction.predictedRank}
-                </div>
-                <div className="text-sm text-gray-600">
-                  Based on {prediction.marks} marks in {getExamFullName(prediction.exam)}
-                  {prediction.ipeMarks && ` with ${prediction.ipeMarks} IPE marks`}
-                </div>
-              </div>
-            </Card>
-
-            {/* Eligible Colleges */}
-            <Card className="p-4">
-              <div className="flex items-center mb-3">
-                <Award className="w-5 h-5 text-blue-600 mr-2" />
-                <h3 className="font-semibold text-gray-800">Eligible Colleges</h3>
-              </div>
-              
-              {prediction.eligibleColleges.length > 0 ? (
-                <div className="space-y-3">
-                  {prediction.eligibleColleges.map((college, index) => (
-                    <div key={index} className="border-l-4 border-green-500 pl-3 py-2">
-                      <h4 className="font-medium text-gray-800">{college.name}</h4>
-                      <p className="text-sm text-gray-600">{college.course_name} - {college.branch}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
-                        <span>{college.location}</span>
-                        <span>Cutoff: {college.cutoff_rank}</span>
-                      </div>
-                    </div>
-                  ))}
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-3"
-                    onClick={() => navigate('/colleges')}
-                  >
-                    View All Colleges
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-gray-500 mb-2">No colleges found for this rank range</p>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => navigate('/colleges')}
-                  >
-                    Browse All Colleges
-                  </Button>
-                </div>
-              )}
-            </Card>
-
-            {/* Tips */}
-            <Card className="p-4 bg-blue-50 border-blue-200">
-              <h3 className="font-semibold text-blue-800 mb-2">💡 Tips for Better Prediction</h3>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• Predictions are based on previous year trends</li>
-                <li>• Actual ranks may vary based on paper difficulty</li>
-                <li>• Consider backup colleges with higher cutoffs</li>
-                <li>• Check state quota and home state benefits</li>
-                {showIpeField && <li>• IPE marks significantly impact EAMCET ranking</li>}
-              </ul>
-            </Card>
-          </div>
+        {/* EAMCET Formula Explanation */}
+        {isEAMCET && (
+          <Card className="p-4 mb-6 bg-blue-50 border-blue-200">
+            <h3 className="font-semibold text-blue-800 mb-2">EAMCET Scoring Formula</h3>
+            <div className="text-sm text-blue-700 space-y-2">
+              <p><strong>Final Score = (EAMCET/160 × 75) + (IPE/600 × 25)</strong></p>
+              <p>• 75% weightage for EAMCET marks</p>
+              <p>• 25% weightage for IPE Group marks (PCM out of 600)</p>
+              <p>• IPE marks are converted from 1000 to 600 scale</p>
+            </div>
+          </Card>
         )}
 
-        {/* Exam Info Cards */}
-        {!prediction && (
-          <div className="space-y-3">
-            <h3 className="font-semibold text-gray-800">Quick Exam Info</h3>
-            <Card className="p-3">
-              <h4 className="font-medium text-sm mb-1">JEE Main 2025</h4>
-              <p className="text-xs text-gray-600">Total marks: 300 | 200+ for top NITs</p>
-            </Card>
-            <Card className="p-3">
-              <h4 className="font-medium text-sm mb-1">NEET 2025</h4>
-              <p className="text-xs text-gray-600">Total marks: 720 | 600+ for govt medical</p>
-            </Card>
-            <Card className="p-3">
-              <h4 className="font-medium text-sm mb-1">AP/TS EAMCET 2025</h4>
-              <p className="text-xs text-gray-600">Total marks: 160 | IPE marks boost ranking</p>
-            </Card>
-          </div>
+        {/* Results */}
+        {result && (
+          <Card className="p-6">
+            <div className="flex items-center mb-4">
+              <TrendingUp className="w-6 h-6 text-green-600 mr-2" />
+              <h3 className="text-xl font-semibold text-gray-800">Prediction Results</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {result.finalScore && (
+                <div className="bg-green-50 p-4 rounded">
+                  <div className="text-sm text-green-600 mb-1">Final Weighted Score</div>
+                  <div className="text-2xl font-bold text-green-700">
+                    {result.finalScore.toFixed(2)}/100
+                  </div>
+                </div>
+              )}
+              
+              <div className="bg-blue-50 p-4 rounded">
+                <div className="text-sm text-blue-600 mb-1">Expected Rank Range</div>
+                <div className="text-xl font-bold text-blue-700">{result.rank}</div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Possible Colleges:</h4>
+                <div className="space-y-2">
+                  {result.colleges.map((college, index) => (
+                    <div key={index} className="bg-gray-100 p-3 rounded text-sm">
+                      {college}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+                <strong>Disclaimer:</strong> This is an estimated prediction based on previous year data. 
+                Actual ranks may vary based on exam difficulty, number of candidates, and other factors.
+              </div>
+            </div>
+          </Card>
         )}
       </div>
 
