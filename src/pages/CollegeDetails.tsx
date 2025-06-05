@@ -310,9 +310,9 @@ const CollegeDetails = () => {
               <Card className="p-4">
                 <h3 className="font-semibold text-gray-800 mb-3">Facilities</h3>
                 <div className="grid grid-cols-2 gap-2">
-                  {college.facilities.map((facility, index) => (
+                  {(college.facilities as string[]).map((facility, index) => (
                     <div key={index} className="bg-gray-100 p-2 rounded text-center text-xs">
-                      {facility}
+                      {String(facility)}
                     </div>
                   ))}
                 </div>
@@ -324,8 +324,8 @@ const CollegeDetails = () => {
               <Card className="p-4">
                 <h3 className="font-semibold text-gray-800 mb-3">Accreditation</h3>
                 <div className="space-y-1">
-                  {college.accreditation.map((acc, index) => (
-                    <div key={index} className="text-sm text-gray-600">• {acc}</div>
+                  {(college.accreditation as string[]).map((acc, index) => (
+                    <div key={index} className="text-sm text-gray-600">• {String(acc)}</div>
                   ))}
                 </div>
               </Card>
@@ -339,7 +339,7 @@ const CollegeDetails = () => {
                   {Object.entries(college.ranking as Record<string, any>).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 capitalize">{key.replace('_', ' ')}</span>
-                      <span className="text-sm font-medium">{value}</span>
+                      <span className="text-sm font-medium">{String(value)}</span>
                     </div>
                   ))}
                 </div>
