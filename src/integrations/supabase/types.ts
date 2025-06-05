@@ -147,6 +147,7 @@ export type Database = {
         Row: {
           accreditation: Json | null
           affiliation: string | null
+          apply_link: string | null
           average_package: number | null
           campus_area: string | null
           campus_tour_video_url: string | null
@@ -175,6 +176,7 @@ export type Database = {
         Insert: {
           accreditation?: Json | null
           affiliation?: string | null
+          apply_link?: string | null
           average_package?: number | null
           campus_area?: string | null
           campus_tour_video_url?: string | null
@@ -203,6 +205,7 @@ export type Database = {
         Update: {
           accreditation?: Json | null
           affiliation?: string | null
+          apply_link?: string | null
           average_package?: number | null
           campus_area?: string | null
           campus_tour_video_url?: string | null
@@ -419,6 +422,7 @@ export type Database = {
           details: Json | null
           event_date: string | null
           event_location: string | null
+          external_link: string | null
           id: number
           image_url: string | null
           is_featured: boolean | null
@@ -433,6 +437,7 @@ export type Database = {
           details?: Json | null
           event_date?: string | null
           event_location?: string | null
+          external_link?: string | null
           id?: number
           image_url?: string | null
           is_featured?: boolean | null
@@ -447,6 +452,7 @@ export type Database = {
           details?: Json | null
           event_date?: string | null
           event_location?: string | null
+          external_link?: string | null
           id?: number
           image_url?: string | null
           is_featured?: boolean | null
@@ -454,6 +460,35 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      saved_news: {
+        Row: {
+          created_at: string | null
+          id: number
+          resource_id: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          resource_id?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          resource_id?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_news_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_college_favorites: {
         Row: {

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 interface PredictionResult {
   exam: string;
   marks: number;
+  ipeMarks?: number;
   predictedRank: string;
   eligibleColleges: College[];
 }
@@ -29,12 +30,13 @@ interface College {
 const Predictor = () => {
   const [exam, setExam] = useState('');
   const [marks, setMarks] = useState('');
+  const [ipeMarks, setIpeMarks] = useState('');
   const [category, setCategory] = useState('general');
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const predictRank = (examType: string, marksObtained: number): string => {
+  const predictRank = (examType: string, marksObtained: number, ipeMarksObtained?: number): string => {
     switch (examType) {
       case 'jee_main':
         if (marksObtained >= 286) return "1-100";
@@ -70,20 +72,43 @@ const Predictor = () => {
         if (marksObtained >= 350) return "120,000-200,000";
         return "200,000+";
 
-      case 'eamcet':
-        if (marksObtained >= 150) return "1-100";
-        if (marksObtained >= 140) return "100-500";
-        if (marksObtained >= 130) return "500-1,000";
-        if (marksObtained >= 120) return "1,000-2,000";
-        if (marksObtained >= 110) return "2,000-5,000";
-        if (marksObtained >= 100) return "5,000-10,000";
-        if (marksObtained >= 90) return "10,000-20,000";
-        if (marksObtained >= 80) return "20,000-30,000";
-        if (marksObtained >= 70) return "30,000-50,000";
-        if (marksObtained >= 60) return "50,000-80,000";
-        if (marksObtained >= 50) return "80,000-120,000";
-        if (marksObtained >= 40) return "120,000-150,000+";
-        return "150,000+";
+      case 'ap_eamcet':
+      case 'ts_eamcet':
+        // Calculate combined score with IPE weightage (75% EAMCET + 25% IPE)
+        if (ipeMarksObtained !== undefined) {
+          const ipeGroupMarks = (ipeMarksObtained / 1000) * 600; // Convert to group marks out of 600
+          const eamcetPercentage = (marksObtained / 160) * 100;
+          const ipePercentage = (ipeGroupMarks / 600) * 100;
+          const combinedScore = (eamcetPercentage * 0.75) + (ipePercentage * 0.25);
+          
+          if (combinedScore >= 92.81) return "1-100";
+          if (combinedScore >= 88.44) return "100-500";
+          if (combinedScore >= 84.06) return "500-1,500";
+          if (combinedScore >= 79.69) return "1,500-3,000";
+          if (combinedScore >= 70.94) return "5,000-10,000";
+          if (combinedScore >= 62.19) return "15,000-25,000";
+          if (combinedScore >= 53.44) return "25,000-40,000";
+          if (combinedScore >= 49.06) return "40,000-60,000";
+          if (combinedScore >= 46.88) return "60,000-80,000";
+          if (combinedScore >= 44.69) return "80,000-100,000";
+          if (combinedScore >= 40.31) return "100,000-120,000";
+          return "120,000+";
+        } else {
+          // Without IPE marks (fallback)
+          if (marksObtained >= 150) return "1-100";
+          if (marksObtained >= 140) return "100-500";
+          if (marksObtained >= 130) return "500-1,000";
+          if (marksObtained >= 120) return "1,000-2,000";
+          if (marksObtained >= 110) return "2,000-5,000";
+          if (marksObtained >= 100) return "5,000-10,000";
+          if (marksObtained >= 90) return "10,000-20,000";
+          if (marksObtained >= 80) return "20,000-30,000";
+          if (marksObtained >= 70) return "30,000-50,000";
+          if (marksObtained >= 60) return "50,000-80,000";
+          if (marksObtained >= 50) return "80,000-120,000";
+          if (marksObtained >= 45) return "120,000-150,000";
+          return "150,000+";
+        }
 
       default:
         return "Unable to predict";
@@ -92,7 +117,6 @@ const Predictor = () => {
 
   const fetchEligibleColleges = async (examType: string, predictedRankRange: string): Promise<College[]> => {
     try {
-      // Extract the upper bound of the rank range for comparison
       const rankNumber = extractRankNumber(predictedRankRange);
       
       const { data: courses, error } = await supabase
@@ -137,19 +161,26 @@ const Predictor = () => {
 
   const handlePredict = async () => {
     if (!exam || !marks) {
-      toast.error('Please fill all fields');
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    if ((exam === 'ap_eamcet' || exam === 'ts_eamcet') && !ipeMarks) {
+      toast.error('Please enter IPE marks for EAMCET prediction');
       return;
     }
 
     setLoading(true);
     try {
       const marksNum = parseInt(marks);
-      const predictedRank = predictRank(exam, marksNum);
+      const ipeMarksNum = ipeMarks ? parseInt(ipeMarks) : undefined;
+      const predictedRank = predictRank(exam, marksNum, ipeMarksNum);
       const eligibleColleges = await fetchEligibleColleges(exam, predictedRank);
 
       setPrediction({
         exam,
         marks: marksNum,
+        ipeMarks: ipeMarksNum,
         predictedRank,
         eligibleColleges
       });
@@ -166,10 +197,13 @@ const Predictor = () => {
       'jee_main': 'JEE Main',
       'jee_advanced': 'JEE Advanced',
       'neet': 'NEET',
-      'eamcet': 'EAMCET'
+      'ap_eamcet': 'AP EAMCET',
+      'ts_eamcet': 'TS EAMCET'
     };
     return examNames[examCode] || examCode;
   };
+
+  const showIpeField = exam === 'ap_eamcet' || exam === 'ts_eamcet';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -197,7 +231,8 @@ const Predictor = () => {
                   <SelectItem value="jee_main">JEE Main</SelectItem>
                   <SelectItem value="jee_advanced">JEE Advanced</SelectItem>
                   <SelectItem value="neet">NEET</SelectItem>
-                  <SelectItem value="eamcet">EAMCET</SelectItem>
+                  <SelectItem value="ap_eamcet">AP EAMCET</SelectItem>
+                  <SelectItem value="ts_eamcet">TS EAMCET</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -212,6 +247,23 @@ const Predictor = () => {
                 placeholder="Enter your marks"
               />
             </div>
+
+            {showIpeField && (
+              <div>
+                <Label htmlFor="ipeMarks">IPE Marks (out of 1000)</Label>
+                <Input
+                  id="ipeMarks"
+                  type="number"
+                  value={ipeMarks}
+                  onChange={(e) => setIpeMarks(e.target.value)}
+                  placeholder="Enter your IPE marks"
+                  max="1000"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Required for accurate EAMCET rank prediction (75% EAMCET + 25% IPE)
+                </p>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="category">Category</Label>
@@ -252,6 +304,7 @@ const Predictor = () => {
                 </div>
                 <div className="text-sm text-gray-600">
                   Based on {prediction.marks} marks in {getExamFullName(prediction.exam)}
+                  {prediction.ipeMarks && ` with ${prediction.ipeMarks} IPE marks`}
                 </div>
               </div>
             </Card>
@@ -304,6 +357,7 @@ const Predictor = () => {
                 <li>• Actual ranks may vary based on paper difficulty</li>
                 <li>• Consider backup colleges with higher cutoffs</li>
                 <li>• Check state quota and home state benefits</li>
+                {showIpeField && <li>• IPE marks significantly impact EAMCET ranking</li>}
               </ul>
             </Card>
           </div>
@@ -322,8 +376,8 @@ const Predictor = () => {
               <p className="text-xs text-gray-600">Total marks: 720 | 600+ for govt medical</p>
             </Card>
             <Card className="p-3">
-              <h4 className="font-medium text-sm mb-1">EAMCET 2025</h4>
-              <p className="text-xs text-gray-600">Total marks: 160 | 45 marks ≈ 150k+ rank</p>
+              <h4 className="font-medium text-sm mb-1">AP/TS EAMCET 2025</h4>
+              <p className="text-xs text-gray-600">Total marks: 160 | IPE marks boost ranking</p>
             </Card>
           </div>
         )}
@@ -339,7 +393,7 @@ const Predictor = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/home')}
             >
-              <HomeIcon className="w-5 h-5" />
+              <HomeIcon className="w-6 h-6" />
               <span className="text-xs">Home</span>
             </Button>
             <Button
@@ -348,7 +402,7 @@ const Predictor = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/colleges')}
             >
-              <Users className="w-5 h-5" />
+              <Users className="w-6 h-6" />
               <span className="text-xs">Colleges</span>
             </Button>
             <Button
@@ -356,7 +410,7 @@ const Predictor = () => {
               size="sm"
               className="flex flex-col items-center space-y-1 p-2 text-green-600"
             >
-              <BookOpen className="w-5 h-5" />
+              <BookOpen className="w-6 h-6" />
               <span className="text-xs">Predictor</span>
             </Button>
             <Button
@@ -365,7 +419,7 @@ const Predictor = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/news')}
             >
-              <Newspaper className="w-5 h-5" />
+              <Newspaper className="w-6 h-6" />
               <span className="text-xs">News</span>
             </Button>
             <Button
@@ -374,7 +428,7 @@ const Predictor = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/profile')}
             >
-              <User className="w-5 h-5" />
+              <User className="w-6 h-6" />
               <span className="text-xs">Profile</span>
             </Button>
           </div>

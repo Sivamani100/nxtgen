@@ -17,6 +17,7 @@ interface Resource {
   date: string;
   details: any;
   created_at: string;
+  external_link?: string;
 }
 
 const Search = () => {
@@ -104,16 +105,27 @@ const Search = () => {
   };
 
   const handleShare = (resource: Resource) => {
+    const shareUrl = `${window.location.origin}/search?q=${encodeURIComponent(resource.title)}`;
+    const shareText = `${resource.title} - ${resource.description}`;
+
     if (navigator.share) {
       navigator.share({
         title: resource.title,
-        text: resource.description,
-        url: window.location.href
+        text: shareText,
+        url: shareUrl
       });
     } else {
       // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(`${resource.title} - ${window.location.href}`);
+      navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
       toast.success("Link copied to clipboard");
+    }
+  };
+
+  const handleApply = (resource: Resource) => {
+    if (resource.external_link) {
+      window.open(resource.external_link, '_blank', 'noopener,noreferrer');
+    } else {
+      toast.info('No application link available for this resource');
     }
   };
 
@@ -197,7 +209,11 @@ const Search = () => {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 mt-3">
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                  <Button 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => handleApply(resource)}
+                  >
                     <ExternalLink className="w-3 h-3 mr-1" />
                     Apply
                   </Button>

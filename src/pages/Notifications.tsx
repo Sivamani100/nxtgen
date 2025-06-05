@@ -41,6 +41,7 @@ const Notifications = () => {
       }, (payload) => {
         console.log('New notification:', payload.new);
         fetchNotifications();
+        toast.success('New notification received!');
       })
       .subscribe();
 
@@ -87,7 +88,17 @@ const Notifications = () => {
         return;
       }
 
-      setNotifications(data || []);
+      const formattedData = data?.map(notification => ({
+        ...notification,
+        resource: notification.resources ? {
+          title: notification.resources.title,
+          description: notification.resources.description,
+          external_link: notification.resources.external_link,
+          category: notification.resources.category
+        } : undefined
+      })) || [];
+
+      setNotifications(formattedData);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       toast.error("An unexpected error occurred");
@@ -126,7 +137,8 @@ const Notifications = () => {
     if (notification.resource?.external_link) {
       window.open(notification.resource.external_link, '_blank', 'noopener,noreferrer');
     } else {
-      toast.info('No external link available for this notification');
+      // Navigate to news page to show the full article
+      navigate('/news');
     }
   };
 
@@ -138,9 +150,9 @@ const Notifications = () => {
         return 'bg-blue-100 text-blue-700';
       case 'Event':
         return 'bg-purple-100 text-purple-700';
-      case 'Scholarships':
+      case 'Scholarship':
         return 'bg-green-100 text-green-700';
-      case 'Admissions':
+      case 'Admission':
         return 'bg-orange-100 text-orange-700';
       default:
         return 'bg-gray-100 text-gray-700';
@@ -238,11 +250,7 @@ const Notifications = () => {
                       onClick={() => markAsRead(notification.id)}
                     >
                       <Heart className="w-3 h-3 mr-1" />
-                      Save
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Share className="w-3 h-3 mr-1" />
-                      Share
+                      Mark Read
                     </Button>
                   </div>
                 </div>

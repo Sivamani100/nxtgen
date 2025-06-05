@@ -23,10 +23,12 @@ const News = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
+  const [savedNews, setSavedNews] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchNews();
+    fetchSavedNews();
   }, [activeTab]);
 
   const fetchNews = async () => {
@@ -52,6 +54,25 @@ const News = () => {
     }
   };
 
+  const fetchSavedNews = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('saved_news')
+        .select('resource_id')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      const savedIds = new Set(data?.map(item => item.resource_id) || []);
+      setSavedNews(savedIds);
+    } catch (error) {
+      console.error('Error fetching saved news:', error);
+    }
+  };
+
   const handleReadMore = (item: NewsItem) => {
     if (item.external_link) {
       window.open(item.external_link, '_blank', 'noopener,noreferrer');
@@ -68,23 +89,45 @@ const News = () => {
         return;
       }
 
-      const { error } = await supabase
-        .from('favorites')
-        .insert({
-          user_id: user.id,
-          resource_id: newsId
+      const isSaved = savedNews.has(newsId);
+
+      if (isSaved) {
+        // Unsave the article
+        const { error } = await supabase
+          .from('saved_news')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('resource_id', newsId);
+
+        if (error) throw error;
+
+        setSavedNews(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(newsId);
+          return newSet;
         });
+        toast.success('Article removed from saved');
+      } else {
+        // Save the article
+        const { error } = await supabase
+          .from('saved_news')
+          .insert({
+            user_id: user.id,
+            resource_id: newsId
+          });
 
-      if (error) {
-        if (error.code === '23505') {
-          toast.error('Article already saved');
-        } else {
-          throw error;
+        if (error) {
+          if (error.code === '23505') {
+            toast.error('Article already saved');
+          } else {
+            throw error;
+          }
+          return;
         }
-        return;
-      }
 
-      toast.success('Article saved to favorites');
+        setSavedNews(prev => new Set([...prev, newsId]));
+        toast.success('Article saved to favorites');
+      }
     } catch (error) {
       console.error('Error saving article:', error);
       toast.error('Failed to save article');
@@ -92,17 +135,19 @@ const News = () => {
   };
 
   const handleShare = (item: NewsItem) => {
-    if (navigator.share && item.external_link) {
+    const shareUrl = `${window.location.origin}/news?article=${item.id}`;
+    const shareText = `${item.title} - ${item.description}`;
+
+    if (navigator.share) {
       navigator.share({
         title: item.title,
-        text: item.description,
-        url: item.external_link
+        text: shareText,
+        url: shareUrl
       });
     } else {
       // Fallback: copy to clipboard
-      const text = item.external_link || `${item.title} - ${item.description}`;
-      navigator.clipboard.writeText(text);
-      toast.success('Link copied to clipboard');
+      navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+      toast.success('Share link copied to clipboard');
     }
   };
 
@@ -241,8 +286,9 @@ const News = () => {
                       size="sm" 
                       variant="outline"
                       onClick={() => handleSave(item.id)}
+                      className={savedNews.has(item.id) ? 'bg-red-50 text-red-600 border-red-200' : ''}
                     >
-                      <Heart className="w-3 h-3" />
+                      <Heart className={`w-3 h-3 ${savedNews.has(item.id) ? 'fill-red-600' : ''}`} />
                     </Button>
                     <Button 
                       size="sm" 
@@ -269,7 +315,7 @@ const News = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/home')}
             >
-              <HomeIcon className="w-5 h-5" />
+              <HomeIcon className="w-6 h-6" />
               <span className="text-xs">Home</span>
             </Button>
             <Button
@@ -278,7 +324,7 @@ const News = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/colleges')}
             >
-              <Users className="w-5 h-5" />
+              <Users className="w-6 h-6" />
               <span className="text-xs">Colleges</span>
             </Button>
             <Button
@@ -287,7 +333,7 @@ const News = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/predictor')}
             >
-              <BookOpen className="w-5 h-5" />
+              <BookOpen className="w-6 h-6" />
               <span className="text-xs">Predictor</span>
             </Button>
             <Button
@@ -295,7 +341,7 @@ const News = () => {
               size="sm"
               className="flex flex-col items-center space-y-1 p-2 text-green-600"
             >
-              <Newspaper className="w-5 h-5" />
+              <Newspaper className="w-6 h-6" />
               <span className="text-xs">News</span>
             </Button>
             <Button
@@ -304,7 +350,7 @@ const News = () => {
               className="flex flex-col items-center space-y-1 p-2 text-gray-400"
               onClick={() => navigate('/profile')}
             >
-              <User className="w-5 h-5" />
+              <User className="w-6 h-6" />
               <span className="text-xs">Profile</span>
             </Button>
           </div>
