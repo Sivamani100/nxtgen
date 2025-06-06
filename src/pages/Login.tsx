@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -55,7 +54,7 @@ const Login = () => {
         <div className="text-center mb-6">
           <div className="text-3xl font-bold text-green-600 mb-2">Welcome back!</div>
           <p className="text-gray-600">Ready to gain previous Experience</p>
-          
+        </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
