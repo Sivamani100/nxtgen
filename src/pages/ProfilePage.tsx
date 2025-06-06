@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,12 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { ProfileHeader } from "@/components/ProfileHeader";
 import { ProfileStats } from "@/components/ProfileStats";
-import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Camera } from "lucide-react";
+import { 
+  Home as HomeIcon, 
+  Users, 
+  BookOpen, 
+  Newspaper, 
+  User, 
+  LogOut,
+  PenLine,
+  Check
+} from "lucide-react";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
+import { Badge } from "@/components/ui/badge";
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -20,6 +37,9 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [savedColleges, setSavedColleges] = useState<number>(0);
+  const [branchInput, setBranchInput] = useState("");
+  const [locationInput, setLocationInput] = useState("");
   const navigate = useNavigate();
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +77,25 @@ const ProfilePage = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchSavedColleges();
   }, []);
+
+  const fetchSavedColleges = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count, error } = await supabase
+        .from('user_college_favorites')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setSavedColleges(count || 0);
+    } catch (error) {
+      console.error('Error fetching saved colleges count:', error);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -119,20 +157,69 @@ const ProfilePage = () => {
     }
   };
 
+  const addBranch = () => {
+    if (!branchInput.trim() || !profile) return;
+    
+    const branches = profile.preferred_branches || [];
+    if (!branches.includes(branchInput.trim())) {
+      setProfile({
+        ...profile,
+        preferred_branches: [...branches, branchInput.trim()]
+      });
+    }
+    setBranchInput("");
+  };
+
+  const removeBranch = (branch: string) => {
+    if (!profile || !profile.preferred_branches) return;
+    
+    setProfile({
+      ...profile,
+      preferred_branches: profile.preferred_branches.filter(b => b !== branch)
+    });
+  };
+
+  const addLocation = () => {
+    if (!locationInput.trim() || !profile) return;
+    
+    const locations = profile.preferred_locations || [];
+    if (!locations.includes(locationInput.trim())) {
+      setProfile({
+        ...profile,
+        preferred_locations: [...locations, locationInput.trim()]
+      });
+    }
+    setLocationInput("");
+  };
+
+  const removeLocation = (location: string) => {
+    if (!profile || !profile.preferred_locations) return;
+    
+    setProfile({
+      ...profile,
+      preferred_locations: profile.preferred_locations.filter(l => l !== location)
+    });
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Profile not found</h2>
-          <Button onClick={() => navigate('/home')} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={() => navigate('/home')} className="bg-teal-600 hover:bg-teal-700">
             Go to Home
           </Button>
         </div>
@@ -141,176 +228,66 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-white shadow-lg p-4 border-b-2 border-purple-100">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
-        </div>
+      <div className="bg-white shadow-sm p-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold text-gray-900">Profile</h1>
+        {!isEditing ? (
+          <Button 
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white"
+          >
+            <PenLine size={16} />
+            Edit
+          </Button>
+        ) : (
+          <Button 
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white"
+          >
+            <Check size={16} />
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
+        )}
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto p-4 pb-24">
-        <ProfileHeader profile={profile} />
+      <div className="max-w-md mx-auto p-4">
+        <ProfileHeader 
+          profile={profile} 
+          isEditing={isEditing} 
+          onPhotoChange={handlePhotoChange}
+          savedCollegesCount={savedColleges}
+        />
         
-        <ProfileStats profile={profile} />
-
-        {!isEditing && (
-          <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border-l-4 border-blue-400">
-            <p className="text-sm text-blue-800">
-              💡 <strong>Tip:</strong> Click the "Edit Profile" button below to update your information and save changes.
-            </p>
-          </div>
+        {!isEditing ? (
+          <ProfileStats profile={profile} />
+        ) : (
+          <EditProfileForm 
+            profile={profile} 
+            setProfile={setProfile} 
+            branchInput={branchInput}
+            setBranchInput={setBranchInput}
+            addBranch={addBranch}
+            removeBranch={removeBranch}
+            locationInput={locationInput}
+            setLocationInput={setLocationInput}
+            addLocation={addLocation}
+            removeLocation={removeLocation}
+          />
         )}
 
-        <Card className="p-6 bg-white shadow-xl border-2 border-purple-200">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
-            {!isEditing ? (
-              <Button 
-                onClick={() => setIsEditing(true)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2"
-              >
-                Edit Profile
-              </Button>
-            ) : (
-              <div className="space-x-2">
-                <Button 
-                  onClick={() => setIsEditing(false)}
-                  variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
-                >
-                  {saving ? 'Saving...' : 'Save'}
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            {isEditing && (
-              <div>
-                <Label className="text-base font-semibold text-gray-900">Profile Photo</Label>
-                <div className="flex items-center space-x-4 mt-2">
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoChange}
-                      className="hidden"
-                      id="photo-upload"
-                    />
-                    <label
-                      htmlFor="photo-upload"
-                      className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg cursor-pointer hover:from-blue-600 hover:to-purple-600 transition-all"
-                    >
-                      <Camera className="w-4 h-4" />
-                      <span className="text-sm">Choose Photo</span>
-                    </label>
-                  </div>
-                  {profilePhoto && (
-                    <span className="text-sm text-green-600 bg-green-50 px-2 py-1 rounded">
-                      Photo selected
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <Label className="text-base font-semibold text-gray-900">Full Name</Label>
-              <Input
-                value={profile.full_name || ''}
-                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                disabled={!isEditing}
-                className="text-base border-2 border-purple-200 focus:border-purple-400"
-                placeholder="Enter your full name"
-              />
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold text-gray-900">Email</Label>
-              <Input
-                value={profile.email || ''}
-                disabled
-                className="text-base bg-gray-100 border-2 border-gray-200"
-              />
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold text-gray-900">Phone Number</Label>
-              <Input
-                value={profile.phone_number || ''}
-                onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
-                disabled={!isEditing}
-                className="text-base border-2 border-blue-200 focus:border-blue-400"
-                placeholder="Enter your phone number"
-              />
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold text-gray-900">Academic Field</Label>
-              <Select
-                value={profile.academic_field || ''}
-                onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
-                disabled={!isEditing}
-              >
-                <SelectTrigger className="border-2 border-green-200 focus:border-green-400">
-                  <SelectValue placeholder="Select your field" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="engineering">Engineering</SelectItem>
-                  <SelectItem value="medical">Medical</SelectItem>
-                  <SelectItem value="commerce">Commerce</SelectItem>
-                  <SelectItem value="arts">Arts</SelectItem>
-                  <SelectItem value="science">Science</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold text-gray-900">Preferred Course</Label>
-              <Input
-                value={profile.preferred_course || ''}
-                onChange={(e) => setProfile({ ...profile, preferred_course: e.target.value })}
-                disabled={!isEditing}
-                className="text-base border-2 border-orange-200 focus:border-orange-400"
-                placeholder="e.g., B.Tech, MBBS, B.Com"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-base font-semibold text-gray-900">Min Budget (₹)</Label>
-                <Input
-                  type="number"
-                  value={profile.budget_min || ''}
-                  onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || null })}
-                  disabled={!isEditing}
-                  className="text-base border-2 border-red-200 focus:border-red-400"
-                  placeholder="50000"
-                />
-              </div>
-              <div>
-                <Label className="text-base font-semibold text-gray-900">Max Budget (₹)</Label>
-                <Input
-                  type="number"
-                  value={profile.budget_max || ''}
-                  onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || null })}
-                  disabled={!isEditing}
-                  className="text-base border-2 border-red-200 focus:border-red-400"
-                  placeholder="500000"
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
+        {!isEditing && (
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full mt-6 flex items-center justify-center gap-2 text-red-500 border-red-100 hover:bg-red-50"
+          >
+            <LogOut size={18} />
+            Logout
+          </Button>
+        )}
       </div>
 
       {/* Bottom Navigation */}
@@ -356,7 +333,7 @@ const ProfilePage = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-purple-600 bg-purple-50"
+              className="flex flex-col items-center space-y-[1px] p-1 text-teal-600 bg-teal-50"
             >
               <User className="w-7 h-7" />
               <span className="text-xs">Profile</span>
@@ -364,6 +341,222 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+interface EditProfileFormProps {
+  profile: Profile;
+  setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
+  branchInput: string;
+  setBranchInput: React.Dispatch<React.SetStateAction<string>>;
+  addBranch: () => void;
+  removeBranch: (branch: string) => void;
+  locationInput: string;
+  setLocationInput: React.Dispatch<React.SetStateAction<string>>;
+  addLocation: () => void;
+  removeLocation: (location: string) => void;
+}
+
+const EditProfileForm = ({
+  profile,
+  setProfile,
+  branchInput,
+  setBranchInput,
+  addBranch,
+  removeBranch,
+  locationInput,
+  setLocationInput,
+  addLocation,
+  removeLocation
+}: EditProfileFormProps) => {
+  return (
+    <div className="space-y-4">
+      {/* Personal Information */}
+      <Card className="p-5 bg-white shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
+        
+        <div className="space-y-4">
+          <div>
+            <Label className="text-gray-600">Full Name</Label>
+            <Input
+              value={profile.full_name || ''}
+              onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+              className="border-gray-200 focus:border-teal-500"
+              placeholder="Enter your full name"
+            />
+          </div>
+          
+          <div>
+            <Label className="text-gray-600">Email</Label>
+            <Input
+              value={profile.email || ''}
+              disabled
+              className="bg-gray-50 border-gray-200"
+            />
+          </div>
+          
+          <div>
+            <Label className="text-gray-600">Phone Number</Label>
+            <Input
+              value={profile.phone_number || ''}
+              onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+              className="border-gray-200 focus:border-teal-500"
+              placeholder="Enter your phone number"
+            />
+          </div>
+        </div>
+      </Card>
+      
+      {/* Academic Information */}
+      <Card className="p-5 bg-white shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Academic Information</h3>
+        
+        <div className="space-y-4">
+          <div>
+            <Label className="text-gray-600">Current Education Level</Label>
+            <Select
+              value={profile.academic_field || ''}
+              onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
+            >
+              <SelectTrigger className="border-gray-200 focus:border-teal-500">
+                <SelectValue placeholder="Select your education level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="12th Grade">12th Grade</SelectItem>
+                <SelectItem value="engineering">Engineering</SelectItem>
+                <SelectItem value="medical">Medical</SelectItem>
+                <SelectItem value="commerce">Commerce</SelectItem>
+                <SelectItem value="arts">Arts</SelectItem>
+                <SelectItem value="science">Science</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label className="text-gray-600">Preferred Course</Label>
+            <Select
+              value={profile.preferred_course || ''}
+              onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
+            >
+              <SelectTrigger className="border-gray-200 focus:border-teal-500">
+                <SelectValue placeholder="Select your preferred course" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="B.Tech">B.Tech</SelectItem>
+                <SelectItem value="MBBS">MBBS</SelectItem>
+                <SelectItem value="B.Com">B.Com</SelectItem>
+                <SelectItem value="BBA">BBA</SelectItem>
+                <SelectItem value="B.Sc">B.Sc</SelectItem>
+                <SelectItem value="B.A">B.A</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
+      
+      {/* Preferences */}
+      <Card className="p-5 bg-white shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Preferences</h3>
+        
+        <div className="space-y-6">
+          {/* Preferred Branches */}
+          <div>
+            <Label className="text-gray-600 mb-2 block">Preferred Branches</Label>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {profile.preferred_branches?.map((branch, idx) => (
+                <Badge 
+                  key={idx} 
+                  className="bg-blue-100 text-blue-800 hover:bg-blue-200 gap-1.5 pl-3 cursor-default"
+                >
+                  {branch}
+                  <button 
+                    onClick={() => removeBranch(branch)}
+                    className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={branchInput}
+                onChange={(e) => setBranchInput(e.target.value)}
+                placeholder="Add branch"
+                className="border-gray-200 focus:border-teal-500"
+              />
+              <Button 
+                onClick={addBranch} 
+                size="sm" 
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+          
+          {/* Preferred Locations */}
+          <div>
+            <Label className="text-gray-600 mb-2 block">Preferred Locations</Label>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {profile.preferred_locations?.map((location, idx) => (
+                <Badge 
+                  key={idx} 
+                  className="bg-green-100 text-green-800 hover:bg-green-200 gap-1.5 pl-3 cursor-default"
+                >
+                  {location}
+                  <button 
+                    onClick={() => removeLocation(location)}
+                    className="ml-1 text-green-600 hover:text-green-800 focus:outline-none"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+                placeholder="Add location"
+                className="border-gray-200 focus:border-teal-500"
+              />
+              <Button 
+                onClick={addLocation} 
+                size="sm" 
+                className="bg-green-500 hover:bg-green-600"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+          
+          {/* Budget */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-gray-600">Budget Min (₹)</Label>
+              <Input
+                type="number"
+                value={profile.budget_min || ''}
+                onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || null })}
+                className="border-gray-200 focus:border-teal-500"
+                placeholder="Minimum budget"
+              />
+            </div>
+            <div>
+              <Label className="text-gray-600">Budget Max (₹)</Label>
+              <Input
+                type="number"
+                value={profile.budget_max || ''}
+                onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || null })}
+                className="border-gray-200 focus:border-teal-500"
+                placeholder="Maximum budget"
+              />
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

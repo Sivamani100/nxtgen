@@ -1,7 +1,6 @@
 
-import { Card } from "@/components/ui/card";
-import { GraduationCap, IndianRupee, Phone } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
+import { Badge } from "@/components/ui/badge";
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -10,30 +9,114 @@ interface ProfileStatsProps {
 }
 
 export const ProfileStats = ({ profile }: ProfileStatsProps) => {
+  // Show only fields that have values
+  const showPersonalInfo = profile.full_name || profile.email || profile.phone_number;
+  const showAcademicInfo = profile.academic_field || profile.preferred_course;
+  const showPreferenceInfo = 
+    (profile.preferred_branches && profile.preferred_branches.length > 0) || 
+    (profile.preferred_locations && profile.preferred_locations.length > 0) ||
+    profile.budget_min || profile.budget_max;
+
   return (
-    <div className="grid grid-cols-3 gap-3 mb-6">
-      <Card className="p-3 text-center bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200">
-        <GraduationCap className="w-6 h-6 mx-auto mb-1 text-blue-600" />
-        <p className="text-xs text-gray-600 mb-1">Field</p>
-        <p className="text-sm font-bold text-gray-900">{profile.academic_field || "Not set"}</p>
-      </Card>
-      <Card className="p-3 text-center bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200">
-        <IndianRupee className="w-6 h-6 mx-auto mb-1 text-green-600" />
-        <p className="text-xs text-gray-600 mb-1">Budget</p>
-        <p className="text-sm font-bold text-gray-900">
-          {profile.budget_min && profile.budget_max 
-            ? `₹${profile.budget_min/1000}K-${profile.budget_max/1000}K`
-            : "Not set"
-          }
-        </p>
-      </Card>
-      <Card className="p-3 text-center bg-gradient-to-br from-pink-50 to-purple-50 border-2 border-pink-200">
-        <Phone className="w-6 h-6 mx-auto mb-1 text-pink-600" />
-        <p className="text-xs text-gray-600 mb-1">Contact</p>
-        <p className="text-sm font-bold text-gray-900">
-          {profile.phone_number ? "Added" : "Not set"}
-        </p>
-      </Card>
+    <div className="space-y-4">
+      {/* Personal Information */}
+      {showPersonalInfo && (
+        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
+          
+          {profile.full_name && (
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-1">Full Name</p>
+              <p className="text-gray-800">{profile.full_name}</p>
+            </div>
+          )}
+          
+          {profile.email && (
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-1">Email</p>
+              <p className="text-gray-800">{profile.email}</p>
+            </div>
+          )}
+          
+          {profile.phone_number && (
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Phone Number</p>
+              <p className="text-gray-800">{profile.phone_number}</p>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Academic Information */}
+      {showAcademicInfo && (
+        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Academic Information</h3>
+          
+          {profile.academic_field && (
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-1">Current Education Level</p>
+              <p className="text-gray-800">{profile.academic_field}</p>
+            </div>
+          )}
+          
+          {profile.preferred_course && (
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Preferred Course</p>
+              <p className="text-gray-800">{profile.preferred_course}</p>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Preferences */}
+      {showPreferenceInfo && (
+        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Preferences</h3>
+          
+          {profile.preferred_branches && profile.preferred_branches.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">Preferred Branches</p>
+              <div className="flex flex-wrap gap-2">
+                {profile.preferred_branches.map((branch, index) => (
+                  <Badge key={index} className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none">
+                    {branch}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {profile.preferred_locations && profile.preferred_locations.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">Preferred Locations</p>
+              <div className="flex flex-wrap gap-2">
+                {profile.preferred_locations.map((location, index) => (
+                  <Badge key={index} className="bg-green-100 text-green-800 hover:bg-green-200 border-none">
+                    {location}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {(profile.budget_min || profile.budget_max) && (
+            <div className="grid grid-cols-2 gap-4">
+              {profile.budget_min && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Budget Min (₹)</p>
+                  <p className="text-gray-800">{profile.budget_min}</p>
+                </div>
+              )}
+              {profile.budget_max && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Budget Max (₹)</p>
+                  <p className="text-gray-800">{profile.budget_max}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
