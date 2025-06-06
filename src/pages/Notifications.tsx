@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Bell, Heart, Share, Calendar, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BottomNavigation } from "@/components/BottomNavigation";
 
 interface Notification {
   id: number;
@@ -160,106 +160,109 @@ const Notifications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm p-4">
-        <div className="flex items-center max-w-md mx-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-lg font-semibold">Notifications</h1>
-        </div>
-        
-        {/* Tabs */}
-        <div className="max-w-md mx-auto mt-4">
-          <div className="flex overflow-x-auto space-x-1">
-            {tabs.map((tab) => (
-              <Button
-                key={tab}
-                variant={activeTab === tab ? 'default' : 'ghost'}
-                size="sm"
-                className={`flex-shrink-0 px-3 py-2 text-xs ${
-                  activeTab === tab 
-                    ? 'bg-green-600 text-white' 
-                    : 'text-gray-600'
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </Button>
-            ))}
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 pb-20 md:pb-0">
+        {/* Header */}
+        <div className="bg-white shadow-sm p-4">
+          <div className="flex items-center max-w-md mx-auto">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-lg font-semibold">Notifications</h1>
           </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-md mx-auto p-4">
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="text-center py-8">
-            <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <div className="text-gray-500 mb-2">No notifications found</div>
-            <div className="text-sm text-gray-400">
-              You'll see updates here when new content is added
+          
+          {/* Tabs */}
+          <div className="max-w-md mx-auto mt-4">
+            <div className="flex overflow-x-auto space-x-1">
+              {tabs.map((tab) => (
+                <Button
+                  key={tab}
+                  variant={activeTab === tab ? 'default' : 'ghost'}
+                  size="sm"
+                  className={`flex-shrink-0 px-3 py-2 text-xs ${
+                    activeTab === tab 
+                      ? 'bg-green-600 text-white' 
+                      : 'text-gray-600'
+                  }`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                </Button>
+              ))}
             </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {notifications.map((notification) => (
-              <Card key={notification.id} className={`overflow-hidden ${!notification.read ? 'ring-2 ring-green-200' : ''}`}>
-                {/* Notification indicator */}
-                {!notification.read && (
-                  <div className="h-1 bg-green-500"></div>
-                )}
-                
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className={`px-2 py-1 rounded text-xs ${getCategoryColor(notification.category)}`}>
-                      {notification.category}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(notification.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  
-                  <h3 className="font-semibold text-gray-800 mb-2">
-                    {notification.resource?.title || notification.message}
-                  </h3>
-                  
-                  {notification.resource?.description && (
-                    <p className="text-sm text-gray-600 mb-3">
-                      {notification.resource.description}
-                    </p>
+        </div>
+
+        {/* Content */}
+        <div className="max-w-md mx-auto p-4">
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="text-center py-8">
+              <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <div className="text-gray-500 mb-2">No notifications found</div>
+              <div className="text-sm text-gray-400">
+                You'll see updates here when new content is added
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {notifications.map((notification) => (
+                <Card key={notification.id} className={`overflow-hidden ${!notification.read ? 'ring-2 ring-green-200' : ''}`}>
+                  {/* Notification indicator */}
+                  {!notification.read && (
+                    <div className="h-1 bg-green-500"></div>
                   )}
                   
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      size="sm" 
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => handleReadMore(notification)}
-                    >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      Read more
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => markAsRead(notification.id)}
-                    >
-                      <Heart className="w-3 h-3 mr-1" />
-                      Mark Read
-                    </Button>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className={`px-2 py-1 rounded text-xs ${getCategoryColor(notification.category)}`}>
+                        {notification.category}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(notification.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    
+                    <h3 className="font-semibold text-gray-800 mb-2">
+                      {notification.resource?.title || notification.message}
+                    </h3>
+                    
+                    {notification.resource?.description && (
+                      <p className="text-sm text-gray-600 mb-3">
+                        {notification.resource.description}
+                      </p>
+                    )}
+                    
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        size="sm" 
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={() => handleReadMore(notification)}
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Read more
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => markAsRead(notification.id)}
+                      >
+                        <Heart className="w-3 h-3 mr-1" />
+                        Mark Read
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      <BottomNavigation />
+    </>
   );
 };
 

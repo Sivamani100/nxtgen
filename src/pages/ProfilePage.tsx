@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 import { Badge } from "@/components/ui/badge";
+import { BottomNavigation } from "@/components/BottomNavigation";
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -228,120 +228,71 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-white shadow-sm p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-900">Profile</h1>
-        {!isEditing ? (
-          <Button 
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white"
-          >
-            <PenLine size={16} />
-            Edit
-          </Button>
-        ) : (
-          <Button 
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white"
-          >
-            <Check size={16} />
-            {saving ? 'Saving...' : 'Save'}
-          </Button>
-        )}
-      </div>
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 pb-20 md:pb-0">
+        {/* Header */}
+        <div className="bg-white shadow-sm p-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold text-gray-900">Profile</h1>
+          {!isEditing ? (
+            <Button 
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white"
+            >
+              <PenLine size={16} />
+              Edit
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white"
+            >
+              <Check size={16} />
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          )}
+        </div>
 
-      {/* Content */}
-      <div className="max-w-md mx-auto p-4">
-        <ProfileHeader 
-          profile={profile} 
-          isEditing={isEditing} 
-          onPhotoChange={handlePhotoChange}
-          savedCollegesCount={savedColleges}
-        />
-        
-        {!isEditing ? (
-          <ProfileStats profile={profile} />
-        ) : (
-          <EditProfileForm 
+        {/* Content */}
+        <div className="max-w-md mx-auto p-4">
+          <ProfileHeader 
             profile={profile} 
-            setProfile={setProfile} 
-            branchInput={branchInput}
-            setBranchInput={setBranchInput}
-            addBranch={addBranch}
-            removeBranch={removeBranch}
-            locationInput={locationInput}
-            setLocationInput={setLocationInput}
-            addLocation={addLocation}
-            removeLocation={removeLocation}
+            isEditing={isEditing} 
+            onPhotoChange={handlePhotoChange}
+            savedCollegesCount={savedColleges}
           />
-        )}
+          
+          {!isEditing ? (
+            <ProfileStats profile={profile} />
+          ) : (
+            <EditProfileForm 
+              profile={profile} 
+              setProfile={setProfile} 
+              branchInput={branchInput}
+              setBranchInput={setBranchInput}
+              addBranch={addBranch}
+              removeBranch={removeBranch}
+              locationInput={locationInput}
+              setLocationInput={setLocationInput}
+              addLocation={addLocation}
+              removeLocation={removeLocation}
+            />
+          )}
 
-        {!isEditing && (
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="w-full mt-6 flex items-center justify-center gap-2 text-red-500 border-red-100 hover:bg-red-50"
-          >
-            <LogOut size={18} />
-            Logout
-          </Button>
-        )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-evenly gap-2 py-3">
+          {!isEditing && (
             <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
-              onClick={() => navigate('/home')}
+              onClick={handleLogout}
+              variant="outline"
+              className="w-full mt-6 flex items-center justify-center gap-2 text-red-500 border-red-100 hover:bg-red-50"
             >
-              <HomeIcon className="w-7 h-7" />
-              <span className="text-xs">Home</span>
+              <LogOut size={18} />
+              Logout
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-purple-600"
-              onClick={() => navigate('/colleges')}
-            >
-              <Users className="w-7 h-7" />
-              <span className="text-xs">Colleges</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
-              onClick={() => navigate('/predictor')}
-            >
-              <BookOpen className="w-7 h-7" />
-              <span className="text-xs">Predictor</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-orange-600"
-              onClick={() => navigate('/news')}
-            >
-              <Newspaper className="w-7 h-7" />
-              <span className="text-xs">News</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-teal-600 bg-teal-50"
-            >
-              <User className="w-7 h-7" />
-              <span className="text-xs">Profile</span>
-            </Button>
-          </div>
+          )}
         </div>
       </div>
-    </div>
+      <BottomNavigation />
+    </>
   );
 };
 
