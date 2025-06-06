@@ -1,30 +1,59 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, User, Settings, Heart, LogOut, BookOpen, MapPin, CreditCard, GraduationCap } from "lucide-react";
+import { ProfileHeader } from "@/components/ProfileHeader";
+import { ProfileStats } from "@/components/ProfileStats";
+import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Camera } from "lucide-react";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 const ProfilePage = () => {
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    full_name: '',
-    phone_number: '',
-    academic_field: '',
-    preferred_course: '',
-    preferred_branches: [] as string[],
-    preferred_locations: [] as string[],
-    budget_min: '',
-    budget_max: ''
-  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const navigate = useNavigate();
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setProfilePhoto(e.target.files[0]);
+    }
+  };
+
+  const uploadProfilePhoto = async (file: File) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+      const filePath = `profile-photos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error('Failed to upload photo');
+      return null;
+    }
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -45,18 +74,7 @@ const ProfilePage = () => {
         .single();
 
       if (error) throw error;
-      
       setProfile(data);
-      setFormData({
-        full_name: data.full_name || '',
-        phone_number: data.phone_number || '',
-        academic_field: data.academic_field || '',
-        preferred_course: data.preferred_course || '',
-        preferred_branches: data.preferred_branches || [],
-        preferred_locations: data.preferred_locations || [],
-        budget_min: data.budget_min?.toString() || '',
-        budget_max: data.budget_max?.toString() || ''
-      });
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');
@@ -66,348 +84,282 @@ const ProfilePage = () => {
   };
 
   const handleSave = async () => {
+    if (!profile) return;
+    
+    setSaving(true);
     try {
+      let photoUrl = profile.profile_picture_url;
+
+      if (profilePhoto) {
+        photoUrl = await uploadProfilePhoto(profilePhoto);
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const updateData = {
-        ...formData,
-        budget_min: formData.budget_min ? parseInt(formData.budget_min) : null,
-        budget_max: formData.budget_max ? parseInt(formData.budget_max) : null
-      };
-
       const { error } = await supabase
         .from('profiles')
-        .update(updateData)
+        .update({
+          ...profile,
+          profile_picture_url: photoUrl
+        })
         .eq('id', user.id);
 
       if (error) throw error;
 
-      setProfile({ ...profile, ...updateData });
+      await fetchProfile();
       setIsEditing(false);
+      setProfilePhoto(null);
       toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
+    } finally {
+      setSaving(false);
     }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/login');
-      toast.success('Logged out successfully');
-    } catch (error) {
-      console.error('Error logging out:', error);
-      toast.error('Failed to logout');
-    }
-  };
-
-  const getCompletionPercentage = () => {
-    const fields = [
-      formData.full_name,
-      formData.phone_number,
-      formData.academic_field,
-      formData.preferred_course,
-      formData.preferred_branches.length > 0,
-      formData.preferred_locations.length > 0,
-      formData.budget_min,
-      formData.budget_max
-    ];
-    
-    const completedFields = fields.filter(field => field && field !== '').length;
-    return Math.round((completedFields / fields.length) * 100);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
       </div>
     );
   }
 
-  const completionPercentage = getCompletionPercentage();
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Profile not found</h2>
+          <Button onClick={() => navigate('/home')} className="bg-purple-600 hover:bg-purple-700">
+            Go to Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       {/* Header */}
-      <div className="bg-white shadow-lg p-4 border-b-2 border-indigo-100">
-        <div className="flex items-center justify-between max-w-md mx-auto">
-          <div className="flex items-center">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3 hover:bg-indigo-50">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="text-xl font-bold text-gray-900">Profile</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/favorites')}
-              className="text-pink-600 hover:bg-pink-50"
-            >
-              <Heart className="w-5 h-5" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={handleLogout}
-              className="text-red-600 hover:bg-red-50"
-            >
-              <LogOut className="w-5 h-5" />
-            </Button>
-          </div>
+      <div className="bg-white shadow-lg p-4 border-b-2 border-purple-100">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto p-4">
-        {/* Profile Header */}
-        <Card className="p-6 mb-6 bg-gradient-to-r from-indigo-100 to-purple-100 border-2 border-indigo-200 shadow-xl">
-          <div className="text-center">
-            <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-10 h-10 text-white" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
-              {profile?.full_name || profile?.email || 'User'}
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">{profile?.email}</p>
-            
-            {/* Completion Progress */}
-            <div className="bg-white rounded-lg p-4 shadow-md">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Profile Completion</span>
-                <span className="text-sm font-bold text-indigo-600">{completionPercentage}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${completionPercentage}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Edit/Save Button */}
-        <div className="flex justify-center mb-6">
-          {isEditing ? (
-            <div className="flex space-x-3">
-              <Button onClick={handleSave} className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-2 shadow-lg">
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setIsEditing(false);
-                  fetchProfile();
-                }}
-                className="border-2 border-gray-300 hover:border-gray-400"
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <Button 
-              onClick={() => setIsEditing(true)}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2 shadow-lg"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Edit Profile
-            </Button>
-          )}
-        </div>
+      <div className="max-w-md mx-auto p-4 pb-24">
+        <ProfileHeader profile={profile} />
+        
+        <ProfileStats profile={profile} />
 
         {!isEditing && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border-2 border-blue-200 mb-6">
-            <p className="text-sm text-blue-800 text-center">
-              💡 <strong>Tip:</strong> Click "Edit Profile" to update your information and preferences for better college recommendations!
+          <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border-l-4 border-blue-400">
+            <p className="text-sm text-blue-800">
+              💡 <strong>Tip:</strong> Click the "Edit Profile" button below to update your information and save changes.
             </p>
           </div>
         )}
 
-        {/* Profile Information */}
-        <div className="space-y-4">
-          {/* Personal Information */}
-          <Card className="p-4 bg-white shadow-lg border-2 border-blue-100">
-            <div className="flex items-center mb-3">
-              <User className="w-5 h-5 text-blue-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Full Name</Label>
-                {isEditing ? (
-                  <Input
-                    value={formData.full_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                    placeholder="Enter your full name"
-                    className="border-2 border-blue-200 focus:border-blue-400"
-                  />
-                ) : (
-                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
-                    {profile?.full_name || 'Not provided'}
-                  </p>
-                )}
+        <Card className="p-6 bg-white shadow-xl border-2 border-purple-200">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
+            {!isEditing ? (
+              <Button 
+                onClick={() => setIsEditing(true)}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2"
+              >
+                Edit Profile
+              </Button>
+            ) : (
+              <div className="space-x-2">
+                <Button 
+                  onClick={() => setIsEditing(false)}
+                  variant="outline"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </Button>
               </div>
+            )}
+          </div>
 
+          <div className="space-y-4">
+            {isEditing && (
               <div>
-                <Label className="text-sm font-medium text-gray-700">Phone Number</Label>
-                {isEditing ? (
-                  <Input
-                    value={formData.phone_number}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
-                    placeholder="Enter your phone number"
-                    className="border-2 border-blue-200 focus:border-blue-400"
-                  />
-                ) : (
-                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
-                    {profile?.phone_number || 'Not provided'}
-                  </p>
-                )}
+                <Label className="text-base font-semibold text-gray-900">Profile Photo</Label>
+                <div className="flex items-center space-x-4 mt-2">
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                      id="photo-upload"
+                    />
+                    <label
+                      htmlFor="photo-upload"
+                      className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg cursor-pointer hover:from-blue-600 hover:to-purple-600 transition-all"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span className="text-sm">Choose Photo</span>
+                    </label>
+                  </div>
+                  {profilePhoto && (
+                    <span className="text-sm text-green-600 bg-green-50 px-2 py-1 rounded">
+                      Photo selected
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          </Card>
+            )}
 
-          {/* Academic Information */}
-          <Card className="p-4 bg-white shadow-lg border-2 border-green-100">
-            <div className="flex items-center mb-3">
-              <GraduationCap className="w-5 h-5 text-green-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-900">Academic Preferences</h3>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Academic Field</Label>
-                {isEditing ? (
-                  <Select value={formData.academic_field} onValueChange={(value) => setFormData(prev => ({ ...prev, academic_field: value }))}>
-                    <SelectTrigger className="border-2 border-green-200 focus:border-green-400">
-                      <SelectValue placeholder="Select academic field" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Engineering">Engineering</SelectItem>
-                      <SelectItem value="Medical">Medical</SelectItem>
-                      <SelectItem value="Arts">Arts</SelectItem>
-                      <SelectItem value="Commerce">Commerce</SelectItem>
-                      <SelectItem value="Science">Science</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
-                    {profile?.academic_field || 'Not selected'}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Preferred Course</Label>
-                {isEditing ? (
-                  <Input
-                    value={formData.preferred_course}
-                    onChange={(e) => setFormData(prev => ({ ...prev, preferred_course: e.target.value }))}
-                    placeholder="e.g., B.Tech, MBBS, B.Com"
-                    className="border-2 border-green-200 focus:border-green-400"
-                  />
-                ) : (
-                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
-                    {profile?.preferred_course || 'Not specified'}
-                  </p>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Location Preferences */}
-          <Card className="p-4 bg-white shadow-lg border-2 border-purple-100">
-            <div className="flex items-center mb-3">
-              <MapPin className="w-5 h-5 text-purple-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-900">Location Preferences</h3>
-            </div>
-            
             <div>
-              <Label className="text-sm font-medium text-gray-700">Preferred Locations</Label>
-              {isEditing ? (
+              <Label className="text-base font-semibold text-gray-900">Full Name</Label>
+              <Input
+                value={profile.full_name || ''}
+                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                disabled={!isEditing}
+                className="text-base border-2 border-purple-200 focus:border-purple-400"
+                placeholder="Enter your full name"
+              />
+            </div>
+
+            <div>
+              <Label className="text-base font-semibold text-gray-900">Email</Label>
+              <Input
+                value={profile.email || ''}
+                disabled
+                className="text-base bg-gray-100 border-2 border-gray-200"
+              />
+            </div>
+
+            <div>
+              <Label className="text-base font-semibold text-gray-900">Phone Number</Label>
+              <Input
+                value={profile.phone_number || ''}
+                onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                disabled={!isEditing}
+                className="text-base border-2 border-blue-200 focus:border-blue-400"
+                placeholder="Enter your phone number"
+              />
+            </div>
+
+            <div>
+              <Label className="text-base font-semibold text-gray-900">Academic Field</Label>
+              <Select
+                value={profile.academic_field || ''}
+                onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
+                disabled={!isEditing}
+              >
+                <SelectTrigger className="border-2 border-green-200 focus:border-green-400">
+                  <SelectValue placeholder="Select your field" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="engineering">Engineering</SelectItem>
+                  <SelectItem value="medical">Medical</SelectItem>
+                  <SelectItem value="commerce">Commerce</SelectItem>
+                  <SelectItem value="arts">Arts</SelectItem>
+                  <SelectItem value="science">Science</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-base font-semibold text-gray-900">Preferred Course</Label>
+              <Input
+                value={profile.preferred_course || ''}
+                onChange={(e) => setProfile({ ...profile, preferred_course: e.target.value })}
+                disabled={!isEditing}
+                className="text-base border-2 border-orange-200 focus:border-orange-400"
+                placeholder="e.g., B.Tech, MBBS, B.Com"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-base font-semibold text-gray-900">Min Budget (₹)</Label>
                 <Input
-                  value={formData.preferred_locations.join(', ')}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    preferred_locations: e.target.value.split(', ').filter(loc => loc.trim()) 
-                  }))}
-                  placeholder="e.g., Mumbai, Delhi, Bangalore"
-                  className="border-2 border-purple-200 focus:border-purple-400"
+                  type="number"
+                  value={profile.budget_min || ''}
+                  onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || null })}
+                  disabled={!isEditing}
+                  className="text-base border-2 border-red-200 focus:border-red-400"
+                  placeholder="50000"
                 />
-              ) : (
-                <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
-                  {profile?.preferred_locations?.length > 0 ? profile.preferred_locations.join(', ') : 'Not specified'}
-                </p>
-              )}
-            </div>
-          </Card>
-
-          {/* Budget Information */}
-          <Card className="p-4 bg-white shadow-lg border-2 border-orange-100">
-            <div className="flex items-center mb-3">
-              <CreditCard className="w-5 h-5 text-orange-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-900">Budget Range</h3>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Min Budget (₹)</Label>
-                {isEditing ? (
-                  <Input
-                    type="number"
-                    value={formData.budget_min}
-                    onChange={(e) => setFormData(prev => ({ ...prev, budget_min: e.target.value }))}
-                    placeholder="e.g., 100000"
-                    className="border-2 border-orange-200 focus:border-orange-400"
-                  />
-                ) : (
-                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
-                    {profile?.budget_min ? `₹${(profile.budget_min / 100000).toFixed(1)}L` : 'Not set'}
-                  </p>
-                )}
               </div>
-
               <div>
-                <Label className="text-sm font-medium text-gray-700">Max Budget (₹)</Label>
-                {isEditing ? (
-                  <Input
-                    type="number"
-                    value={formData.budget_max}
-                    onChange={(e) => setFormData(prev => ({ ...prev, budget_max: e.target.value }))}
-                    placeholder="e.g., 500000"
-                    className="border-2 border-orange-200 focus:border-orange-400"
-                  />
-                ) : (
-                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
-                    {profile?.budget_max ? `₹${(profile.budget_max / 100000).toFixed(1)}L` : 'Not set'}
-                  </p>
-                )}
+                <Label className="text-base font-semibold text-gray-900">Max Budget (₹)</Label>
+                <Input
+                  type="number"
+                  value={profile.budget_max || ''}
+                  onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || null })}
+                  disabled={!isEditing}
+                  className="text-base border-2 border-red-200 focus:border-red-400"
+                  placeholder="500000"
+                />
               </div>
             </div>
-          </Card>
+          </div>
+        </Card>
+      </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-4 mt-6">
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-evenly gap-2 py-3">
             <Button
-              variant="outline"
-              className="h-16 flex-col space-y-2 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50"
-              onClick={() => navigate('/favorites')}
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
+              onClick={() => navigate('/home')}
             >
-              <Heart className="w-5 h-5 text-blue-600" />
-              <span className="text-sm font-medium">Saved Colleges</span>
+              <HomeIcon className="w-7 h-7" />
+              <span className="text-xs">Home</span>
             </Button>
             <Button
-              variant="outline"
-              className="h-16 flex-col space-y-2 border-2 border-green-200 hover:border-green-400 hover:bg-green-50"
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-purple-600"
+              onClick={() => navigate('/colleges')}
+            >
+              <Users className="w-7 h-7" />
+              <span className="text-xs">Colleges</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
               onClick={() => navigate('/predictor')}
             >
-              <BookOpen className="w-5 h-5 text-green-600" />
-              <span className="text-sm font-medium">Rank Predictor</span>
+              <BookOpen className="w-7 h-7" />
+              <span className="text-xs">Predictor</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-orange-600"
+              onClick={() => navigate('/news')}
+            >
+              <Newspaper className="w-7 h-7" />
+              <span className="text-xs">News</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-purple-600 bg-purple-50"
+            >
+              <User className="w-7 h-7" />
+              <span className="text-xs">Profile</span>
             </Button>
           </div>
         </div>

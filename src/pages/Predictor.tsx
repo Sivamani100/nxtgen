@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,7 +121,7 @@ const Predictor = () => {
         .gte('closing_rank', minRank)
         .lte('closing_rank', maxRank)
         .order('closing_rank', { ascending: true })
-        .limit(10);
+        .limit(15);
 
       if (error) throw error;
 
@@ -243,11 +242,8 @@ const Predictor = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Header */}
       <div className="bg-white shadow-lg p-4 border-b-2 border-green-100">
-        <div className="flex items-center max-w-md mx-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3 hover:bg-green-50">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-xl font-bold text-gray-900">Rank Predictor</h1>
+        <div className="max-w-md mx-auto">
+          <h1 className="text-xl font-bold text-gray-900">Rank & College Predictor</h1>
         </div>
       </div>
 
@@ -378,12 +374,12 @@ const Predictor = () => {
               </div>
             </Card>
 
-            {/* Predicted Colleges */}
+            {/* NxtGen Selected Colleges */}
             {result.predictedColleges && result.predictedColleges.length > 0 && (
               <Card className="p-6 bg-white shadow-xl border-2 border-purple-200">
                 <div className="flex items-center mb-4">
                   <GraduationCap className="w-7 h-7 text-purple-600 mr-2" />
-                  <h3 className="text-xl font-bold text-gray-900">Colleges for Your Rank</h3>
+                  <h3 className="text-xl font-bold text-gray-900">Based on your rank, NxtGen selected the best colleges for you</h3>
                 </div>
                 
                 <div className="space-y-4">
@@ -405,6 +401,16 @@ const Predictor = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </Card>
+            )}
+
+            {/* No Colleges Found */}
+            {result.predictedColleges && result.predictedColleges.length === 0 && (
+              <Card className="p-6 bg-white shadow-xl border-2 border-gray-200">
+                <div className="text-center py-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">Based on your rank, there are no colleges available</h4>
+                  <p className="text-base text-gray-600">Consider exploring other exam options or improving your rank.</p>
                 </div>
               </Card>
             )}

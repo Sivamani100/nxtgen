@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,11 +80,37 @@ const Colleges = () => {
       );
     }
 
-    // Apply type filter - Fixed to work properly
+    // Apply type filter with improved logic for grouping
     if (filters.type !== 'all') {
-      filtered = filtered.filter(college => 
-        college.type && college.type.toLowerCase() === filters.type.toLowerCase()
-      );
+      filtered = filtered.filter(college => {
+        if (!college.type) return false;
+        
+        const collegeType = college.type.toLowerCase();
+        const filterType = filters.type.toLowerCase();
+        
+        switch (filterType) {
+          case 'private':
+            return collegeType.includes('private') || 
+                   collegeType.includes('deemed') ||
+                   collegeType.includes('autonomous');
+          case 'government':
+            return collegeType.includes('government') || 
+                   collegeType.includes('public') ||
+                   collegeType.includes('state') ||
+                   collegeType.includes('central') ||
+                   collegeType.includes('national');
+          case 'university':
+            return collegeType.includes('university');
+          case 'engineering':
+            return collegeType.includes('engineering');
+          case 'medical':
+            return collegeType.includes('medical');
+          case 'polytechnic':
+            return collegeType.includes('polytechnic');
+          default:
+            return collegeType === filterType;
+        }
+      });
     }
 
     // Apply state filter
@@ -213,7 +238,10 @@ const Colleges = () => {
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="government">Government</SelectItem>
                 <SelectItem value="private">Private</SelectItem>
-                <SelectItem value="autonomous">Autonomous</SelectItem>
+                <SelectItem value="university">University</SelectItem>
+                <SelectItem value="engineering">Engineering</SelectItem>
+                <SelectItem value="medical">Medical</SelectItem>
+                <SelectItem value="polytechnic">Polytechnic</SelectItem>
               </SelectContent>
             </Select>
 
