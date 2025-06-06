@@ -1,83 +1,33 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Save, Camera, Home as HomeIcon, Users, BookOpen, Newspaper, User, LogOut, X } from "lucide-react";
+import { ArrowLeft, Save, User, Settings, Heart, LogOut, BookOpen, MapPin, CreditCard, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 
-interface Profile {
-  id: string;
-  email: string;
-  full_name: string | null;
-  phone_number: string | null;
-  academic_field: string | null;
-  preferred_course: string | null;
-  preferred_branches: string[] | null;
-  preferred_locations: string[] | null;
-  budget_min: number | null;
-  budget_max: number | null;
-  profile_picture_url: string | null;
-  profile_completion_percentage: number | null;
-  tutorial_completed: boolean | null;
-  notification_preferences: any;
-  created_at: string | null;
-}
-
-const INDIAN_CITIES = [
-  'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Pune', 'Ahmedabad',
-  'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Thane', 'Bhopal', 'Visakhapatnam',
-  'Pimpri-Chinchwad', 'Patna', 'Vadodara', 'Ghaziabad', 'Ludhiana', 'Agra', 'Nashik',
-  'Faridabad', 'Meerut', 'Rajkot', 'Kalyan-Dombivali', 'Vasai-Virar', 'Varanasi', 'Srinagar',
-  'Dhanbad', 'Jodhpur', 'Amritsar', 'Raipur', 'Allahabad', 'Coimbatore', 'Jabalpur',
-  'Gwalior', 'Vijayawada', 'Madurai', 'Gurgaon', 'Navi Mumbai', 'Aurangabad', 'Solapur',
-  'Ranchi', 'Jalandhar', 'Tiruchirappalli', 'Bhubaneswar', 'Salem', 'Warangal', 'Mira-Bhayandar',
-  'Thiruvananthapuram', 'Bhiwandi', 'Saharanpur', 'Guntur', 'Amravati', 'Bikaner', 'Noida',
-  'Jamshedpur', 'Bhilai Nagar', 'Cuttack', 'Firozabad', 'Kochi', 'Nellore', 'Bhavnagar',
-  'Dehradun', 'Durgapur', 'Asansol', 'Rourkela', 'Nanded', 'Kolhapur', 'Ajmer', 'Akola',
-  'Gulbarga', 'Jamnagar', 'Ujjain', 'Loni', 'Siliguri', 'Jhansi', 'Ulhasnagar', 'Jammu',
-  'Sangli-Miraj & Kupwad', 'Mangalore', 'Erode', 'Belgaum', 'Ambattur', 'Tirunelveli',
-  'Malegaon', 'Gaya', 'Jalgaon', 'Udaipur', 'Maheshtala'
-];
-
-const ENGINEERING_BRANCHES = [
-  'Computer Science Engineering', 'Information Technology', 'Electronics and Communication Engineering',
-  'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Chemical Engineering',
-  'Aerospace Engineering', 'Automobile Engineering', 'Biotechnology Engineering',
-  'Environmental Engineering', 'Industrial Engineering', 'Materials Engineering',
-  'Mining Engineering', 'Nuclear Engineering', 'Petroleum Engineering', 'Software Engineering',
-  'Biomedical Engineering', 'Agricultural Engineering', 'Food Technology',
-  'Textile Engineering', 'Marine Engineering', 'Metallurgical Engineering',
-  'Production Engineering', 'Robotics Engineering', 'Data Science and Engineering',
-  'Artificial Intelligence and Machine Learning', 'Cyber Security', 'Electronics and Instrumentation',
-  'Information Science Engineering', 'Telecommunication Engineering'
-];
-
 const ProfilePage = () => {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [savedCollegesCount, setSavedCollegesCount] = useState(0);
-  const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
-    email: '',
     phone_number: '',
     academic_field: '',
     preferred_course: '',
     preferred_branches: [] as string[],
     preferred_locations: [] as string[],
     budget_min: '',
-    budget_max: '',
+    budget_max: ''
   });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchProfile();
-    fetchSavedCollegesCount();
   }, []);
 
   const fetchProfile = async () => {
@@ -90,62 +40,23 @@ const ProfilePage = () => {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          email,
-          academic_field,
-          tutorial_completed,
-          notification_preferences,
-          created_at,
-          full_name,
-          phone_number,
-          preferred_course,
-          preferred_branches,
-          preferred_locations,
-          budget_min,
-          budget_max,
-          profile_picture_url,
-          profile_completion_percentage
-        `)
+        .select('*')
         .eq('id', user.id)
         .single();
 
       if (error) throw error;
       
-      // Handle the data properly with null checks
-      const profileData: Profile = {
-        id: data.id,
-        email: data.email,
-        full_name: data.full_name || null,
-        phone_number: data.phone_number || null,
-        academic_field: data.academic_field || null,
-        preferred_course: data.preferred_course || null,
-        preferred_branches: data.preferred_branches || null,
-        preferred_locations: data.preferred_locations || null,
-        budget_min: data.budget_min || null,
-        budget_max: data.budget_max || null,
-        profile_picture_url: data.profile_picture_url || null,
-        profile_completion_percentage: data.profile_completion_percentage || null,
-        tutorial_completed: data.tutorial_completed || null,
-        notification_preferences: data.notification_preferences,
-        created_at: data.created_at || null
-      };
-      
-      setProfile(profileData);
+      setProfile(data);
       setFormData({
-        full_name: profileData.full_name || '',
-        email: profileData.email,
-        phone_number: profileData.phone_number || '',
-        academic_field: profileData.academic_field || '',
-        preferred_course: profileData.preferred_course || '',
-        preferred_branches: profileData.preferred_branches || [],
-        preferred_locations: profileData.preferred_locations || [],
-        budget_min: profileData.budget_min?.toString() || '',
-        budget_max: profileData.budget_max?.toString() || '',
+        full_name: data.full_name || '',
+        phone_number: data.phone_number || '',
+        academic_field: data.academic_field || '',
+        preferred_course: data.preferred_course || '',
+        preferred_branches: data.preferred_branches || [],
+        preferred_locations: data.preferred_locations || [],
+        budget_min: data.budget_min?.toString() || '',
+        budget_max: data.budget_max?.toString() || ''
       });
-      
-      // Calculate and update profile completion
-      await updateProfileCompletion(user.id);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');
@@ -154,523 +65,349 @@ const ProfilePage = () => {
     }
   };
 
-  const fetchSavedCollegesCount = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { count, error } = await supabase
-        .from('user_college_favorites')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setSavedCollegesCount(count || 0);
-    } catch (error) {
-      console.error('Error fetching saved colleges count:', error);
-    }
-  };
-
-  const updateProfileCompletion = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .rpc('calculate_profile_completion', { profile_id: userId });
-
-      if (error) throw error;
-
-      await supabase
-        .from('profiles')
-        .update({ profile_completion_percentage: data })
-        .eq('id', userId);
-
-      setProfile(prev => prev ? { ...prev, profile_completion_percentage: data } : null);
-    } catch (error) {
-      console.error('Error updating profile completion:', error);
-    }
-  };
-
   const handleSave = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const updateData = {
+        ...formData,
+        budget_min: formData.budget_min ? parseInt(formData.budget_min) : null,
+        budget_max: formData.budget_max ? parseInt(formData.budget_max) : null
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: formData.full_name,
-          phone_number: formData.phone_number,
-          academic_field: formData.academic_field,
-          preferred_course: formData.preferred_course,
-          preferred_branches: formData.preferred_branches,
-          preferred_locations: formData.preferred_locations,
-          budget_min: formData.budget_min ? parseInt(formData.budget_min) : null,
-          budget_max: formData.budget_max ? parseInt(formData.budget_max) : null,
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;
 
-      toast.success('Profile updated successfully');
+      setProfile({ ...profile, ...updateData });
       setIsEditing(false);
-      await fetchProfile();
+      toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
     }
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      setUploading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      // Validate file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-      if (!allowedTypes.includes(file.type)) {
-        toast.error('Only JPEG, PNG, WebP, and GIF files are allowed');
-        return;
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
-
-      // Delete existing profile picture if it exists
-      if (profile?.profile_picture_url) {
-        const oldPath = profile.profile_picture_url.split('/').pop();
-        if (oldPath) {
-          await supabase.storage
-            .from('profile-pictures')
-            .remove([`${user.id}/${oldPath}`]);
-        }
-      }
-
-      const { error: uploadError } = await supabase.storage
-        .from('profile-pictures')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('profile-pictures')
-        .getPublicUrl(fileName);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ profile_picture_url: data.publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      await fetchProfile();
-      toast.success('Profile picture updated successfully');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload profile picture');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate('/');
+      await supabase.auth.signOut();
+      navigate('/login');
+      toast.success('Logged out successfully');
     } catch (error) {
-      console.error('Error signing out:', error);
-      toast.error('Failed to sign out');
+      console.error('Error logging out:', error);
+      toast.error('Failed to logout');
     }
   };
 
-  const addPreferredBranch = (branch: string) => {
-    if (!formData.preferred_branches.includes(branch)) {
-      setFormData(prev => ({
-        ...prev,
-        preferred_branches: [...prev.preferred_branches, branch]
-      }));
-    }
-  };
-
-  const removePreferredBranch = (branch: string) => {
-    setFormData(prev => ({
-      ...prev,
-      preferred_branches: prev.preferred_branches.filter(b => b !== branch)
-    }));
-  };
-
-  const addPreferredLocation = (location: string) => {
-    if (!formData.preferred_locations.includes(location)) {
-      setFormData(prev => ({
-        ...prev,
-        preferred_locations: [...prev.preferred_locations, location]
-      }));
-    }
-  };
-
-  const removePreferredLocation = (location: string) => {
-    setFormData(prev => ({
-      ...prev,
-      preferred_locations: prev.preferred_locations.filter(l => l !== location)
-    }));
-  };
-
-  const getInitials = (name: string) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const getCompletionPercentage = () => {
+    const fields = [
+      formData.full_name,
+      formData.phone_number,
+      formData.academic_field,
+      formData.preferred_course,
+      formData.preferred_branches.length > 0,
+      formData.preferred_locations.length > 0,
+      formData.budget_min,
+      formData.budget_max
+    ];
+    
+    const completedFields = fields.filter(field => field && field !== '').length;
+    return Math.round((completedFields / fields.length) * 100);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
+  const completionPercentage = getCompletionPercentage();
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
       {/* Header */}
-      <div className="bg-white shadow-sm p-4">
+      <div className="bg-white shadow-lg p-4 border-b-2 border-indigo-100">
         <div className="flex items-center justify-between max-w-md mx-auto">
-          <h1 className="text-lg font-semibold">Profile</h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => isEditing ? handleSave() : setIsEditing(!isEditing)}
-            className="p-2"
-            disabled={uploading}
-          >
-            {isEditing ? <Save className="w-5 h-5" /> : <Edit className="w-5 h-5" />}
-          </Button>
+          <div className="flex items-center">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3 hover:bg-indigo-50">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-bold text-gray-900">Profile</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/favorites')}
+              className="text-pink-600 hover:bg-pink-50"
+            >
+              <Heart className="w-5 h-5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleLogout}
+              className="text-red-600 hover:bg-red-50"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto p-4 pb-20">
+      <div className="max-w-md mx-auto p-4">
         {/* Profile Header */}
-        <Card className="p-6 mb-6">
+        <Card className="p-6 mb-6 bg-gradient-to-r from-indigo-100 to-purple-100 border-2 border-indigo-200 shadow-xl">
           <div className="text-center">
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-green-400 rounded-full mx-auto mb-3 flex items-center justify-center overflow-hidden">
-                {profile?.profile_picture_url ? (
-                  <img 
-                    src={profile.profile_picture_url} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover"
+            <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              {profile?.full_name || profile?.email || 'User'}
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">{profile?.email}</p>
+            
+            {/* Completion Progress */}
+            <div className="bg-white rounded-lg p-4 shadow-md">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Profile Completion</span>
+                <span className="text-sm font-bold text-indigo-600">{completionPercentage}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${completionPercentage}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Edit/Save Button */}
+        <div className="flex justify-center mb-6">
+          {isEditing ? (
+            <div className="flex space-x-3">
+              <Button onClick={handleSave} className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-2 shadow-lg">
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditing(false);
+                  fetchProfile();
+                }}
+                className="border-2 border-gray-300 hover:border-gray-400"
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              onClick={() => setIsEditing(true)}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2 shadow-lg"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Button>
+          )}
+        </div>
+
+        {!isEditing && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border-2 border-blue-200 mb-6">
+            <p className="text-sm text-blue-800 text-center">
+              💡 <strong>Tip:</strong> Click "Edit Profile" to update your information and preferences for better college recommendations!
+            </p>
+          </div>
+        )}
+
+        {/* Profile Information */}
+        <div className="space-y-4">
+          {/* Personal Information */}
+          <Card className="p-4 bg-white shadow-lg border-2 border-blue-100">
+            <div className="flex items-center mb-3">
+              <User className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Full Name</Label>
+                {isEditing ? (
+                  <Input
+                    value={formData.full_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                    placeholder="Enter your full name"
+                    className="border-2 border-blue-200 focus:border-blue-400"
                   />
                 ) : (
-                  <span className="text-white font-bold text-2xl">
-                    {getInitials(formData.full_name || profile?.email || 'User')}
-                  </span>
+                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
+                    {profile?.full_name || 'Not provided'}
+                  </p>
                 )}
               </div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                id="profile-picture"
-                disabled={uploading}
-              />
-              <label htmlFor="profile-picture">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute bottom-0 right-1/2 transform translate-x-1/2 translate-y-1/2 p-2 cursor-pointer"
-                  disabled={uploading}
-                  asChild
-                >
-                  <span>
-                    <Camera className="w-4 h-4" />
-                  </span>
-                </Button>
-              </label>
-            </div>
-            <h3 className="font-semibold text-gray-800 text-lg">{formData.full_name || 'User'}</h3>
-            <p className="text-sm text-gray-600">{formData.email}</p>
-            <div className="flex items-center justify-center mt-3 space-x-6">
-              <div className="text-center">
-                <div className="text-lg font-bold text-green-600">{profile?.profile_completion_percentage || 0}%</div>
-                <div className="text-xs text-gray-600">Profile Complete</div>
-              </div>
-              <div 
-                className="text-center cursor-pointer"
-                onClick={() => navigate('/favorites')}
-              >
-                <div className="text-lg font-bold text-blue-600">{savedCollegesCount}</div>
-                <div className="text-xs text-gray-600">Saved Colleges</div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Phone Number</Label>
+                {isEditing ? (
+                  <Input
+                    value={formData.phone_number}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                    placeholder="Enter your phone number"
+                    className="border-2 border-blue-200 focus:border-blue-400"
+                  />
+                ) : (
+                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
+                    {profile?.phone_number || 'Not provided'}
+                  </p>
+                )}
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Personal Information */}
-        <Card className="p-4 mb-4">
-          <h3 className="font-semibold text-gray-800 mb-3">Personal Information</h3>
-          <div className="space-y-3">
-            <div>
-              <Label htmlFor="full_name">Full Name</Label>
-              <Input
-                id="full_name"
-                value={formData.full_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                disabled={!isEditing}
-                className={!isEditing ? 'bg-gray-50' : ''}
-                placeholder="Enter your full name"
-              />
+          {/* Academic Information */}
+          <Card className="p-4 bg-white shadow-lg border-2 border-green-100">
+            <div className="flex items-center mb-3">
+              <GraduationCap className="w-5 h-5 text-green-600 mr-2" />
+              <h3 className="text-lg font-bold text-gray-900">Academic Preferences</h3>
             </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={formData.email}
-                disabled
-                className="bg-gray-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone_number">Phone Number</Label>
-              <Input
-                id="phone_number"
-                value={formData.phone_number}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
-                disabled={!isEditing}
-                className={!isEditing ? 'bg-gray-50' : ''}
-                placeholder="Enter your phone number"
-              />
-            </div>
-          </div>
-        </Card>
-
-        {/* Academic Information */}
-        <Card className="p-4 mb-4">
-          <h3 className="font-semibold text-gray-800 mb-3">Academic Information</h3>
-          <div className="space-y-3">
-            <div>
-              <Label htmlFor="academic_field">Current Education Level</Label>
-              <Select 
-                value={formData.academic_field} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, academic_field: value }))}
-                disabled={!isEditing}
-              >
-                <SelectTrigger className={!isEditing ? 'bg-gray-50' : ''}>
-                  <SelectValue placeholder="Select your education level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="12th">12th Grade</SelectItem>
-                  <SelectItem value="diploma">Diploma</SelectItem>
-                  <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                  <SelectItem value="postgraduate">Postgraduate</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="preferred_course">Preferred Course</Label>
-              <Select 
-                value={formData.preferred_course} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, preferred_course: value }))}
-                disabled={!isEditing}
-              >
-                <SelectTrigger className={!isEditing ? 'bg-gray-50' : ''}>
-                  <SelectValue placeholder="Select preferred course" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="btech">B.Tech</SelectItem>
-                  <SelectItem value="mbbs">MBBS</SelectItem>
-                  <SelectItem value="bds">BDS</SelectItem>
-                  <SelectItem value="bsc">B.Sc</SelectItem>
-                  <SelectItem value="bcom">B.Com</SelectItem>
-                  <SelectItem value="bba">BBA</SelectItem>
-                  <SelectItem value="mtech">M.Tech</SelectItem>
-                  <SelectItem value="mba">MBA</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </Card>
-
-        {/* Preferences */}
-        <Card className="p-4 mb-4">
-          <h3 className="font-semibold text-gray-800 mb-3">Preferences</h3>
-          <div className="space-y-4">
-            <div>
-              <Label>Preferred Branches</Label>
-              <div className="flex flex-wrap gap-2 mt-2 mb-2">
-                {formData.preferred_branches.map((branch) => (
-                  <span key={branch} className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded flex items-center">
-                    {branch}
-                    {isEditing && (
-                      <button 
-                        onClick={() => removePreferredBranch(branch)}
-                        className="ml-1 text-blue-500 hover:text-blue-700"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </span>
-                ))}
+            
+            <div className="space-y-3">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Academic Field</Label>
+                {isEditing ? (
+                  <Select value={formData.academic_field} onValueChange={(value) => setFormData(prev => ({ ...prev, academic_field: value }))}>
+                    <SelectTrigger className="border-2 border-green-200 focus:border-green-400">
+                      <SelectValue placeholder="Select academic field" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Engineering">Engineering</SelectItem>
+                      <SelectItem value="Medical">Medical</SelectItem>
+                      <SelectItem value="Arts">Arts</SelectItem>
+                      <SelectItem value="Commerce">Commerce</SelectItem>
+                      <SelectItem value="Science">Science</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
+                    {profile?.academic_field || 'Not selected'}
+                  </p>
+                )}
               </div>
-              {isEditing && (
-                <Select onValueChange={addPreferredBranch}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Add branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ENGINEERING_BRANCHES.filter(branch => !formData.preferred_branches.includes(branch)).map((branch) => (
-                      <SelectItem key={branch} value={branch}>{branch}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Preferred Course</Label>
+                {isEditing ? (
+                  <Input
+                    value={formData.preferred_course}
+                    onChange={(e) => setFormData(prev => ({ ...prev, preferred_course: e.target.value }))}
+                    placeholder="e.g., B.Tech, MBBS, B.Com"
+                    className="border-2 border-green-200 focus:border-green-400"
+                  />
+                ) : (
+                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
+                    {profile?.preferred_course || 'Not specified'}
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Location Preferences */}
+          <Card className="p-4 bg-white shadow-lg border-2 border-purple-100">
+            <div className="flex items-center mb-3">
+              <MapPin className="w-5 h-5 text-purple-600 mr-2" />
+              <h3 className="text-lg font-bold text-gray-900">Location Preferences</h3>
             </div>
             
             <div>
-              <Label>Preferred Locations</Label>
-              <div className="flex flex-wrap gap-2 mt-2 mb-2">
-                {formData.preferred_locations.map((location) => (
-                  <span key={location} className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded flex items-center">
-                    {location}
-                    {isEditing && (
-                      <button 
-                        onClick={() => removePreferredLocation(location)}
-                        className="ml-1 text-green-500 hover:text-green-700"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </span>
-                ))}
-              </div>
-              {isEditing && (
-                <Select onValueChange={addPreferredLocation}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Add location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INDIAN_CITIES.filter(city => !formData.preferred_locations.includes(city)).map((city) => (
-                      <SelectItem key={city} value={city}>{city}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <Label className="text-sm font-medium text-gray-700">Preferred Locations</Label>
+              {isEditing ? (
+                <Input
+                  value={formData.preferred_locations.join(', ')}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    preferred_locations: e.target.value.split(', ').filter(loc => loc.trim()) 
+                  }))}
+                  placeholder="e.g., Mumbai, Delhi, Bangalore"
+                  className="border-2 border-purple-200 focus:border-purple-400"
+                />
+              ) : (
+                <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
+                  {profile?.preferred_locations?.length > 0 ? profile.preferred_locations.join(', ') : 'Not specified'}
+                </p>
               )}
+            </div>
+          </Card>
+
+          {/* Budget Information */}
+          <Card className="p-4 bg-white shadow-lg border-2 border-orange-100">
+            <div className="flex items-center mb-3">
+              <CreditCard className="w-5 h-5 text-orange-600 mr-2" />
+              <h3 className="text-lg font-bold text-gray-900">Budget Range</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="budget_min">Budget Min (₹)</Label>
-                <Input
-                  id="budget_min"
-                  value={formData.budget_min}
-                  onChange={(e) => setFormData(prev => ({ ...prev, budget_min: e.target.value }))}
-                  disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
-                  placeholder="50,000"
-                  type="number"
-                />
+                <Label className="text-sm font-medium text-gray-700">Min Budget (₹)</Label>
+                {isEditing ? (
+                  <Input
+                    type="number"
+                    value={formData.budget_min}
+                    onChange={(e) => setFormData(prev => ({ ...prev, budget_min: e.target.value }))}
+                    placeholder="e.g., 100000"
+                    className="border-2 border-orange-200 focus:border-orange-400"
+                  />
+                ) : (
+                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
+                    {profile?.budget_min ? `₹${(profile.budget_min / 100000).toFixed(1)}L` : 'Not set'}
+                  </p>
+                )}
               </div>
+
               <div>
-                <Label htmlFor="budget_max">Budget Max (₹)</Label>
-                <Input
-                  id="budget_max"
-                  value={formData.budget_max}
-                  onChange={(e) => setFormData(prev => ({ ...prev, budget_max: e.target.value }))}
-                  disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
-                  placeholder="2,00,000"
-                  type="number"
-                />
+                <Label className="text-sm font-medium text-gray-700">Max Budget (₹)</Label>
+                {isEditing ? (
+                  <Input
+                    type="number"
+                    value={formData.budget_max}
+                    onChange={(e) => setFormData(prev => ({ ...prev, budget_max: e.target.value }))}
+                    placeholder="e.g., 500000"
+                    className="border-2 border-orange-200 focus:border-orange-400"
+                  />
+                ) : (
+                  <p className="text-base text-gray-900 bg-gray-50 p-2 rounded border">
+                    {profile?.budget_max ? `₹${(profile.budget_max / 100000).toFixed(1)}L` : 'Not set'}
+                  </p>
+                )}
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Action Buttons */}
-        {isEditing && (
-          <div className="flex space-x-3 mb-4">
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => setIsEditing(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              className="flex-1 bg-green-600 hover:bg-green-700"
-              onClick={handleSave}
-            >
-              Save Changes
-            </Button>
-          </div>
-        )}
-
-        {/* Logout Button */}
-        <Button 
-          variant="outline" 
-          className="w-full text-red-600 border-red-200 hover:bg-red-50"
-          onClick={handleLogout}
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Logout
-        </Button>
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-evenly gap-2 py-3">
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-4 mt-6">
             <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
-              onClick={() => navigate('/home')}
+              variant="outline"
+              className="h-16 flex-col space-y-2 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50"
+              onClick={() => navigate('/favorites')}
             >
-              <HomeIcon className="w-6 h-6" />
-              <span className="text-xs">Home</span>
+              <Heart className="w-5 h-5 text-blue-600" />
+              <span className="text-sm font-medium">Saved Colleges</span>
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
-              onClick={() => navigate('/colleges')}
-            >
-              <Users className="w-6 h-6" />
-              <span className="text-xs">Colleges</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
+              variant="outline"
+              className="h-16 flex-col space-y-2 border-2 border-green-200 hover:border-green-400 hover:bg-green-50"
               onClick={() => navigate('/predictor')}
             >
-              <BookOpen className="w-6 h-6" />
-              <span className="text-xs">Predictor</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
-              onClick={() => navigate('/news')}
-            >
-              <Newspaper className="w-6 h-6" />
-              <span className="text-xs">News</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-green-600"
-            >
-              <User className="w-6 h-6" />
-              <span className="text-xs">Profile</span>
+              <BookOpen className="w-5 h-5 text-green-600" />
+              <span className="text-sm font-medium">Rank Predictor</span>
             </Button>
           </div>
         </div>
