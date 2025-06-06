@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -625,14 +624,14 @@ const ProfilePage = () => {
         </Button>
       </div>
 
-      {/* Bottom Navigation - Updated with larger icons (24px) */}
+      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
         <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-around py-2">
+          <div className="flex items-center justify-evenly gap-2 py-3">
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
               onClick={() => navigate('/home')}
             >
               <HomeIcon className="w-6 h-6" />
@@ -641,7 +640,7 @@ const ProfilePage = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
               onClick={() => navigate('/colleges')}
             >
               <Users className="w-6 h-6" />
@@ -650,7 +649,7 @@ const ProfilePage = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
               onClick={() => navigate('/predictor')}
             >
               <BookOpen className="w-6 h-6" />
@@ -659,7 +658,7 @@ const ProfilePage = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-400"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
               onClick={() => navigate('/news')}
             >
               <Newspaper className="w-6 h-6" />
@@ -668,7 +667,7 @@ const ProfilePage = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-green-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-green-600"
             >
               <User className="w-6 h-6" />
               <span className="text-xs">Profile</span>
