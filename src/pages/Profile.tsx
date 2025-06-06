@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, User, Settings, LogOut, Edit } from "lucide-react";
+import { ArrowLeft, User, Settings, LogOut, Edit, Home as HomeIcon, Users, BookOpen, Newspaper } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -169,7 +168,7 @@ const Profile = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto p-4">
+      <div className="max-w-md mx-auto p-4 pb-24">
         {/* Profile Header */}
         <Card className="p-6 mb-6">
           <div className="text-center">
@@ -286,6 +285,58 @@ const Profile = () => {
             <LogOut className="w-4 h-4 mr-2" />
             Logout
           </Button>
+        </div>
+      </div>
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-evenly gap-2 py-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
+              onClick={() => navigate('/home')}
+            >
+              <HomeIcon className="w-6 h-6" />
+              <span className="text-xs">Home</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
+              onClick={() => navigate('/colleges')}
+            >
+              <Users className="w-6 h-6" />
+              <span className="text-xs">Colleges</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
+              onClick={() => navigate('/predictor')}
+            >
+              <BookOpen className="w-6 h-6" />
+              <span className="text-xs">Predictor</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
+              onClick={() => navigate('/news')}
+            >
+              <Newspaper className="w-6 h-6" />
+              <span className="text-xs">News</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-green-600"
+            >
+              <User className="w-6 h-6" />
+              <span className="text-xs">Profile</span>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
