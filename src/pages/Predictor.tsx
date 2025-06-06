@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -427,50 +426,50 @@ const Predictor = () => {
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
         <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-around py-2">
+          <div className="flex items-center justify-evenly gap-2 py-3">
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
               onClick={() => navigate('/home')}
             >
               <HomeIcon className="w-6 h-6" />
-              <span className="text-xs font-medium">Home</span>
+              <span className="text-xs">Home</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
               onClick={() => navigate('/colleges')}
             >
               <Users className="w-6 h-6" />
-              <span className="text-xs font-medium">Colleges</span>
+              <span className="text-xs">Colleges</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-green-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-green-600"
             >
               <BookOpen className="w-6 h-6" />
-              <span className="text-xs font-medium">Predictor</span>
+              <span className="text-xs">Predictor</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
               onClick={() => navigate('/news')}
             >
               <Newspaper className="w-6 h-6" />
-              <span className="text-xs font-medium">News</span>
+              <span className="text-xs">News</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-1 p-2 text-gray-500"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
               onClick={() => navigate('/profile')}
             >
               <User className="w-6 h-6" />
-              <span className="text-xs font-medium">Profile</span>
+              <span className="text-xs">Profile</span>
             </Button>
           </div>
         </div>
