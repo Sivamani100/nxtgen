@@ -56,16 +56,6 @@ const Login = () => {
           <div className="text-3xl font-bold text-green-600 mb-2">Welcome back!</div>
           <p className="text-gray-600">Ready to gain previous Experience</p>
           
-          {/* Illustration */}
-          <div className="my-6 flex justify-center">
-            <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-sm text-gray-500">👩‍💻</div>
-                <div className="text-xs text-gray-400 mt-2">Learning Experience</div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
