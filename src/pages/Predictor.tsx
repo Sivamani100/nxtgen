@@ -440,6 +440,7 @@ const Predictor = () => {
                   </div>
                 ))}
               </div>
+              <br></br>
               <h1>You can see the predicted colleges in the College Predict Page (See in the top of this page )</h1>
             </Card>
           </div>
