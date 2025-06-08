@@ -43,7 +43,7 @@ const Home = () => {
     fetchColleges();
     fetchNews();
     fetchNotificationCount();
-    checkEamcetPopupStatus();
+    showEamcetPopupAfterDelay();
   }, []);
 
   useEffect(() => {
@@ -52,36 +52,15 @@ const Home = () => {
     }
   }, [userProfile]);
 
-  const checkEamcetPopupStatus = () => {
-    const popupShownKey = 'eamcet_popup_shown';
-    const popupExpiryKey = 'eamcet_popup_expiry';
-    
-    const popupShown = localStorage.getItem(popupShownKey);
-    const popupExpiry = localStorage.getItem(popupExpiryKey);
-    
-    const currentTime = new Date().getTime();
-    
-    // If no expiry date is set, set it for one month from now
-    if (!popupExpiry) {
-      const oneMonthFromNow = new Date();
-      oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
-      localStorage.setItem(popupExpiryKey, oneMonthFromNow.getTime().toString());
-    }
-    
-    // Check if popup should be shown
-    const expiryTime = parseInt(popupExpiry || '0');
-    
-    if (!popupShown && currentTime < expiryTime) {
-      // Show popup after a short delay to ensure smooth loading
-      setTimeout(() => {
-        setShowEamcetPopup(true);
-      }, 2000);
-    }
+  const showEamcetPopupAfterDelay = () => {
+    // Show popup after 1 second every time the app opens
+    setTimeout(() => {
+      setShowEamcetPopup(true);
+    }, 1000);
   };
 
   const handleCloseEamcetPopup = () => {
     setShowEamcetPopup(false);
-    localStorage.setItem('eamcet_popup_shown', 'true');
   };
 
   const fetchUserProfile = async () => {

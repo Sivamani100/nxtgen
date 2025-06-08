@@ -43,7 +43,7 @@ const EamcetResultsPopup = ({ open, onClose }: EamcetResultsPopupProps) => {
               <div className="flex items-center justify-center mb-2">
                 <Trophy className="w-8 h-8 text-yellow-600 mr-2" />
                 <DialogTitle className="text-xl font-bold text-green-700">
-                  EAMCET Results Out!
+                  AP EAPCET Results 2025!
                 </DialogTitle>
               </div>
             </DialogHeader>
@@ -52,10 +52,10 @@ const EamcetResultsPopup = ({ open, onClose }: EamcetResultsPopupProps) => {
               <div className="text-center space-y-4">
                 <div className="bg-gradient-to-r from-green-100 to-blue-100 p-4 rounded-lg border border-green-200">
                   <h3 className="text-lg font-bold text-gray-800 mb-2">
-                    🎉 Check Your EAMCET Results Now!
+                    🎉 Check Your AP EAPCET Engineering Results 2025!
                   </h3>
                   <p className="text-sm text-gray-600 mb-3">
-                    EAMCET results are now available. Click below to check your results and explore your college options.
+                    AP EAPCET Engineering results are now available. Click below to check your results and explore your college options.
                   </p>
                   <div className="flex items-center justify-center text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
                     <Calendar className="w-3 h-3 mr-1" />
@@ -69,7 +69,7 @@ const EamcetResultsPopup = ({ open, onClose }: EamcetResultsPopupProps) => {
                     className="w-full h-12 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-bold text-base shadow-lg"
                   >
                     <ExternalLink className="w-5 h-5 mr-2" />
-                    Check EAMCET Results
+                    Check AP EAPCET Results
                   </Button>
                   
                   <Button
@@ -82,7 +82,7 @@ const EamcetResultsPopup = ({ open, onClose }: EamcetResultsPopupProps) => {
                 </div>
                 
                 <p className="text-xs text-gray-500 text-center">
-                  This notification will only show for a limited time
+                  Stay updated with the latest results
                 </p>
               </div>
             </Card>
@@ -100,7 +100,7 @@ const EamcetResultsPopup = ({ open, onClose }: EamcetResultsPopupProps) => {
                 Back
               </Button>
               <DialogTitle className="text-lg font-bold text-green-700">
-                EAMCET Results
+                AP EAPCET Results 2025
               </DialogTitle>
               <Button
                 variant="ghost"
@@ -114,9 +114,9 @@ const EamcetResultsPopup = ({ open, onClose }: EamcetResultsPopupProps) => {
             
             <div className="flex-1 bg-white rounded-lg border-2 border-green-200 overflow-hidden">
               <iframe
-                src="https://way2.co/MTY2NDEzOTg=_lng1/-1"
+                src="https://results.eenadu.net/ap-eapcet-2025/ap-eapcet-engineering-results-2025.aspx"
                 className="w-full h-full"
-                title="EAMCET Results"
+                title="AP EAPCET Engineering Results 2025"
                 style={{ minHeight: '70vh' }}
                 frameBorder="0"
                 allowFullScreen
