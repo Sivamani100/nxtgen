@@ -427,15 +427,7 @@ const Predictor = () => {
               </Card>
             )}
 
-            {/* No Colleges Found */}
-            {result.predictedColleges && result.predictedColleges.length === 0 && (
-              <Card className="p-6 bg-white shadow-xl border-2 border-gray-200">
-                <div className="text-center py-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">Based on your rank, there are no colleges available</h4>
-                  <p className="text-base text-gray-600">Consider exploring other exam options or improving your rank.</p>
-                </div>
-              </Card>
-            )}
+           
 
             {/* General College Suggestions */}
             <Card className="p-6 bg-white shadow-xl border-2 border-gray-200">
