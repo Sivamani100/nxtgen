@@ -5,27 +5,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, User, Settings, LogOut, Edit, Home as HomeIcon, Users, BookOpen, Newspaper } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, User, Settings, LogOut, Edit, Home as HomeIcon, Users, BookOpen, Newspaper, PenLine, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
-interface Profile {
-  id: string;
-  email: string;
-  academic_field?: string;
-  notification_preferences?: any;
-  tutorial_completed: boolean;
-}
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 const Profile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [savedColleges, setSavedColleges] = useState<number>(0);
+  const [branchInput, setBranchInput] = useState("");
+  const [locationInput, setLocationInput] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchProfile();
+    fetchSavedColleges();
   }, []);
 
   const fetchProfile = async () => {
@@ -80,16 +82,80 @@ const Profile = () => {
     }
   };
 
+  const fetchSavedColleges = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count, error } = await supabase
+        .from('user_college_favorites')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setSavedColleges(count || 0);
+    } catch (error) {
+      console.error('Error fetching saved colleges count:', error);
+    }
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setProfilePhoto(e.target.files[0]);
+    }
+  };
+
+  const uploadProfilePhoto = async (file: File) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+      const filePath = `profile-photos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error('Failed to upload photo');
+      return null;
+    }
+  };
+
   const updateProfile = async () => {
     if (!profile) return;
 
     setSaving(true);
     try {
+      let photoUrl = profile.profile_picture_url;
+
+      if (profilePhoto) {
+        photoUrl = await uploadProfilePhoto(profilePhoto);
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
           academic_field: profile.academic_field,
-          notification_preferences: profile.notification_preferences
+          notification_preferences: profile.notification_preferences,
+          full_name: profile.full_name,
+          phone_number: profile.phone_number,
+          preferred_course: profile.preferred_course,
+          preferred_branches: profile.preferred_branches,
+          preferred_locations: profile.preferred_locations,
+          budget_min: profile.budget_min,
+          budget_max: profile.budget_max,
+          profile_picture_url: photoUrl
         })
         .eq('id', profile.id);
 
@@ -101,6 +167,8 @@ const Profile = () => {
 
       toast.success("Profile updated successfully");
       setIsEditing(false);
+      setProfilePhoto(null);
+      await fetchProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error("An unexpected error occurred");
@@ -114,7 +182,7 @@ const Profile = () => {
     if (error) {
       toast.error("Error signing out");
     } else {
-      navigate('/');
+      navigate('/login');
     }
   };
 
@@ -127,6 +195,50 @@ const Profile = () => {
         ...profile.notification_preferences,
         [key]: value
       }
+    });
+  };
+
+  const addBranch = () => {
+    if (!branchInput.trim() || !profile) return;
+    
+    const branches = profile.preferred_branches || [];
+    if (!branches.includes(branchInput.trim())) {
+      setProfile({
+        ...profile,
+        preferred_branches: [...branches, branchInput.trim()]
+      });
+    }
+    setBranchInput("");
+  };
+
+  const removeBranch = (branch: string) => {
+    if (!profile || !profile.preferred_branches) return;
+    
+    setProfile({
+      ...profile,
+      preferred_branches: profile.preferred_branches.filter(b => b !== branch)
+    });
+  };
+
+  const addLocation = () => {
+    if (!locationInput.trim() || !profile) return;
+    
+    const locations = profile.preferred_locations || [];
+    if (!locations.includes(locationInput.trim())) {
+      setProfile({
+        ...profile,
+        preferred_locations: [...locations, locationInput.trim()]
+      });
+    }
+    setLocationInput("");
+  };
+
+  const removeLocation = (location: string) => {
+    if (!profile || !profile.preferred_locations) return;
+    
+    setProfile({
+      ...profile,
+      preferred_locations: profile.preferred_locations.filter(l => l !== location)
     });
   };
 
@@ -150,7 +262,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pb-20">
       {/* Header */}
       <div className="bg-gray-100 shadow-sm p-4">
         <div className="flex items-center justify-between max-w-md mx-auto">
@@ -160,133 +272,369 @@ const Profile = () => {
             </Button>
             <h1 className="text-lg font-semibold text-blue-600">Profile</h1>
           </div>
-          <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-            <Settings className="w-5 h-5" />
-          </Button>
+          {!isEditing ? (
+            <Button 
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <PenLine size={16} />
+              Edit
+            </Button>
+          ) : (
+            <Button 
+              onClick={updateProfile}
+              disabled={saving}
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Check size={16} />
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto p-4 pb-24">
+      <div className="max-w-md mx-auto p-4">
         {/* Profile Header */}
         <Card className="p-6 mb-6 bg-white border border-blue-200">
           <div className="text-center">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <User className="w-10 h-10 text-white" />
+              {profile.profile_picture_url ? (
+                <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <User className="w-10 h-10 text-white" />
+              )}
             </div>
+            {isEditing && (
+              <div className="mb-4">
+                <Label htmlFor="profilePhoto" className="text-blue-600">Change Profile Photo</Label>
+                <Input
+                  id="profilePhoto"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="mt-1 bg-gray-100 text-gray-800 border-blue-300"
+                />
+              </div>
+            )}
             <h2 className="text-xl font-semibold text-blue-600 mb-1">
-              {profile.email.split('@')[0]}
+              {profile.full_name || profile.email.split('@')[0]}
             </h2>
             <p className="text-gray-600 mb-4">{profile.email}</p>
-            <Button 
-              onClick={() => setIsEditing(!isEditing)}
-              className="bg-blue-600 text-white hover:bg-blue-700"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-            </Button>
+            <p className="text-gray-600 mb-4">Saved Colleges: {savedColleges}</p>
           </div>
         </Card>
 
         {/* Profile Details */}
-        <Card className="p-6 mb-6 bg-white border border-blue-200">
-          <h3 className="font-semibold text-blue-600 mb-4">Profile Information</h3>
+        {isEditing ? (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="email" className="text-blue-600">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={profile.email}
-                disabled
-                className="mt-1 bg-gray-100 text-gray-800 border-blue-300"
-              />
-            </div>
-            <div>
-              <Label htmlFor="academic_field" className="text-blue-600">Academic Field</Label>
-              <Input
-                id="academic_field"
-                value={profile.academic_field || ''}
-                onChange={(e) => setProfile({ ...profile, academic_field: e.target.value })}
-                placeholder="e.g., Computer Science, Engineering"
-                disabled={!isEditing}
-                className="mt-1 bg-gray-100 text-gray-800 border-blue-300 placeholder-gray-500"
-              />
-            </div>
-          </div>
-        </Card>
+            {/* Personal Information */}
+            <Card className="p-5 bg-white shadow-sm border border-blue-200">
+              <h3 className="text-lg font-semibold text-blue-600 mb-4">Personal Information</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-blue-600">Full Name</Label>
+                  <Input
+                    value={profile.full_name || ''}
+                    onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                    className="border-blue-200 focus:border-blue-500"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div>
+                  <Label className="text-blue-600">Email</Label>
+                  <Input
+                    value={profile.email || ''}
+                    disabled
+                    className="bg-gray-100 border-blue-200"
+                  />
+                </div>
+                <div>
+                  <Label className="text-blue-600">Phone Number</Label>
+                  <Input
+                    value={profile.phone_number || ''}
+                    onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                    className="border-blue-200 focus:border-blue-500"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+              </div>
+            </Card>
 
-        {/* Notification Preferences */}
-        <Card className="p-6 mb-6 bg-white border border-blue-200">
-          <h3 className="font-semibold text-blue-600 mb-4">Notification Preferences</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-blue-600">Scholarship Updates</Label>
-                <p className="text-sm text-gray-600">Get notified about new scholarships</p>
+            {/* Academic Information */}
+            <Card className="p-5 bg-white shadow-sm border border-blue-200">
+              <h3 className="text-lg font-semibold text-blue-600 mb-4">Academic Information</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-blue-600">Current Education Level</Label>
+                  <Select
+                    value={profile.academic_field || ''}
+                    onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
+                  >
+                    <SelectTrigger className="border-blue-200 focus:border-blue-500">
+                      <SelectValue placeholder="Select your education level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="12th Grade">12th Grade</SelectItem>
+                      <SelectItem value="engineering">Engineering</SelectItem>
+                      <SelectItem value="medical">Medical</SelectItem>
+                      <SelectItem value="commerce">Commerce</SelectItem>
+                      <SelectItem value="arts">Arts</SelectItem>
+                      <SelectItem value="science">Science</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-blue-600">Preferred Course</Label>
+                  <Select
+                    value={profile.preferred_course || ''}
+                    onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
+                  >
+                    <SelectTrigger className="border-blue-200 focus:border-blue-500">
+                      <SelectValue placeholder="Select your preferred course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="B.Tech">B.Tech</SelectItem>
+                      <SelectItem value="MBBS">MBBS</SelectItem>
+                      <SelectItem value="B.Com">B.Com</SelectItem>
+                      <SelectItem value="BBA">BBA</SelectItem>
+                      <SelectItem value="B.Sc">B.Sc</SelectItem>
+                      <SelectItem value="B.A">B.A</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <Switch
-                checked={profile.notification_preferences?.scholarships ?? true}
-                onCheckedChange={(checked) => updateNotificationPreference('scholarships', checked)}
-                disabled={!isEditing}
-                className="data-[state=checked]:bg-blue-600"
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-blue-600">Admission Updates</Label>
-                <p className="text-sm text-gray-600">Get notified about admission deadlines</p>
+            </Card>
+
+            {/* Preferences */}
+            <Card className="p-5 bg-white shadow-sm border border-blue-200">
+              <h3 className="text-lg font-semibold text-blue-600 mb-4">Preferences</h3>
+              <div className="space-y-6">
+                <div>
+                  <Label className="text-blue-600 mb-2 block">Preferred Branches</Label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {profile.preferred_branches?.map((branch, idx) => (
+                      <Badge 
+                        key={idx} 
+                        className="bg-blue-100 text-blue-800 hover:bg-blue-200 gap-1.5 pl-3 cursor-default"
+                      >
+                        {branch}
+                        <button 
+                          onClick={() => removeBranch(branch)}
+                          className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={branchInput}
+                      onChange={(e) => setBranchInput(e.target.value)}
+                      placeholder="Add branch"
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                    <Button 
+                      onClick={addBranch} 
+                      size="sm" 
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-blue-600 mb-2 block">Preferred Locations</Label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {profile.preferred_locations?.map((location, idx) => (
+                      <Badge 
+                        key={idx} 
+                        className="bg-blue-100 text-blue-800 hover:bg-blue-200 gap-1.5 pl-3 cursor-default"
+                      >
+                        {location}
+                        <button 
+                          onClick={() => removeLocation(location)}
+                          className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      placeholder="Add location"
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                    <Button 
+                      onClick={addLocation} 
+                      size="sm" 
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-blue-600">Budget Min (₹)</Label>
+                    <Input
+                      type="number"
+                      value={profile.budget_min || ''}
+                      onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || null })}
+                      className="border-blue-200 focus:border-blue-500"
+                      placeholder="Minimum budget"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-blue-600">Budget Max (₹)</Label>
+                    <Input
+                      type="number"
+                      value={profile.budget_max || ''}
+                      onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || null })}
+                      className="border-blue-200 focus:border-blue-500"
+                      placeholder="Maximum budget"
+                    />
+                  </div>
+                </div>
               </div>
-              <Switch
-                checked={profile.notification_preferences?.admissions ?? true}
-                onCheckedChange={(checked) => updateNotificationPreference('admissions', checked)}
-                disabled={!isEditing}
-                className="data-[state=checked]:bg-blue-600"
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-blue-600">Event Updates</Label>
-                <p className="text-sm text-gray-600">Get notified about educational events</p>
+            </Card>
+
+            {/* Notification Preferences */}
+            <Card className="p-6 mb-6 bg-white border border-blue-200">
+              <h3 className="font-semibold text-blue-600 mb-4">Notification Preferences</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-blue-600">Scholarship Updates</Label>
+                    <p className="text-sm text-gray-600">Get notified about new scholarships</p>
+                  </div>
+                  <Switch
+                    checked={profile.notification_preferences?.scholarships ?? true}
+                    onCheckedChange={(checked) => updateNotificationPreference('scholarships', checked)}
+                    disabled={!isEditing}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-blue-600">Admission Updates</Label>
+                    <p className="text-sm text-gray-600">Get notified about admission deadlines</p>
+                  </div>
+                  <Switch
+                    checked={profile.notification_preferences?.admissions ?? true}
+                    onCheckedChange={(checked) => updateNotificationPreference('admissions', checked)}
+                    disabled={!isEditing}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-blue-600">Event Updates</Label>
+                    <p className="text-sm text-gray-600">Get notified about educational events</p>
+                  </div>
+                  <Switch
+                    checked={profile.notification_preferences?.events ?? true}
+                    onCheckedChange={(checked) => updateNotificationPreference('events', checked)}
+                    disabled={!isEditing}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
               </div>
-              <Switch
-                checked={profile.notification_preferences?.events ?? true}
-                onCheckedChange={(checked) => updateNotificationPreference('events', checked)}
-                disabled={!isEditing}
-                className="data-[state=checked]:bg-blue-600"
-              />
-            </div>
+            </Card>
           </div>
-        </Card>
+        ) : (
+          <Card className="p-6 mb-6 bg-white border border-blue-200">
+            <h3 className="font-semibold text-blue-600 mb-4">Profile Information</h3>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-blue-600">Full Name</Label>
+                <p className="text-gray-600">{profile.full_name || 'Not set'}</p>
+              </div>
+              <div>
+                <Label className="text-blue-600">Email</Label>
+                <p className="text-gray-600">{profile.email}</p>
+              </div>
+              <div>
+                <Label className="text-blue-600">Phone Number</Label>
+                <p className="text-gray-600">{profile.phone_number || 'Not set'}</p>
+              </div>
+              <div>
+                <Label className="text-blue-600">Current Education Level</Label>
+                <p className="text-gray-600">{profile.academic_field || 'Not set'}</p>
+              </div>
+              <div>
+                <Label className="text-blue-600">Preferred Course</Label>
+                <p className="text-gray-600">{profile.preferred_course || 'Not set'}</p>
+              </div>
+              <div>
+                <Label className="text-blue-600">Preferred Branches</Label>
+                <div className="flex flex-wrap gap-2">
+                  {profile.preferred_branches?.length ? (
+                    profile.preferred_branches.map((branch, idx) => (
+                      <Badge key={idx} className="bg-blue-100 text-blue-800">{branch}</Badge>
+                    ))
+                  ) : (
+                    <p className="text-gray-600">None</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Label className="text-blue-600">Preferred Locations</Label>
+                <div className="flex flex-wrap gap-2">
+                  {profile.preferred_locations?.length ? (
+                    profile.preferred_locations.map((location, idx) => (
+                      <Badge key={idx} className="bg-blue-100 text-blue-800">{location}</Badge>
+                    ))
+                  ) : (
+                    <p className="text-gray-600">None</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Label className="text-blue-600">Budget Range</Label>
+                <p className="text-gray-600">
+                  {profile.budget_min && profile.budget_max 
+                    ? `₹${profile.budget_min} - ₹${profile.budget_max}`
+                    : 'Not set'}
+                </p>
+              </div>
+              <div>
+                <Label className="text-blue-600">Notification Preferences</Label>
+                <div className="text-gray-600">
+                  <p>Scholarships: {profile.notification_preferences?.scholarships ? 'On' : 'Off'}</p>
+                  <p>Admissions: {profile.notification_preferences?.admissions ? 'On' : 'Off'}</p>
+                  <p>Events: {profile.notification_preferences?.events ? 'On' : 'Off'}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          {isEditing && (
-            <Button 
-              onClick={updateProfile}
-              disabled={saving}
-              className="w-full bg-blue-600 text-white hover:bg-blue-700"
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </Button>
+          {!isEditing && (
+            <>
+              <Button 
+                onClick={() => navigate('/change-password')}
+                variant="outline"
+                className="w-full text-blue-600 border-blue-600 hover:bg-blue-100"
+              >
+                Change Password
+              </Button>
+              <Button 
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full text-blue-600 border-blue-600 hover:bg-blue-100"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </>
           )}
-          
-          <Button 
-            onClick={() => navigate('/change-password')}
-            variant="outline"
-            className="w-full text-blue-600 border-blue-600 hover:bg-blue-100"
-          >
-            Change Password
-          </Button>
-          
-          <Button 
-            onClick={handleLogout}
-            variant="outline"
-            className="w-full text-blue-600 border-blue-600 hover:bg-blue-100"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
         </div>
       </div>
 
@@ -297,7 +645,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
               onClick={() => navigate('/home')}
             >
               <HomeIcon className="w-6 h-6" />
@@ -306,7 +654,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
               onClick={() => navigate('/colleges')}
             >
               <Users className="w-6 h-6" />
@@ -315,7 +663,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
               onClick={() => navigate('/predictor')}
             >
               <BookOpen className="w-6 h-6" />
@@ -324,7 +672,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
               onClick={() => navigate('/news')}
             >
               <Newspaper className="w-6 h-6" />
@@ -333,7 +681,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-blue-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-blue-600 bg-blue-50"
             >
               <User className="w-6 h-6" />
               <span className="text-xs">Profile</span>
