@@ -436,10 +436,11 @@ const Predictor = () => {
                 {result.colleges.map((college, index) => (
                   <div key={index} className="bg-gradient-to-r from-gray-100 to-blue-100 p-3 rounded-lg border border-gray-200">
                     <span className="text-base font-medium text-gray-800">{college}</span>
-                    <h1>You can see the predicted colleges in the College Predict Page (See in the top of this page )</h1>
+                    
                   </div>
                 ))}
               </div>
+              <h1>You can see the predicted colleges in the College Predict Page (See in the top of this page )</h1>
             </Card>
           </div>
         )}
