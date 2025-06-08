@@ -232,22 +232,7 @@ const CollegePredictor = () => {
           </div>
         )}
 
-        {/* No Results */}
-        {!loading && predictedColleges.length === 0 && rank && category && (
-          <Card className="p-6 bg-white shadow-xl border-2 border-gray-200">
-            <div className="text-center py-4">
-              <Target className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <h4 className="text-lg font-bold text-gray-900 mb-2">No Colleges Found</h4>
-              <p className="text-base text-gray-600 mb-4">
-                No colleges found for rank {parseInt(rank).toLocaleString()} in {category.toUpperCase()} category.
-              </p>
-              <p className="text-sm text-gray-500">
-                Try entering a different rank or check other categories.
-              </p>
-            </div>
-          </Card>
-        )}
-      </div>
+       
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
