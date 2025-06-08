@@ -6,63 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Bell, Search, Star, MapPin, TrendingUp, Award, Heart, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
 import { toast } from "sonner";
-
-// EamcetResultsPopup Component
-const EamcetResultsPopup = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 relative border-4 border-green-300">
-        {/* Close Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute top-2 right-2 p-1 hover:bg-gray-100"
-          onClick={onClose}
-        >
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </Button>
-
-        {/* Popup Content */}
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <Award className="w-8 h-8 text-yellow-500" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">AP EAPCET Results 2025!</h2>
-          <h3 className="text-lg font-semibold text-blue-600 mb-4">Check Your AP EAPCET Engineering 2025!</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            AP EAPCET Engineering results are now available. Click below to check your results and explore your college options.
-          </p>
-          <div className="inline-block bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm font-medium mb-4">
-            Results just announced!
-          </div>
-          <Button
-            className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white text-lg font-semibold py-3 mb-4"
-            onClick={() => {
-              onClose();
-              // Replace with actual navigation or result-checking logic
-              window.location.href = 'https://example.com/ap-eapcet-results'; // Placeholder link
-            }}
-          >
-            <TrendingUp className="w-5 h-5 mr-2" />
-            Check AP EAPCET Results
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full border-gray-300 text-gray-600 hover:bg-gray-100 text-sm font-medium py-2"
-            onClick={onClose}
-          >
-            Maybe Later
-          </Button>
-          <p className="text-xs text-gray-500 mt-4">Stay updated with the latest results</p>
-        </div>
-      </div>
-    </div>
-  );
-};
+import EamcetResultsPopup from "@/components/EamcetResultsPopup";
 
 interface College {
   id: number;
@@ -109,6 +53,7 @@ const Home = () => {
   }, [userProfile]);
 
   const showEamcetPopupAfterDelay = () => {
+    // Show popup after 1 second every time the app opens
     setTimeout(() => {
       setShowEamcetPopup(true);
     }, 1000);
@@ -463,3 +408,4 @@ const Home = () => {
 };
 
 export default Home;
+
