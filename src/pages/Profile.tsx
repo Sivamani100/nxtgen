@@ -653,13 +653,6 @@ const Profile = () => {
         {!isEditing && (
           <div className="space-y-3 mt-6">
             <Button 
-              onClick={() => navigate('/change-password')}
-              variant="outline"
-              className="w-full text-gray-800 border-gray-300 hover:bg-gray-100 rounded-full"
-            >
-              Change Password
-            </Button>
-            <Button 
               onClick={handleLogout}
               variant="outline"
               className="w-full text-red-500 border-gray-300 hover:bg-gray-100 rounded-full flex items-center justify-center gap-2"
