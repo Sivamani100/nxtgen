@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,8 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Target, Star, MapPin, GraduationCap, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
+import { ArrowLeft, Target, Star, MapPin, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
 import { toast } from "sonner";
+import { debounce } from "lodash";
 
 interface College {
   id: number;
@@ -35,6 +35,7 @@ const CollegePredictor = () => {
   const [category, setCategory] = useState('');
   const [predictedColleges, setPredictedColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const categories = [
@@ -49,46 +50,71 @@ const CollegePredictor = () => {
     { value: 'bc_e', label: 'BC-E' }
   ];
 
-  const predictColleges = async () => {
-    if (!rank || !category) {
-      toast.error('Please enter your rank and select category');
-      return;
-    }
-
-    const userRank = parseInt(rank);
-    if (userRank <= 0) {
-      toast.error('Please enter a valid rank');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const cutoffColumn = `cutoff_rank_${category}`;
-      
-      const { data, error } = await supabase
-        .from('colleges')
-        .select('*')
-        .gte(cutoffColumn, userRank)
-        .order(cutoffColumn, { ascending: true })
-        .limit(20);
-
-      if (error) throw error;
-
-      setPredictedColleges(data || []);
-      
-      if (data && data.length > 0) {
-        toast.success(`Found ${data.length} colleges for your rank!`);
-      } else {
-        toast.info('No colleges found for your rank. Try increasing your rank range.');
+  // Debounced predictColleges function to prevent rapid API calls
+  const predictColleges = useCallback(
+    debounce(async (userRank: string, selectedCategory: string) => {
+      if (!userRank || !selectedCategory) {
+        setError('Please enter your rank and select a category');
+        toast.error('Please enter your rank and select a category');
+        setPredictedColleges([]);
+        return;
       }
-    } catch (error) {
-      console.error('Error predicting colleges:', error);
-      toast.error('Failed to predict colleges');
-    } finally {
-      setLoading(false);
+
+      const parsedRank = parseInt(userRank);
+      if (isNaN(parsedRank) || parsedRank <= 0) {
+        setError('Please enter a valid rank');
+        toast.error('Please enter a valid rank');
+        setPredictedColleges([]);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const cutoffColumn = `cutoff_rank_${selectedCategory}`;
+        
+        const { data, error } = await supabase
+          .from('colleges')
+          .select('*')
+          .gte(cutoffColumn, parsedRank)
+          .order(cutoffColumn, { ascending: true })
+          .limit(20);
+
+        if (error) {
+          throw new Error(error.message || 'Failed to fetch colleges');
+        }
+
+        setPredictedColleges(data || []);
+        
+        if (data && data.length > 0) {
+          toast.success(`Found ${data.length} colleges for your rank!`);
+        } else {
+          setError('No colleges found for your rank. Try increasing your rank range.');
+          toast.info('No colleges found for your rank. Try increasing your rank range.');
+        }
+      } catch (error: any) {
+        console.error('Error predicting colleges:', error);
+        setError('Failed to predict colleges. Please try again later.');
+        toast.error('Failed to predict colleges. Please try again later.');
+        setPredictedColleges([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 500),
+    []
+  );
+
+  // Auto-trigger prediction when both rank and category are set
+  useEffect(() => {
+    if (rank && category) {
+      setPredictedColleges([]); // Clear previous results
+      predictColleges(rank, category);
+    } else {
+      setPredictedColleges([]);
+      setError(null);
     }
-  };
+  }, [rank, category, predictColleges]);
 
   const getCutoffForCategory = (college: College, selectedCategory: string) => {
     switch (selectedCategory) {
@@ -143,12 +169,13 @@ const CollegePredictor = () => {
                 onChange={(e) => setRank(e.target.value)}
                 placeholder="Enter your rank"
                 className="text-base border-2 border-blue-200 focus:border-blue-400"
+                disabled={loading}
               />
             </div>
 
             <div>
               <Label htmlFor="category" className="text-base font-semibold text-gray-900">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={setCategory} disabled={loading}>
                 <SelectTrigger className="border-2 border-purple-200 focus:border-purple-400">
                   <SelectValue placeholder="Select your category" />
                 </SelectTrigger>
@@ -162,8 +189,12 @@ const CollegePredictor = () => {
               </Select>
             </div>
 
+            {error && (
+              <div className="text-red-600 text-sm font-medium">{error}</div>
+            )}
+
             <Button 
-              onClick={predictColleges} 
+              onClick={() => predictColleges(rank, category)} 
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-lg font-semibold py-3 shadow-lg"
             >
@@ -215,7 +246,7 @@ const CollegePredictor = () => {
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium text-gray-700">Cutoff Rank ({category.toUpperCase()}):</span>
                       <span className="font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                        {getCutoffForCategory(college, category)?.toLocaleString()}
+                        {getCutoffForCategory(college, category)?.toLocaleString() || 'N/A'}
                       </span>
                     </div>
                     <div className="text-xs text-green-700 mt-1 font-medium">
@@ -232,57 +263,56 @@ const CollegePredictor = () => {
           </div>
         )}
 
-       
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-evenly gap-2 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
-              onClick={() => navigate('/home')}
-            >
-              <HomeIcon className="w-7 h-7" />
-              <span className="text-xs">Home</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-purple-600"
-              onClick={() => navigate('/colleges')}
-            >
-              <Users className="w-7 h-7" />
-              <span className="text-xs">Colleges</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
-              onClick={() => navigate('/predictor')}
-            >
-              <BookOpen className="w-7 h-7" />
-              <span className="text-xs">Predictor</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-orange-600"
-              onClick={() => navigate('/news')}
-            >
-              <Newspaper className="w-7 h-7" />
-              <span className="text-xs">News</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-indigo-600"
-              onClick={() => navigate('/profile')}
-            >
-              <User className="w-7 h-7" />
-              <span className="text-xs">Profile</span>
-            </Button>
+        {/* Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+          <div className="max-w-md mx-auto">
+            <div className="flex items-center justify-evenly gap-2 py-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
+                onClick={() => navigate('/home')}
+              >
+                <HomeIcon className="w-7 h-7" />
+                <span className="text-xs">Home</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-purple-600"
+                onClick={() => navigate('/colleges')}
+              >
+                <Users className="w-7 h-7" />
+                <span className="text-xs">Colleges</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
+                onClick={() => navigate('/predictor')}
+              >
+                <BookOpen className="w-7 h-7" />
+                <span className="text-xs">Predictor</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-orange-600"
+                onClick={() => navigate('/news')}
+              >
+                <Newspaper className="w-7 h-7" />
+                <span className="text-xs">News</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-indigo-600"
+                onClick={() => navigate('/profile')}
+              >
+                <User className="w-7 h-7" />
+                <span className="text-xs">Profile</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
