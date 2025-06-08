@@ -242,6 +242,24 @@ const Profile = () => {
     });
   };
 
+  const calculateProfileCompletion = () => {
+    if (!profile) return 0;
+    const fields = [
+      profile.full_name,
+      profile.email,
+      profile.phone_number,
+      profile.academic_field,
+      profile.preferred_course,
+      profile.preferred_branches?.length,
+      profile.preferred_locations?.length,
+      profile.budget_min,
+      profile.budget_max,
+      profile.profile_picture_url
+    ];
+    const filledFields = fields.filter(field => field != null && field !== '').length;
+    return Math.round((filledFields / fields.length) * 100);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -262,66 +280,68 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-gray-100 pb-20">
       {/* Header */}
-      <div className="bg-gray-100 shadow-sm p-4">
-        <div className="flex items-center justify-between max-w-md mx-auto">
-          <div className="flex items-center">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3 text-blue-600 hover:text-blue-700">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="text-lg font-semibold text-blue-600">Profile</h1>
-          </div>
-          {!isEditing ? (
-            <Button 
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <PenLine size={16} />
-              Edit
-            </Button>
-          ) : (
-            <Button 
-              onClick={updateProfile}
-              disabled={saving}
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Check size={16} />
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-          )}
-        </div>
+      <div className="bg-white shadow-sm p-4 flex justify-between items-center">
+        <h1 className="text-xl font-semibold text-gray-800">Profile</h1>
+        {!isEditing ? (
+          <Button 
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-full px-4 py-1"
+          >
+            <PenLine size={16} />
+            Edit
+          </Button>
+        ) : (
+          <Button 
+            onClick={updateProfile}
+            disabled={saving}
+            className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-full px-4 py-1"
+          >
+            <Check size={16} />
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
+        )}
       </div>
 
       {/* Content */}
       <div className="max-w-md mx-auto p-4">
         {/* Profile Header */}
-        <Card className="p-6 mb-6 bg-white border border-blue-200">
+        <Card className="p-6 mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
           <div className="text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <div className="w-20 h-20 bg-teal-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold">
               {profile.profile_picture_url ? (
                 <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
               ) : (
-                <User className="w-10 h-10 text-white" />
+                profile.full_name ? profile.full_name[0] : profile.email[0]
               )}
             </div>
             {isEditing && (
               <div className="mb-4">
-                <Label htmlFor="profilePhoto" className="text-blue-600">Change Profile Photo</Label>
+                <Label htmlFor="profilePhoto" className="text-gray-600">Change Profile Photo</Label>
                 <Input
                   id="profilePhoto"
                   type="file"
                   accept="image/*"
                   onChange={handlePhotoChange}
-                  className="mt-1 bg-gray-100 text-gray-800 border-blue-300"
+                  className="mt-1 bg-gray-100 text-gray-800 border-gray-300"
                 />
               </div>
             )}
-            <h2 className="text-xl font-semibold text-blue-600 mb-1">
+            <h2 className="text-xl font-semibold text-gray-800 mb-1">
               {profile.full_name || profile.email.split('@')[0]}
             </h2>
             <p className="text-gray-600 mb-4">{profile.email}</p>
-            <p className="text-gray-600 mb-4">Saved Colleges: {savedColleges}</p>
+            <div className="flex justify-center gap-6">
+              <div>
+                <p className="text-lg font-semibold text-teal-500">{calculateProfileCompletion()}%</p>
+                <p className="text-sm text-gray-500">Profile Complete</p>
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-teal-500">{savedColleges}</p>
+                <p className="text-sm text-gray-500">Saved Colleges</p>
+              </div>
+            </div>
           </div>
         </Card>
 
@@ -329,32 +349,32 @@ const Profile = () => {
         {isEditing ? (
           <div className="space-y-4">
             {/* Personal Information */}
-            <Card className="p-5 bg-white shadow-sm border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-600 mb-4">Personal Information</h3>
+            <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
               <div className="space-y-4">
                 <div>
-                  <Label className="text-blue-600">Full Name</Label>
+                  <Label className="text-gray-600">Full Name</Label>
                   <Input
                     value={profile.full_name || ''}
                     onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                    className="border-blue-200 focus:border-blue-500"
+                    className="border-gray-200 focus:border-teal-500"
                     placeholder="Enter your full name"
                   />
                 </div>
                 <div>
-                  <Label className="text-blue-600">Email</Label>
+                  <Label className="text-gray-600">Email</Label>
                   <Input
                     value={profile.email || ''}
                     disabled
-                    className="bg-gray-100 border-blue-200"
+                    className="bg-gray-100 border-gray-200"
                   />
                 </div>
                 <div>
-                  <Label className="text-blue-600">Phone Number</Label>
+                  <Label className="text-gray-600">Phone Number</Label>
                   <Input
                     value={profile.phone_number || ''}
                     onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
-                    className="border-blue-200 focus:border-blue-500"
+                    className="border-gray-200 focus:border-teal-500"
                     placeholder="Enter your phone number"
                   />
                 </div>
@@ -362,16 +382,16 @@ const Profile = () => {
             </Card>
 
             {/* Academic Information */}
-            <Card className="p-5 bg-white shadow-sm border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-600 mb-4">Academic Information</h3>
+            <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Academic Information</h3>
               <div className="space-y-4">
                 <div>
-                  <Label className="text-blue-600">Current Education Level</Label>
+                  <Label className="text-gray-600">Current Education Level</Label>
                   <Select
                     value={profile.academic_field || ''}
                     onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
                   >
-                    <SelectTrigger className="border-blue-200 focus:border-blue-500">
+                    <SelectTrigger className="border-gray-200 focus:border-teal-500">
                       <SelectValue placeholder="Select your education level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -385,12 +405,12 @@ const Profile = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-blue-600">Preferred Course</Label>
+                  <Label className="text-gray-600">Preferred Course</Label>
                   <Select
                     value={profile.preferred_course || ''}
                     onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
                   >
-                    <SelectTrigger className="border-blue-200 focus:border-blue-500">
+                    <SelectTrigger className="border-gray-200 focus:border-teal-500">
                       <SelectValue placeholder="Select your preferred course" />
                     </SelectTrigger>
                     <SelectContent>
@@ -407,21 +427,21 @@ const Profile = () => {
             </Card>
 
             {/* Preferences */}
-            <Card className="p-5 bg-white shadow-sm border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-600 mb-4">Preferences</h3>
+            <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Preferences</h3>
               <div className="space-y-6">
                 <div>
-                  <Label className="text-blue-600 mb-2 block">Preferred Branches</Label>
+                  <Label className="text-gray-600 mb-2 block">Preferred Branches</Label>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {profile.preferred_branches?.map((branch, idx) => (
                       <Badge 
                         key={idx} 
-                        className="bg-blue-100 text-blue-800 hover:bg-blue-200 gap-1.5 pl-3 cursor-default"
+                        className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default"
                       >
                         {branch}
                         <button 
                           onClick={() => removeBranch(branch)}
-                          className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+                          className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
                         >
                           ×
                         </button>
@@ -433,29 +453,29 @@ const Profile = () => {
                       value={branchInput}
                       onChange={(e) => setBranchInput(e.target.value)}
                       placeholder="Add branch"
-                      className="border-blue-200 focus:border-blue-500"
+                      className="border-gray-200 focus:border-teal-500"
                     />
                     <Button 
                       onClick={addBranch} 
                       size="sm" 
-                      className="bg-blue-500 hover:bg-blue-600"
+                      className="bg-teal-500 hover:bg-teal-600 text-white"
                     >
                       Add
                     </Button>
                   </div>
                 </div>
                 <div>
-                  <Label className="text-blue-600 mb-2 block">Preferred Locations</Label>
+                  <Label className="text-gray-600 mb-2 block">Preferred Locations</Label>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {profile.preferred_locations?.map((location, idx) => (
                       <Badge 
                         key={idx} 
-                        className="bg-blue-100 text-blue-800 hover:bg-blue-200 gap-1.5 pl-3 cursor-default"
+                        className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default"
                       >
                         {location}
                         <button 
                           onClick={() => removeLocation(location)}
-                          className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+                          className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
                         >
                           ×
                         </button>
@@ -467,12 +487,12 @@ const Profile = () => {
                       value={locationInput}
                       onChange={(e) => setLocationInput(e.target.value)}
                       placeholder="Add location"
-                      className="border-blue-200 focus:border-blue-500"
+                      className="border-gray-200 focus:border-teal-500"
                     />
                     <Button 
                       onClick={addLocation} 
                       size="sm" 
-                      className="bg-blue-500 hover:bg-blue-600"
+                      className="bg-teal-500 hover:bg-teal-600 text-white"
                     >
                       Add
                     </Button>
@@ -480,22 +500,22 @@ const Profile = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-blue-600">Budget Min (₹)</Label>
+                    <Label className="text-gray-600">Budget Min (₹)</Label>
                     <Input
                       type="number"
                       value={profile.budget_min || ''}
                       onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || null })}
-                      className="border-blue-200 focus:border-blue-500"
+                      className="border-gray-200 focus:border-teal-500"
                       placeholder="Minimum budget"
                     />
                   </div>
                   <div>
-                    <Label className="text-blue-600">Budget Max (₹)</Label>
+                    <Label className="text-gray-600">Budget Max (₹)</Label>
                     <Input
                       type="number"
                       value={profile.budget_max || ''}
                       onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || null })}
-                      className="border-blue-200 focus:border-blue-500"
+                      className="border-gray-200 focus:border-teal-500"
                       placeholder="Maximum budget"
                     />
                   </div>
@@ -504,107 +524,107 @@ const Profile = () => {
             </Card>
 
             {/* Notification Preferences */}
-            <Card className="p-6 mb-6 bg-white border border-blue-200">
-              <h3 className="font-semibold text-blue-600 mb-4">Notification Preferences</h3>
+            <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Notification Preferences</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-blue-600">Scholarship Updates</Label>
-                    <p className="text-sm text-gray-600">Get notified about new scholarships</p>
+                    <Label className="text-gray-600">Scholarship Updates</Label>
+                    <p className="text-sm text-gray-500">Get notified about new scholarships</p>
                   </div>
                   <Switch
                     checked={profile.notification_preferences?.scholarships ?? true}
                     onCheckedChange={(checked) => updateNotificationPreference('scholarships', checked)}
                     disabled={!isEditing}
-                    className="data-[state=checked]:bg-blue-600"
+                    className="data-[state=checked]:bg-teal-500"
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-blue-600">Admission Updates</Label>
-                    <p className="text-sm text-gray-600">Get notified about admission deadlines</p>
+                    <Label className="text-gray-600">Admission Updates</Label>
+                    <p className="text-sm text-gray-500">Get notified about admission deadlines</p>
                   </div>
                   <Switch
                     checked={profile.notification_preferences?.admissions ?? true}
                     onCheckedChange={(checked) => updateNotificationPreference('admissions', checked)}
                     disabled={!isEditing}
-                    className="data-[state=checked]:bg-blue-600"
+                    className="data-[state=checked]:bg-teal-500"
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-blue-600">Event Updates</Label>
-                    <p className="text-sm text-gray-600">Get notified about educational events</p>
+                    <Label className="text-gray-600">Event Updates</Label>
+                    <p className="text-sm text-gray-500">Get notified about educational events</p>
                   </div>
                   <Switch
                     checked={profile.notification_preferences?.events ?? true}
                     onCheckedChange={(checked) => updateNotificationPreference('events', checked)}
                     disabled={!isEditing}
-                    className="data-[state=checked]:bg-blue-600"
+                    className="data-[state=checked]:bg-teal-500"
                   />
                 </div>
               </div>
             </Card>
           </div>
         ) : (
-          <Card className="p-6 mb-6 bg-white border border-blue-200">
-            <h3 className="font-semibold text-blue-600 mb-4">Profile Information</h3>
-            <div className="space-y-4">
+          <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
+            <div className="space-y-3">
               <div>
-                <Label className="text-blue-600">Full Name</Label>
-                <p className="text-gray-600">{profile.full_name || 'Not set'}</p>
+                <Label className="text-gray-600 font-medium">Full Name</Label>
+                <p className="text-gray-800">{profile.full_name || 'Not set'}</p>
               </div>
               <div>
-                <Label className="text-blue-600">Email</Label>
-                <p className="text-gray-600">{profile.email}</p>
+                <Label className="text-gray-600 font-medium">Email</Label>
+                <p className="text-gray-800">{profile.email}</p>
               </div>
               <div>
-                <Label className="text-blue-600">Phone Number</Label>
-                <p className="text-gray-600">{profile.phone_number || 'Not set'}</p>
+                <Label className="text-gray-600 font-medium">Phone Number</Label>
+                <p className="text-gray-800">{profile.phone_number || 'Not set'}</p>
               </div>
               <div>
-                <Label className="text-blue-600">Current Education Level</Label>
-                <p className="text-gray-600">{profile.academic_field || 'Not set'}</p>
+                <Label className="text-gray-600 font-medium">Current Education Level</Label>
+                <p className="text-gray-800">{profile.academic_field || 'Not set'}</p>
               </div>
               <div>
-                <Label className="text-blue-600">Preferred Course</Label>
-                <p className="text-gray-600">{profile.preferred_course || 'Not set'}</p>
+                <Label className="text-gray-600 font-medium">Preferred Course</Label>
+                <p className="text-gray-800">{profile.preferred_course || 'Not set'}</p>
               </div>
               <div>
-                <Label className="text-blue-600">Preferred Branches</Label>
+                <Label className="text-gray-600 font-medium">Preferred Branches</Label>
                 <div className="flex flex-wrap gap-2">
                   {profile.preferred_branches?.length ? (
                     profile.preferred_branches.map((branch, idx) => (
-                      <Badge key={idx} className="bg-blue-100 text-blue-800">{branch}</Badge>
+                      <Badge key={idx} className="bg-teal-100 text-teal-800">{branch}</Badge>
                     ))
                   ) : (
-                    <p className="text-gray-600">None</p>
+                    <p className="text-gray-800">None</p>
                   )}
                 </div>
               </div>
               <div>
-                <Label className="text-blue-600">Preferred Locations</Label>
+                <Label className="text-gray-600 font-medium">Preferred Locations</Label>
                 <div className="flex flex-wrap gap-2">
                   {profile.preferred_locations?.length ? (
                     profile.preferred_locations.map((location, idx) => (
-                      <Badge key={idx} className="bg-blue-100 text-blue-800">{location}</Badge>
+                      <Badge key={idx} className="bg-teal-100 text-teal-800">{location}</Badge>
                     ))
                   ) : (
-                    <p className="text-gray-600">None</p>
+                    <p className="text-gray-800">None</p>
                   )}
                 </div>
               </div>
               <div>
-                <Label className="text-blue-600">Budget Range</Label>
-                <p className="text-gray-600">
+                <Label className="text-gray-600 font-medium">Budget Range</Label>
+                <p className="text-gray-800">
                   {profile.budget_min && profile.budget_max 
                     ? `₹${profile.budget_min} - ₹${profile.budget_max}`
                     : 'Not set'}
                 </p>
               </div>
               <div>
-                <Label className="text-blue-600">Notification Preferences</Label>
-                <div className="text-gray-600">
+                <Label className="text-gray-600 font-medium">Notification Preferences</Label>
+                <div className="text-gray-800">
                   <p>Scholarships: {profile.notification_preferences?.scholarships ? 'On' : 'Off'}</p>
                   <p>Admissions: {profile.notification_preferences?.admissions ? 'On' : 'Off'}</p>
                   <p>Events: {profile.notification_preferences?.events ? 'On' : 'Off'}</p>
@@ -615,37 +635,35 @@ const Profile = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="space-y-3">
-          {!isEditing && (
-            <>
-              <Button 
-                onClick={() => navigate('/change-password')}
-                variant="outline"
-                className="w-full text-blue-600 border-blue-600 hover:bg-blue-100"
-              >
-                Change Password
-              </Button>
-              <Button 
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full text-blue-600 border-blue-600 hover:bg-blue-100"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
-            </>
-          )}
-        </div>
+        {!isEditing && (
+          <div className="space-y-3 mt-6">
+            <Button 
+              onClick={() => navigate('/change-password')}
+              variant="outline"
+              className="w-full text-gray-800 border-gray-300 hover:bg-gray-100 rounded-full"
+            >
+              Change Password
+            </Button>
+            <Button 
+              onClick={handleLogout}
+              variant="outline"
+              className="w-full text-gray-800 border-gray-300 hover:bg-gray-100 rounded-full"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-100 border-t border-blue-200">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-evenly gap-2 py-3">
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-teal-600"
               onClick={() => navigate('/home')}
             >
               <HomeIcon className="w-6 h-6" />
@@ -654,7 +672,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-teal-600"
               onClick={() => navigate('/colleges')}
             >
               <Users className="w-6 h-6" />
@@ -663,7 +681,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-teal-600"
               onClick={() => navigate('/predictor')}
             >
               <BookOpen className="w-6 h-6" />
@@ -672,7 +690,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-teal-600"
               onClick={() => navigate('/news')}
             >
               <Newspaper className="w-6 h-6" />
@@ -681,7 +699,7 @@ const Profile = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-blue-600 bg-blue-50"
+              className="flex flex-col items-center space-y-[1px] p-1 text-teal-600 bg-teal-50 rounded-full"
             >
               <User className="w-6 h-6" />
               <span className="text-xs">Profile</span>
