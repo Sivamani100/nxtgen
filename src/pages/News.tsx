@@ -350,7 +350,7 @@ const News = () => {
               variant="ghost"
               size="sm"
               className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-indigo-600"
-              onClick={() => navigate('/profilePage')}
+              onClick={() => navigate('/profile')}
             >
               <User className="w-7 h-7" />
               <span className="text-xs">Profile</span>
