@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Bell, Search, Star, MapPin, TrendingUp, Award, Heart, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
 import { toast } from "sonner";
+import EamcetResultsPopup from "@/components/EamcetResultsPopup";
 
 interface College {
   id: number;
@@ -35,6 +35,7 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [showEamcetPopup, setShowEamcetPopup] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,6 +43,7 @@ const Home = () => {
     fetchColleges();
     fetchNews();
     fetchNotificationCount();
+    checkEamcetPopupStatus();
   }, []);
 
   useEffect(() => {
@@ -49,6 +51,38 @@ const Home = () => {
       fetchFilteredColleges();
     }
   }, [userProfile]);
+
+  const checkEamcetPopupStatus = () => {
+    const popupShownKey = 'eamcet_popup_shown';
+    const popupExpiryKey = 'eamcet_popup_expiry';
+    
+    const popupShown = localStorage.getItem(popupShownKey);
+    const popupExpiry = localStorage.getItem(popupExpiryKey);
+    
+    const currentTime = new Date().getTime();
+    
+    // If no expiry date is set, set it for one month from now
+    if (!popupExpiry) {
+      const oneMonthFromNow = new Date();
+      oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+      localStorage.setItem(popupExpiryKey, oneMonthFromNow.getTime().toString());
+    }
+    
+    // Check if popup should be shown
+    const expiryTime = parseInt(popupExpiry || '0');
+    
+    if (!popupShown && currentTime < expiryTime) {
+      // Show popup after a short delay to ensure smooth loading
+      setTimeout(() => {
+        setShowEamcetPopup(true);
+      }, 2000);
+    }
+  };
+
+  const handleCloseEamcetPopup = () => {
+    setShowEamcetPopup(false);
+    localStorage.setItem('eamcet_popup_shown', 'true');
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -167,6 +201,12 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      {/* EAMCET Results Popup */}
+      <EamcetResultsPopup 
+        open={showEamcetPopup} 
+        onClose={handleCloseEamcetPopup} 
+      />
+
       {/* Header */}
       <div className="bg-white shadow-lg p-4 border-b-2 border-blue-100">
         <div className="max-w-md mx-auto">
