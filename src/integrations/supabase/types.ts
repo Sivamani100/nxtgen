@@ -155,6 +155,15 @@ export type Database = {
           contact_email: string | null
           contact_phone: string | null
           created_at: string | null
+          cutoff_rank_bc_a: number | null
+          cutoff_rank_bc_b: number | null
+          cutoff_rank_bc_c: number | null
+          cutoff_rank_bc_d: number | null
+          cutoff_rank_bc_e: number | null
+          cutoff_rank_general: number | null
+          cutoff_rank_obc: number | null
+          cutoff_rank_sc: number | null
+          cutoff_rank_st: number | null
           description: string | null
           established_year: number | null
           facilities: Json | null
@@ -184,6 +193,15 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          cutoff_rank_bc_a?: number | null
+          cutoff_rank_bc_b?: number | null
+          cutoff_rank_bc_c?: number | null
+          cutoff_rank_bc_d?: number | null
+          cutoff_rank_bc_e?: number | null
+          cutoff_rank_general?: number | null
+          cutoff_rank_obc?: number | null
+          cutoff_rank_sc?: number | null
+          cutoff_rank_st?: number | null
           description?: string | null
           established_year?: number | null
           facilities?: Json | null
@@ -213,6 +231,15 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          cutoff_rank_bc_a?: number | null
+          cutoff_rank_bc_b?: number | null
+          cutoff_rank_bc_c?: number | null
+          cutoff_rank_bc_d?: number | null
+          cutoff_rank_bc_e?: number | null
+          cutoff_rank_general?: number | null
+          cutoff_rank_obc?: number | null
+          cutoff_rank_sc?: number | null
+          cutoff_rank_st?: number | null
           description?: string | null
           established_year?: number | null
           facilities?: Json | null

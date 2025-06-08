@@ -249,6 +249,28 @@ const Predictor = () => {
 
       {/* Content */}
       <div className="max-w-md mx-auto p-4 pb-24">
+        {/* Navigation Cards */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Card className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-green-200 hover:border-green-400 bg-white">
+            <div className="text-center space-y-2">
+              <TrendingUp className="w-8 h-8 text-green-600 mx-auto" />
+              <h3 className="text-base font-bold text-green-700">Rank Predictor</h3>
+              <p className="text-xs text-gray-600">Predict your rank based on marks</p>
+            </div>
+          </Card>
+          <Card 
+            className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-200 hover:border-blue-400 bg-white"
+            onClick={() => navigate('/college-predictor')}
+          >
+            <div className="text-center space-y-2">
+              <GraduationCap className="w-8 h-8 text-blue-600 mx-auto" />
+              <h3 className="text-base font-bold text-blue-700">College Predictor</h3>
+              <p className="text-xs text-gray-600">Find colleges based on your rank</p>
+            </div>
+          </Card>
+        </div>
+
+        {/* Rank Predictor Section */}
         <Card className="p-6 mb-6 bg-white shadow-xl border-2 border-green-200">
           <div className="flex items-center mb-4">
             <Calculator className="w-7 h-7 text-green-600 mr-2" />
