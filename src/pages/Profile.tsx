@@ -14,6 +14,12 @@ import { Database } from "@/integrations/supabase/types";
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
+interface NotificationPreferences {
+  scholarships?: boolean;
+  admissions?: boolean;
+  events?: boolean;
+}
+
 const Profile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +59,7 @@ const Profile = () => {
       if (data) {
         setProfile(data);
       } else {
-        const newProfile = {
+        const newProfile: Partial<Profile> = {
           id: user.id,
           email: user.email || '',
           tutorial_completed: false,
@@ -61,17 +67,28 @@ const Profile = () => {
             scholarships: true,
             admissions: true,
             events: true
-          }
+          },
+          academic_field: null,
+          budget_max: null,
+          budget_min: null,
+          full_name: null,
+          phone_number: null,
+          preferred_course: null,
+          preferred_branches: null,
+          preferred_locations: null,
+          profile_picture_url: null,
+          profile_completion_percentage: 0,
+          created_at: new Date().toISOString()
         };
 
         const { error: insertError } = await supabase
           .from('profiles')
-          .insert(newProfile);
+          .insert(newProfile as any);
 
         if (insertError) {
           console.error('Error creating profile:', insertError);
         } else {
-          setProfile(newProfile);
+          setProfile(newProfile as Profile);
         }
       }
     } catch (error) {
@@ -189,10 +206,12 @@ const Profile = () => {
   const updateNotificationPreference = (key: string, value: boolean) => {
     if (!profile) return;
     
+    const currentPrefs = profile.notification_preferences as NotificationPreferences || {};
+    
     setProfile({
       ...profile,
       notification_preferences: {
-        ...profile.notification_preferences,
+        ...currentPrefs,
         [key]: value
       }
     });
@@ -260,6 +279,13 @@ const Profile = () => {
     return Math.round((filledFields / fields.length) * 100);
   };
 
+  const getNotificationPreferences = (): NotificationPreferences => {
+    if (!profile?.notification_preferences) {
+      return { scholarships: true, admissions: true, events: true };
+    }
+    return profile.notification_preferences as NotificationPreferences;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -310,10 +336,10 @@ const Profile = () => {
         <Card className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
           <div className="text-center">
             <div className="w-20 h-20 bg-teal-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold">
-              {profile.profile_picture_url ? (
+              {profile?.profile_picture_url ? (
                 <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
               ) : (
-                profile.full_name ? profile.full_name[0] : profile.email[0]
+                profile?.full_name ? profile.full_name[0] : profile?.email[0]
               )}
             </div>
             {isEditing && (
@@ -329,9 +355,9 @@ const Profile = () => {
               </div>
             )}
             <h2 className="text-xl font-semibold text-gray-800 mb-1">
-              {profile.full_name || profile.email.split('@')[0]}
+              {profile?.full_name || profile?.email.split('@')[0]}
             </h2>
-            <p className="text-gray-600 mb-4">{profile.email}</p>
+            <p className="text-gray-600 mb-4">{profile?.email}</p>
             <div className="flex justify-center gap-6">
               <div>
                 <p className="text-lg font-semibold text-teal-500">{calculateProfileCompletion()}%</p>
@@ -600,7 +626,7 @@ const Profile = () => {
                   <p className="text-sm text-gray-500">Get notified about new scholarships</p>
                 </div>
                 <Switch
-                  checked={profile.notification_preferences?.scholarships ?? true}
+                  checked={getNotificationPreferences().scholarships ?? true}
                   onCheckedChange={(checked) => updateNotificationPreference('scholarships', checked)}
                   disabled={!isEditing}
                   className="data-[state=checked]:bg-teal-500"
@@ -612,7 +638,7 @@ const Profile = () => {
                   <p className="text-sm text-gray-500">Get notified about admission deadlines</p>
                 </div>
                 <Switch
-                  checked={profile.notification_preferences?.admissions ?? true}
+                  checked={getNotificationPreferences().admissions ?? true}
                   onCheckedChange={(checked) => updateNotificationPreference('admissions', checked)}
                   disabled={!isEditing}
                   className="data-[state=checked]:bg-teal-500"
@@ -624,7 +650,7 @@ const Profile = () => {
                   <p className="text-sm text-gray-500">Get notified about educational events</p>
                 </div>
                 <Switch
-                  checked={profile.notification_preferences?.events ?? true}
+                  checked={getNotificationPreferences().events ?? true}
                   onCheckedChange={(checked) => updateNotificationPreference('events', checked)}
                   disabled={!isEditing}
                   className="data-[state=checked]:bg-teal-500"
@@ -635,15 +661,15 @@ const Profile = () => {
             <div className="space-y-3">
               <div>
                 <Label className="text-gray-600 font-medium">Scholarship Updates</Label>
-                <p className="text-gray-800">{profile.notification_preferences?.scholarships ? 'On' : 'Off'}</p>
+                <p className="text-gray-800">{getNotificationPreferences().scholarships ? 'On' : 'Off'}</p>
               </div>
               <div>
                 <Label className="text-gray-600 font-medium">Admission Updates</Label>
-                <p className="text-gray-800">{profile.notification_preferences?.admissions ? 'On' : 'Off'}</p>
+                <p className="text-gray-800">{getNotificationPreferences().admissions ? 'On' : 'Off'}</p>
               </div>
               <div>
                 <Label className="text-gray-600 font-medium">Event Updates</Label>
-                <p className="text-gray-800">{profile.notification_preferences?.events ? 'On' : 'Off'}</p>
+                <p className="text-gray-800">{getNotificationPreferences().events ? 'On' : 'Off'}</p>
               </div>
             </div>
           )}
