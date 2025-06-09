@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showEamcetPopup, setShowEamcetPopup] = useState(false);
+  const [isGuestUser, setIsGuestUser] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,10 +49,10 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (userProfile) {
+    if (userProfile && !isGuestUser) {
       fetchFilteredColleges();
     }
-  }, [userProfile]);
+  }, [userProfile, isGuestUser]);
 
   const showEamcetPopupAfterDelay = () => {
     // Show popup after 1 second every time the app opens
@@ -71,16 +73,30 @@ const Home = () => {
         return;
       }
 
+      // Check if user is anonymous (guest)
+      if (user.is_anonymous) {
+        setIsGuestUser(true);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+      
       setUserProfile(data);
+      setIsGuestUser(false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      setIsGuestUser(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,9 +163,11 @@ const Home = () => {
   };
 
   const fetchNotificationCount = async () => {
+    if (isGuestUser) return;
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user || user.is_anonymous) return;
 
       const { count, error } = await supabase
         .from('notifications')
@@ -191,24 +209,33 @@ const Home = () => {
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Welcome Back!</h1>
+              <h1 className="text-xl font-bold text-gray-900">
+                {isGuestUser ? 'Welcome Guest!' : 'Welcome Back!'}
+              </h1>
               <p className="text-base text-gray-600">Find your perfect college</p>
+              {isGuestUser && (
+                <p className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded mt-1">
+                  Guest Mode - Sign up for personalized features
+                </p>
+              )}
             </div>
-            <div className="relative">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-2 hover:bg-blue-50"
-                onClick={() => navigate('/notifications')}
-              >
-                <Bell className="w-6 h-6 text-blue-600" />
-                {unreadNotifications > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {unreadNotifications}
-                  </span>
-                )}
-              </Button>
-            </div>
+            {!isGuestUser && (
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-2 hover:bg-blue-50"
+                  onClick={() => navigate('/notifications')}
+                >
+                  <Bell className="w-6 h-6 text-blue-600" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      {unreadNotifications}
+                    </span>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
           
           {/* Search Bar */}
@@ -254,7 +281,7 @@ const Home = () => {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">
-              {userProfile?.preferred_locations?.length > 0 || userProfile?.budget_min ? 
+              {!isGuestUser && userProfile?.preferred_locations?.length > 0 || userProfile?.budget_min ? 
                 'Recommended For You' : 'Top Colleges'}
             </h2>
             <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')} className="text-green-600 font-medium hover:bg-green-50">
@@ -328,8 +355,8 @@ const Home = () => {
           </div>
         )}
 
-        {/* User Preferences Info */}
-        {userProfile && (userProfile.preferred_locations?.length > 0 || userProfile.budget_min) && (
+        {/* User Preferences Info - Only show for non-guest users */}
+        {!isGuestUser && userProfile && (userProfile.preferred_locations?.length > 0 || userProfile.budget_min) && (
           <Card className="p-4 mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 shadow-lg">
             <h3 className="text-lg font-bold text-green-900 mb-2">Your Preferences</h3>
             <div className="space-y-1 text-sm text-green-800">
@@ -348,6 +375,20 @@ const Home = () => {
                 Update preferences →
               </Button>
             </div>
+          </Card>
+        )}
+
+        {/* Guest Mode Promotion */}
+        {isGuestUser && (
+          <Card className="p-4 mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 shadow-lg">
+            <h3 className="text-lg font-bold text-blue-900 mb-2">Get Personalized Recommendations</h3>
+            <p className="text-sm text-blue-800 mb-3">Sign up to get college recommendations based on your preferences, budget, and location!</p>
+            <Button 
+              onClick={() => navigate('/signup')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Sign Up Now
+            </Button>
           </Card>
         )}
       </div>
@@ -408,4 +449,3 @@ const Home = () => {
 };
 
 export default Home;
-
