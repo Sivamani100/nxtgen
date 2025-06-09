@@ -60,7 +60,8 @@ const Profile = () => {
       if (data) {
         setProfile(data);
       } else {
-        const newProfile: Partial<Profile> = {
+        // Create a properly typed new profile object
+        const newProfile = {
           id: user.id,
           email: user.email || '',
           tutorial_completed: false,
@@ -161,20 +162,22 @@ const Profile = () => {
         photoUrl = await uploadProfilePhoto(profilePhoto);
       }
 
+      const updateData = {
+        academic_field: profile.academic_field,
+        notification_preferences: profile.notification_preferences,
+        full_name: profile.full_name,
+        phone_number: profile.phone_number,
+        preferred_course: profile.preferred_course,
+        preferred_branches: profile.preferred_branches,
+        preferred_locations: profile.preferred_locations,
+        budget_min: profile.budget_min,
+        budget_max: profile.budget_max,
+        profile_picture_url: photoUrl
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          academic_field: profile.academic_field,
-          notification_preferences: profile.notification_preferences,
-          full_name: profile.full_name,
-          phone_number: profile.phone_number,
-          preferred_course: profile.preferred_course,
-          preferred_branches: profile.preferred_branches,
-          preferred_locations: profile.preferred_locations,
-          budget_min: profile.budget_min,
-          budget_max: profile.budget_max,
-          profile_picture_url: photoUrl
-        })
+        .update(updateData)
         .eq('id', profile.id);
 
       if (error) {
@@ -207,11 +210,25 @@ const Profile = () => {
   const updateNotificationPreference = (key: string, value: boolean) => {
     if (!profile) return;
     
-    const currentPrefs = profile.notification_preferences as NotificationPreferences || {
-      scholarships: true,
-      admissions: true,
-      events: true
-    };
+    // Safely handle the notification preferences conversion
+    let currentPrefs: NotificationPreferences;
+    try {
+      if (typeof profile.notification_preferences === 'object' && profile.notification_preferences !== null) {
+        currentPrefs = profile.notification_preferences as NotificationPreferences;
+      } else {
+        currentPrefs = {
+          scholarships: true,
+          admissions: true,
+          events: true
+        };
+      }
+    } catch {
+      currentPrefs = {
+        scholarships: true,
+        admissions: true,
+        events: true
+      };
+    }
     
     setProfile({
       ...profile,
@@ -303,11 +320,25 @@ const Profile = () => {
     );
   }
 
-  const notificationPrefs = profile.notification_preferences as NotificationPreferences || {
-    scholarships: true,
-    admissions: true,
-    events: true
-  };
+  // Safely handle notification preferences
+  let notificationPrefs: NotificationPreferences;
+  try {
+    if (typeof profile.notification_preferences === 'object' && profile.notification_preferences !== null) {
+      notificationPrefs = profile.notification_preferences as NotificationPreferences;
+    } else {
+      notificationPrefs = {
+        scholarships: true,
+        admissions: true,
+        events: true
+      };
+    }
+  } catch {
+    notificationPrefs = {
+      scholarships: true,
+      admissions: true,
+      events: true
+    };
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 pb-20">
