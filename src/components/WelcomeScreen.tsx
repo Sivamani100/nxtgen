@@ -2,9 +2,40 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const WelcomeScreen = () => {
   const navigate = useNavigate();
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
+
+  const handleGuestMode = async () => {
+    setIsGuestLoading(true);
+    try {
+      // Sign in with the dummy guest account
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'guestuser@gmail.com',
+        password: 'guestuser',
+      });
+
+      if (error) {
+        toast.error('Failed to enter guest mode. Please try again.');
+        console.error('Guest mode error:', error);
+        return;
+      }
+
+      if (data.user) {
+        toast.success('Welcome! You are now in guest mode.');
+        navigate('/home');
+      }
+    } catch (error) {
+      console.error('Guest mode error:', error);
+      toast.error('Failed to enter guest mode. Please try again.');
+    } finally {
+      setIsGuestLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex flex-col items-center justify-center p-4">
@@ -33,10 +64,27 @@ const WelcomeScreen = () => {
           >
             Login
           </Button>
+          <div className="flex items-center my-4">
+            <div className="flex-1 h-px bg-gray-300"></div>
+            <span className="px-3 text-sm text-gray-500">or</span>
+            <div className="flex-1 h-px bg-gray-300"></div>
+          </div>
+          <Button
+            onClick={handleGuestMode}
+            variant="secondary"
+            className="w-full h-12 text-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+            disabled={isGuestLoading}
+          >
+            {isGuestLoading ? 'Entering Guest Mode...' : 'Continue as Guest'}
+          </Button>
         </div>
         
         <div className="mt-8 text-xs text-gray-500">
           Discover scholarships, admissions, events, and educational news
+        </div>
+        
+        <div className="mt-4 text-xs text-gray-400">
+          Guest mode gives you full access to all features without registration
         </div>
       </Card>
     </div>

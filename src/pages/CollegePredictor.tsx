@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,15 +29,24 @@ interface College {
   cutoff_rank_bc_c: number;
   cutoff_rank_bc_d: number;
   cutoff_rank_bc_e: number;
+  state: string;
 }
 
 const CollegePredictor = () => {
   const [rank, setRank] = useState('');
   const [category, setCategory] = useState('');
+  const [examType, setExamType] = useState('');
   const [predictedColleges, setPredictedColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const examTypes = [
+    { value: 'jee-main', label: 'JEE Main' },
+    { value: 'jee-advanced', label: 'JEE Advanced' },
+    { value: 'ap-eapcet', label: 'AP EAPCET' },
+    { value: 'ts-eamcet', label: 'TS EAMCET' }
+  ];
 
   const categories = [
     { value: 'general', label: 'General/OC' },
@@ -52,10 +62,10 @@ const CollegePredictor = () => {
 
   // Debounced predictColleges function to prevent rapid API calls
   const predictColleges = useCallback(
-    debounce(async (userRank: string, selectedCategory: string) => {
-      if (!userRank || !selectedCategory) {
-        setError('Please enter your rank and select a category');
-        toast.error('Please enter your rank and select a category');
+    debounce(async (userRank: string, selectedCategory: string, selectedExamType: string) => {
+      if (!userRank || !selectedCategory || !selectedExamType) {
+        setError('Please enter your rank, select a category, and choose exam type');
+        toast.error('Please enter your rank, select a category, and choose exam type');
         setPredictedColleges([]);
         return;
       }
@@ -74,12 +84,36 @@ const CollegePredictor = () => {
       try {
         const cutoffColumn = `cutoff_rank_${selectedCategory}`;
         
-        const { data, error } = await supabase
+        let query = supabase
           .from('colleges')
           .select('*')
           .gte(cutoffColumn, parsedRank)
-          .order(cutoffColumn, { ascending: true })
-          .limit(20);
+          .order(cutoffColumn, { ascending: true });
+
+        // Apply exam type filters
+        switch (selectedExamType) {
+          case 'jee-advanced':
+            // Only IITs and NITs
+            query = query.in('type', ['IIT', 'NIT']);
+            break;
+          case 'ap-eapcet':
+            // Only Andhra Pradesh colleges
+            query = query.eq('state', 'Andhra Pradesh');
+            break;
+          case 'ts-eamcet':
+            // Only Telangana colleges
+            query = query.eq('state', 'Telangana');
+            break;
+          case 'jee-main':
+            // All colleges in India - no additional filter needed
+            break;
+          default:
+            break;
+        }
+
+        query = query.limit(20);
+
+        const { data, error } = await query;
 
         if (error) {
           throw new Error(error.message || 'Failed to fetch colleges');
@@ -88,10 +122,24 @@ const CollegePredictor = () => {
         setPredictedColleges(data || []);
         
         if (data && data.length > 0) {
-          toast.success(`Found ${data.length} colleges for your rank!`);
+          toast.success(`Found ${data.length} colleges for your rank and exam type!`);
         } else {
-          setError('No colleges found for your rank. Try increasing your rank range.');
-          toast.info('No colleges found for your rank. Try increasing your rank range.');
+          let examMessage = '';
+          switch (selectedExamType) {
+            case 'jee-advanced':
+              examMessage = ' No IITs or NITs found for your rank.';
+              break;
+            case 'ap-eapcet':
+              examMessage = ' No Andhra Pradesh colleges found for your rank.';
+              break;
+            case 'ts-eamcet':
+              examMessage = ' No Telangana colleges found for your rank.';
+              break;
+            default:
+              examMessage = ' No colleges found for your rank.';
+          }
+          setError('No colleges found for your rank and exam type.' + examMessage + ' Try increasing your rank range.');
+          toast.info('No colleges found for your rank and exam type.' + examMessage + ' Try increasing your rank range.');
         }
       } catch (error: any) {
         console.error('Error predicting colleges:', error);
@@ -105,16 +153,16 @@ const CollegePredictor = () => {
     []
   );
 
-  // Auto-trigger prediction when both rank and category are set
+  // Auto-trigger prediction when all fields are set
   useEffect(() => {
-    if (rank && category) {
+    if (rank && category && examType) {
       setPredictedColleges([]); // Clear previous results
-      predictColleges(rank, category);
+      predictColleges(rank, category, examType);
     } else {
       setPredictedColleges([]);
       setError(null);
     }
-  }, [rank, category, predictColleges]);
+  }, [rank, category, examType, predictColleges]);
 
   const getCutoffForCategory = (college: College, selectedCategory: string) => {
     switch (selectedCategory) {
@@ -128,6 +176,21 @@ const CollegePredictor = () => {
       case 'bc_d': return college.cutoff_rank_bc_d;
       case 'bc_e': return college.cutoff_rank_bc_e;
       default: return 0;
+    }
+  };
+
+  const getExamTypeDescription = (examType: string) => {
+    switch (examType) {
+      case 'jee-advanced':
+        return 'Showing only IITs and NITs';
+      case 'ap-eapcet':
+        return 'Showing only Andhra Pradesh colleges';
+      case 'ts-eamcet':
+        return 'Showing only Telangana colleges';
+      case 'jee-main':
+        return 'Showing all colleges in India';
+      default:
+        return '';
     }
   };
 
@@ -160,6 +223,27 @@ const CollegePredictor = () => {
           </div>
           
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="exam-type" className="text-base font-semibold text-gray-900">Exam Type</Label>
+              <Select value={examType} onValueChange={setExamType} disabled={loading}>
+                <SelectTrigger className="border-2 border-orange-200 focus:border-orange-400">
+                  <SelectValue placeholder="Select exam type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {examTypes.map((exam) => (
+                    <SelectItem key={exam.value} value={exam.value}>
+                      {exam.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {examType && (
+                <div className="text-sm text-gray-600 mt-1 bg-orange-50 p-2 rounded border-l-4 border-orange-300">
+                  {getExamTypeDescription(examType)}
+                </div>
+              )}
+            </div>
+
             <div>
               <Label htmlFor="rank" className="text-base font-semibold text-gray-900">Your Rank</Label>
               <Input
@@ -194,7 +278,7 @@ const CollegePredictor = () => {
             )}
 
             <Button 
-              onClick={() => predictColleges(rank, category)} 
+              onClick={() => predictColleges(rank, category, examType)} 
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-lg font-semibold py-3 shadow-lg"
             >
@@ -213,6 +297,14 @@ const CollegePredictor = () => {
                 {predictedColleges.length} colleges found
               </span>
             </div>
+
+            {examType && (
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-lg border-2 border-blue-200">
+                <div className="text-sm font-medium text-blue-800">
+                  📚 {getExamTypeDescription(examType)}
+                </div>
+              </div>
+            )}
 
             {predictedColleges.map((college) => (
               <Card 
