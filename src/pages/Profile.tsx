@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,12 +13,6 @@ import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
-
-interface NotificationPreferences {
-  scholarships: boolean;
-  admissions: boolean;
-  events: boolean;
-}
 
 const Profile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -60,7 +53,6 @@ const Profile = () => {
       if (data) {
         setProfile(data);
       } else {
-        // Create a properly typed new profile object
         const newProfile = {
           id: user.id,
           email: user.email || '',
@@ -69,18 +61,7 @@ const Profile = () => {
             scholarships: true,
             admissions: true,
             events: true
-          },
-          academic_field: null,
-          budget_max: null,
-          budget_min: null,
-          created_at: new Date().toISOString(),
-          full_name: null,
-          phone_number: null,
-          preferred_branches: null,
-          preferred_course: null,
-          preferred_locations: null,
-          profile_completion_percentage: 0,
-          profile_picture_url: null
+          }
         };
 
         const { error: insertError } = await supabase
@@ -90,7 +71,7 @@ const Profile = () => {
         if (insertError) {
           console.error('Error creating profile:', insertError);
         } else {
-          setProfile(newProfile as Profile);
+          setProfile(newProfile);
         }
       }
     } catch (error) {
@@ -162,22 +143,20 @@ const Profile = () => {
         photoUrl = await uploadProfilePhoto(profilePhoto);
       }
 
-      const updateData = {
-        academic_field: profile.academic_field,
-        notification_preferences: profile.notification_preferences,
-        full_name: profile.full_name,
-        phone_number: profile.phone_number,
-        preferred_course: profile.preferred_course,
-        preferred_branches: profile.preferred_branches,
-        preferred_locations: profile.preferred_locations,
-        budget_min: profile.budget_min,
-        budget_max: profile.budget_max,
-        profile_picture_url: photoUrl
-      };
-
       const { error } = await supabase
         .from('profiles')
-        .update(updateData)
+        .update({
+          academic_field: profile.academic_field,
+          notification_preferences: profile.notification_preferences,
+          full_name: profile.full_name,
+          phone_number: profile.phone_number,
+          preferred_course: profile.preferred_course,
+          preferred_branches: profile.preferred_branches,
+          preferred_locations: profile.preferred_locations,
+          budget_min: profile.budget_min,
+          budget_max: profile.budget_max,
+          profile_picture_url: photoUrl
+        })
         .eq('id', profile.id);
 
       if (error) {
@@ -210,30 +189,10 @@ const Profile = () => {
   const updateNotificationPreference = (key: string, value: boolean) => {
     if (!profile) return;
     
-    // Safely handle the notification preferences conversion
-    let currentPrefs: NotificationPreferences;
-    try {
-      if (typeof profile.notification_preferences === 'object' && profile.notification_preferences !== null) {
-        currentPrefs = profile.notification_preferences as NotificationPreferences;
-      } else {
-        currentPrefs = {
-          scholarships: true,
-          admissions: true,
-          events: true
-        };
-      }
-    } catch {
-      currentPrefs = {
-        scholarships: true,
-        admissions: true,
-        events: true
-      };
-    }
-    
     setProfile({
       ...profile,
       notification_preferences: {
-        ...currentPrefs,
+        ...profile.notification_preferences,
         [key]: value
       }
     });
@@ -318,26 +277,6 @@ const Profile = () => {
         </div>
       </div>
     );
-  }
-
-  // Safely handle notification preferences
-  let notificationPrefs: NotificationPreferences;
-  try {
-    if (typeof profile.notification_preferences === 'object' && profile.notification_preferences !== null) {
-      notificationPrefs = profile.notification_preferences as NotificationPreferences;
-    } else {
-      notificationPrefs = {
-        scholarships: true,
-        admissions: true,
-        events: true
-      };
-    }
-  } catch {
-    notificationPrefs = {
-      scholarships: true,
-      admissions: true,
-      events: true
-    };
   }
 
   return (
@@ -661,7 +600,7 @@ const Profile = () => {
                   <p className="text-sm text-gray-500">Get notified about new scholarships</p>
                 </div>
                 <Switch
-                  checked={notificationPrefs.scholarships}
+                  checked={profile.notification_preferences?.scholarships ?? true}
                   onCheckedChange={(checked) => updateNotificationPreference('scholarships', checked)}
                   disabled={!isEditing}
                   className="data-[state=checked]:bg-teal-500"
@@ -673,7 +612,7 @@ const Profile = () => {
                   <p className="text-sm text-gray-500">Get notified about admission deadlines</p>
                 </div>
                 <Switch
-                  checked={notificationPrefs.admissions}
+                  checked={profile.notification_preferences?.admissions ?? true}
                   onCheckedChange={(checked) => updateNotificationPreference('admissions', checked)}
                   disabled={!isEditing}
                   className="data-[state=checked]:bg-teal-500"
@@ -685,7 +624,7 @@ const Profile = () => {
                   <p className="text-sm text-gray-500">Get notified about educational events</p>
                 </div>
                 <Switch
-                  checked={notificationPrefs.events}
+                  checked={profile.notification_preferences?.events ?? true}
                   onCheckedChange={(checked) => updateNotificationPreference('events', checked)}
                   disabled={!isEditing}
                   className="data-[state=checked]:bg-teal-500"
@@ -696,15 +635,15 @@ const Profile = () => {
             <div className="space-y-3">
               <div>
                 <Label className="text-gray-600 font-medium">Scholarship Updates</Label>
-                <p className="text-gray-800">{notificationPrefs.scholarships ? 'On' : 'Off'}</p>
+                <p className="text-gray-800">{profile.notification_preferences?.scholarships ? 'On' : 'Off'}</p>
               </div>
               <div>
                 <Label className="text-gray-600 font-medium">Admission Updates</Label>
-                <p className="text-gray-800">{notificationPrefs.admissions ? 'On' : 'Off'}</p>
+                <p className="text-gray-800">{profile.notification_preferences?.admissions ? 'On' : 'Off'}</p>
               </div>
               <div>
                 <Label className="text-gray-600 font-medium">Event Updates</Label>
-                <p className="text-gray-800">{notificationPrefs.events ? 'On' : 'Off'}</p>
+                <p className="text-gray-800">{profile.notification_preferences?.events ? 'On' : 'Off'}</p>
               </div>
             </div>
           )}
