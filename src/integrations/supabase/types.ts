@@ -9,146 +9,14 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admissions: {
-        Row: {
-          category: string
-          closing_rank: number | null
-          college_id: number | null
-          course_id: number | null
-          created_at: string | null
-          exam_name: string
-          id: number
-          opening_rank: number | null
-          round_number: number | null
-          year: number
-        }
-        Insert: {
-          category: string
-          closing_rank?: number | null
-          college_id?: number | null
-          course_id?: number | null
-          created_at?: string | null
-          exam_name: string
-          id?: number
-          opening_rank?: number | null
-          round_number?: number | null
-          year: number
-        }
-        Update: {
-          category?: string
-          closing_rank?: number | null
-          college_id?: number | null
-          course_id?: number | null
-          created_at?: string | null
-          exam_name?: string
-          id?: number
-          opening_rank?: number | null
-          round_number?: number | null
-          year?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admissions_college_id_fkey"
-            columns: ["college_id"]
-            isOneToOne: false
-            referencedRelation: "colleges"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "admissions_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      college_course_mapping: {
-        Row: {
-          additional_info: string | null
-          college_id: number | null
-          course_id: number | null
-          created_at: string | null
-          id: number
-          is_available: boolean | null
-        }
-        Insert: {
-          additional_info?: string | null
-          college_id?: number | null
-          course_id?: number | null
-          created_at?: string | null
-          id?: number
-          is_available?: boolean | null
-        }
-        Update: {
-          additional_info?: string | null
-          college_id?: number | null
-          course_id?: number | null
-          created_at?: string | null
-          id?: number
-          is_available?: boolean | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "college_course_mapping_college_id_fkey"
-            columns: ["college_id"]
-            isOneToOne: false
-            referencedRelation: "colleges"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "college_course_mapping_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      college_recruiters: {
-        Row: {
-          college_id: number | null
-          created_at: string | null
-          id: number
-          logo_url: string | null
-          package_offered: number | null
-          recruiter_name: string
-          roles_offered: string[] | null
-        }
-        Insert: {
-          college_id?: number | null
-          created_at?: string | null
-          id?: number
-          logo_url?: string | null
-          package_offered?: number | null
-          recruiter_name: string
-          roles_offered?: string[] | null
-        }
-        Update: {
-          college_id?: number | null
-          created_at?: string | null
-          id?: number
-          logo_url?: string | null
-          package_offered?: number | null
-          recruiter_name?: string
-          roles_offered?: string[] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "college_recruiters_college_id_fkey"
-            columns: ["college_id"]
-            isOneToOne: false
-            referencedRelation: "colleges"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       colleges: {
         Row: {
           accreditation: Json | null
           affiliation: string | null
           apply_link: string | null
           average_package: number | null
+          branch_wise_rankings: Json | null
+          branches_offered: Json | null
           campus_area: string | null
           campus_tour_video_url: string | null
           city: string
@@ -176,6 +44,7 @@ export type Database = {
           ranking: Json | null
           rating: number | null
           state: string
+          top_recruiters: Json | null
           total_fees_max: number | null
           total_fees_min: number | null
           type: string
@@ -187,6 +56,8 @@ export type Database = {
           affiliation?: string | null
           apply_link?: string | null
           average_package?: number | null
+          branch_wise_rankings?: Json | null
+          branches_offered?: Json | null
           campus_area?: string | null
           campus_tour_video_url?: string | null
           city: string
@@ -214,6 +85,7 @@ export type Database = {
           ranking?: Json | null
           rating?: number | null
           state: string
+          top_recruiters?: Json | null
           total_fees_max?: number | null
           total_fees_min?: number | null
           type: string
@@ -225,6 +97,8 @@ export type Database = {
           affiliation?: string | null
           apply_link?: string | null
           average_package?: number | null
+          branch_wise_rankings?: Json | null
+          branches_offered?: Json | null
           campus_area?: string | null
           campus_tour_video_url?: string | null
           city?: string
@@ -252,6 +126,7 @@ export type Database = {
           ranking?: Json | null
           rating?: number | null
           state?: string
+          top_recruiters?: Json | null
           total_fees_max?: number | null
           total_fees_min?: number | null
           type?: string
@@ -259,65 +134,6 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: []
-      }
-      courses: {
-        Row: {
-          branch: string
-          college_id: number | null
-          course_name: string
-          created_at: string | null
-          cutoff_rank_general: number | null
-          cutoff_rank_obc: number | null
-          cutoff_rank_sc: number | null
-          cutoff_rank_st: number | null
-          duration: string
-          exam_accepted: string
-          fees_per_year: number | null
-          id: number
-          seats_available: number | null
-          seats_total: number | null
-        }
-        Insert: {
-          branch: string
-          college_id?: number | null
-          course_name: string
-          created_at?: string | null
-          cutoff_rank_general?: number | null
-          cutoff_rank_obc?: number | null
-          cutoff_rank_sc?: number | null
-          cutoff_rank_st?: number | null
-          duration: string
-          exam_accepted: string
-          fees_per_year?: number | null
-          id?: number
-          seats_available?: number | null
-          seats_total?: number | null
-        }
-        Update: {
-          branch?: string
-          college_id?: number | null
-          course_name?: string
-          created_at?: string | null
-          cutoff_rank_general?: number | null
-          cutoff_rank_obc?: number | null
-          cutoff_rank_sc?: number | null
-          cutoff_rank_st?: number | null
-          duration?: string
-          exam_accepted?: string
-          fees_per_year?: number | null
-          id?: number
-          seats_available?: number | null
-          seats_total?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "courses_college_id_fkey"
-            columns: ["college_id"]
-            isOneToOne: false
-            referencedRelation: "colleges"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       favorites: {
         Row: {
