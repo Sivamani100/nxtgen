@@ -198,7 +198,7 @@ const Profile = () => {
   const updateNotificationPreference = (key: string, value: boolean) => {
     if (!profile) return;
     
-    const currentPrefs = profile.notification_preferences as NotificationPreferences || {
+    const currentPrefs = (profile.notification_preferences as NotificationPreferences) || {
       scholarships: true,
       admissions: true,
       events: true
@@ -294,7 +294,7 @@ const Profile = () => {
     );
   }
 
-  const notificationPrefs = profile.notification_preferences as NotificationPreferences || {
+  const notificationPrefs = (profile.notification_preferences as NotificationPreferences) || {
     scholarships: true,
     admissions: true,
     events: true

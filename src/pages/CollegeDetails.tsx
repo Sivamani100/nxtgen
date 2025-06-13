@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,32 +11,22 @@ import { Database } from "@/integrations/supabase/types";
 type College = Database['public']['Tables']['colleges']['Row'];
 
 interface Recruiter {
-  id: number;
-  recruiter_name: string;
-  logo_url: string;
-  package_offered: number;
-  roles_offered: string[];
+  name: string;
+  package: number;
+  roles: string[];
+  logo_url?: string;
 }
 
-interface CourseMapping {
-  id: number;
-  course_id: number;
-  is_available: boolean;
-  additional_info: string;
-  courses: {
-    course_name: string;
-    branch: string;
-    duration: string;
-    fees_per_year: number;
-  };
+interface Branch {
+  name: string;
+  seats: number;
+  fees_per_year: number;
 }
 
 const CollegeDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [college, setCollege] = useState<College | null>(null);
-  const [recruiters, setRecruiters] = useState<Recruiter[]>([]);
-  const [courseMappings, setCourseMappings] = useState<CourseMapping[]>([]);
   const [loading, setLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
@@ -43,8 +34,6 @@ const CollegeDetails = () => {
   useEffect(() => {
     if (id) {
       fetchCollegeDetails();
-      fetchRecruiters();
-      fetchCourseMappings();
     }
   }, [id]);
 
@@ -63,38 +52,6 @@ const CollegeDetails = () => {
       toast.error('Failed to load college details');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchRecruiters = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('college_recruiters')
-        .select('*')
-        .eq('college_id', parseInt(id!));
-
-      if (error) throw error;
-      setRecruiters(data || []);
-    } catch (error) {
-      console.error('Error fetching recruiters:', error);
-    }
-  };
-
-  const fetchCourseMappings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('college_course_mapping')
-        .select(`
-          *,
-          courses(course_name, branch, duration, fees_per_year)
-  `)
-        .eq('college_id', parseInt(id!))
-        .eq('is_available', true);
-
-      if (error) throw error;
-      setCourseMappings(data || []);
-    } catch (error) {
-      console.error('Error fetching course mappings:', error);
     }
   };
 
@@ -168,6 +125,11 @@ const CollegeDetails = () => {
       </div>
     );
   }
+
+  // Parse JSON data safely
+  const branches = (college.branches_offered as Branch[]) || [];
+  const recruiters = (college.top_recruiters as Recruiter[]) || [];
+  const branchRankings = (college.branch_wise_rankings as Record<string, Record<string, number>>) || {};
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -339,31 +301,37 @@ const CollegeDetails = () => {
           </Card>
         )}
 
-        {/* Available Courses */}
-        {courseMappings.length > 0 && (
+        {/* Available Branches */}
+        {branches.length > 0 && (
           <Card className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Available Courses</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Available Branches</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {courseMappings.map((mapping) => (
-                <div key={mapping.id} className="bg-gray-50 p-4 rounded-lg border">
-                  <h3 className="text-base font-bold text-gray-900 mb-2">
-                    {mapping.courses.course_name} - {mapping.courses.branch}
-                  </h3>
+              {branches.map((branch, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-lg border">
+                  <h3 className="text-base font-bold text-gray-900 mb-2">{branch.name}</h3>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-600 text-sm">Duration:</span>
-                      <span className="font-medium text-sm">{mapping.courses.duration}</span>
+                      <span className="text-gray-600 text-sm">Seats:</span>
+                      <span className="font-medium text-sm">{branch.seats}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">Fees per year:</span>
                       <span className="font-bold text-green-600 text-sm">
-                        ₹{(mapping.courses.fees_per_year / 100000).toFixed(1)}L
+                        ₹{(branch.fees_per_year / 100000).toFixed(1)}L
                       </span>
                     </div>
-                    {mapping.additional_info && (
-                      <p className="text-xs text-blue-700 bg-blue-50 p-2 rounded">
-                        {mapping.additional_info}
-                      </p>
+                    {branchRankings[branch.name] && (
+                      <div className="mt-3">
+                        <p className="text-xs font-semibold text-blue-700 mb-2">Cutoff Ranks:</p>
+                        <div className="grid grid-cols-2 gap-1 text-xs">
+                          {Object.entries(branchRankings[branch.name]).map(([category, rank]) => (
+                            <div key={category} className="flex justify-between">
+                              <span className="text-gray-600 uppercase">{category}:</span>
+                              <span className="font-semibold">{rank.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -470,13 +438,13 @@ const CollegeDetails = () => {
           <Card className="p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Top Recruiters</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {recruiters.map((recruiter) => (
-                <div key={recruiter.id} className="bg-gray-50 p-4 rounded-lg border">
+              {recruiters.map((recruiter, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-lg border">
                   <div className="flex items-center mb-3">
                     {recruiter.logo_url && (
                       <img 
                         src={recruiter.logo_url} 
-                        alt={recruiter.recruiter_name}
+                        alt={recruiter.name}
                         className="w-12 h-12 object-contain rounded mr-3"
                         onError={(e) => {
                           console.error('Recruiter image failed to load:', recruiter.logo_url);
@@ -486,18 +454,18 @@ const CollegeDetails = () => {
                       />
                     )}
                     <div>
-                      <h3 className="text-base font-bold text-gray-900">{recruiter.recruiter_name}</h3>
+                      <h3 className="text-base font-bold text-gray-900">{recruiter.name}</h3>
                       <p className="text-xs text-green-600 font-semibold">
-                        Package: ₹{(recruiter.package_offered / 100000).toFixed(1)}L
+                        Package: ₹{(recruiter.package / 100000).toFixed(1)}L
                       </p>
                     </div>
                   </div>
-                  {recruiter.roles_offered && recruiter.roles_offered.length > 0 && (
+                  {recruiter.roles && recruiter.roles.length > 0 && (
                     <div>
-                      <p className="text_xs text-gray-600 mb-2">Roles Offered:</p>
+                      <p className="text-xs text-gray-600 mb-2">Roles Offered:</p>
                       <div className="flex flex-wrap gap-1">
-                        {recruiter.roles_offered.map((role, index) => (
-                          <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                        {recruiter.roles.map((role, roleIndex) => (
+                          <span key={roleIndex} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
                             {role}
                           </span>
                         ))}

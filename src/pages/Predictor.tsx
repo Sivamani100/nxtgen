@@ -1,6 +1,6 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,15 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Calculator, TrendingUp, BookOpen, Home as HomeIcon, Users, Newspaper, User, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 
-interface PredictedCollege {
-  id: number;
-  name: string;
-  location: string;
-  course_name: string;
-  branch: string;
-  fees_per_year: number;
-  closing_rank: number;
-  category: string;
+interface PredictionResult {
+  finalScore?: number;
+  rank: string;
+  colleges: string[];
 }
 
 const Predictor = () => {
@@ -25,12 +20,7 @@ const Predictor = () => {
   const [marks, setMarks] = useState('');
   const [ipeMarks, setIpeMarks] = useState('');
   const [category, setCategory] = useState('');
-  const [result, setResult] = useState<{
-    finalScore?: number;
-    rank: string;
-    colleges: string[];
-    predictedColleges?: PredictedCollege[];
-  } | null>(null);
+  const [result, setResult] = useState<PredictionResult | null>(null);
   const navigate = useNavigate();
 
   const exams = [
@@ -87,62 +77,6 @@ const Predictor = () => {
     return { finalScore, rankRange };
   };
 
-  const fetchPredictedColleges = async (predictedRank: string, examType: string, selectedCategory: string) => {
-    try {
-      const rankParts = predictedRank.split(' – ');
-      let minRank = 0;
-      let maxRank = 100000;
-
-      if (rankParts.length === 2) {
-        minRank = parseInt(rankParts[0].replace(/,/g, ''));
-        maxRank = parseInt(rankParts[1].replace(/,/g, ''));
-      } else if (predictedRank.includes('>')) {
-        minRank = parseInt(predictedRank.replace(/[^0-9]/g, ''));
-        maxRank = 200000;
-      }
-
-      const examName = examType === 'ap-eamcet' ? 'AP EAMCET' : 
-                      examType === 'ts-eamcet' ? 'TS EAMCET' : 
-                      examType === 'jee-main' ? 'JEE Main' : 
-                      examType === 'neet' ? 'NEET' : 'JEE Advanced';
-
-      const { data, error } = await supabase
-        .from('admissions')
-        .select(`
-          college_id,
-          course_id,
-          closing_rank,
-          category,
-          colleges(id, name, location),
-          courses(course_name, branch, fees_per_year)
-        `)
-        .eq('exam_name', examName)
-        .eq('category', selectedCategory)
-        .gte('closing_rank', minRank)
-        .lte('closing_rank', maxRank)
-        .order('closing_rank', { ascending: true })
-        .limit(15);
-
-      if (error) throw error;
-
-      const predictedColleges: PredictedCollege[] = data?.map((admission: any) => ({
-        id: admission.colleges.id,
-        name: admission.colleges.name,
-        location: admission.colleges.location,
-        course_name: admission.courses.course_name,
-        branch: admission.courses.branch,
-        fees_per_year: admission.courses.fees_per_year,
-        closing_rank: admission.closing_rank,
-        category: admission.category
-      })) || [];
-
-      return predictedColleges;
-    } catch (error) {
-      console.error('Error fetching predicted colleges:', error);
-      return [];
-    }
-  };
-
   const predictRank = async () => {
     if (!exam || !marks || !category) {
       toast.error('Please fill all required fields');
@@ -152,7 +86,7 @@ const Predictor = () => {
     const marksNum = parseInt(marks);
     const ipeMarksNum = ipeMarks ? parseInt(ipeMarks) : 0;
 
-    let prediction: { finalScore?: number; rank: string; colleges: string[]; predictedColleges?: PredictedCollege[] };
+    let prediction: PredictionResult;
 
     switch (exam) {
       case 'jee-main':
@@ -227,10 +161,6 @@ const Predictor = () => {
           colleges: ['Contact counselor for guidance']
         };
     }
-
-    // Fetch predicted colleges based on rank
-    const predictedColleges = await fetchPredictedColleges(prediction.rank, exam, category);
-    prediction.predictedColleges = predictedColleges;
 
     setResult(prediction);
     toast.success('Rank predicted successfully!');
@@ -396,39 +326,6 @@ const Predictor = () => {
               </div>
             </Card>
 
-            {/* NxtGen Selected Colleges */}
-            {result.predictedColleges && result.predictedColleges.length > 0 && (
-              <Card className="p-6 bg-white shadow-xl border-2 border-purple-200">
-                <div className="flex items-center mb-4">
-                  <GraduationCap className="w-7 h-7 text-purple-600 mr-2" />
-                  <h3 className="text-xl font-bold text-gray-900">Based on your rank, NxtGen selected the best colleges for you</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  {result.predictedColleges.map((college, index) => (
-                    <div 
-                      key={index} 
-                      className="bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border-2 border-gray-200 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all duration-300"
-                      onClick={() => navigate(`/college-details/${college.id}`)}
-                    >
-                      <h4 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h4>
-                      <p className="text-base font-medium text-gray-700 mb-2">{college.course_name} - {college.branch}</p>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 bg-gray-100 px-2 py-1 rounded">{college.location}</span>
-                        <span className="font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">₹{(college.fees_per_year / 100000).toFixed(1)}L/year</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm mt-2">
-                        <span className="text-blue-600 font-medium bg-blue-100 px-2 py-1 rounded">Closing Rank: {college.closing_rank.toLocaleString()}</span>
-                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded border border-indigo-200">{college.category}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-           
-
             {/* General College Suggestions */}
             <Card className="p-6 bg-white shadow-xl border-2 border-gray-200">
               <h4 className="text-lg font-bold text-gray-900 mb-3">General College Categories:</h4>
@@ -436,12 +333,12 @@ const Predictor = () => {
                 {result.colleges.map((college, index) => (
                   <div key={index} className="bg-gradient-to-r from-gray-100 to-blue-100 p-3 rounded-lg border border-gray-200">
                     <span className="text-base font-medium text-gray-800">{college}</span>
-                    
                   </div>
                 ))}
               </div>
-              <br></br>
-              <h1>You can see the predicted colleges in the College Predict Page (See in the top of this page )</h1>
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-blue-800 font-medium">💡 For detailed college predictions with branch-wise cutoffs, use our College Predictor above!</p>
+              </div>
             </Card>
           </div>
         )}
