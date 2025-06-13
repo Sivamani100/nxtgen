@@ -81,8 +81,12 @@ const CollegePredictor = () => {
 
       // Filter colleges based on branch availability and rank
       const suitableColleges = data?.filter((college) => {
-        const branches = college.branches_offered as Branch[];
-        const branchRankings = college.branch_wise_rankings as Record<string, Record<string, number>>;
+        const branches: Branch[] = Array.isArray(college.branches_offered) 
+          ? (college.branches_offered as unknown as Branch[])
+          : [];
+        const branchRankings = (college.branch_wise_rankings && typeof college.branch_wise_rankings === 'object') 
+          ? (college.branch_wise_rankings as Record<string, Record<string, number>>)
+          : {};
         
         // Check if branch is offered
         const hasBranch = branches && Array.isArray(branches) && branches.some((branch) => branch.name === selectedBranch);
@@ -218,8 +222,12 @@ const CollegePredictor = () => {
             
             <div className="space-y-4">
               {colleges.map((college) => {
-                const branches = college.branches_offered as Branch[];
-                const branchRankings = college.branch_wise_rankings as Record<string, Record<string, number>>;
+                const branches: Branch[] = Array.isArray(college.branches_offered) 
+                  ? (college.branches_offered as unknown as Branch[])
+                  : [];
+                const branchRankings = (college.branch_wise_rankings && typeof college.branch_wise_rankings === 'object') 
+                  ? (college.branch_wise_rankings as Record<string, Record<string, number>>)
+                  : {};
                 const selectedBranchData = branches?.find(b => b.name === selectedBranch);
                 const cutoffRank = branchRankings?.[selectedBranch]?.[category];
 

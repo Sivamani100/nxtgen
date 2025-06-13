@@ -126,10 +126,16 @@ const CollegeDetails = () => {
     );
   }
 
-  // Parse JSON data safely
-  const branches = (college.branches_offered as Branch[]) || [];
-  const recruiters = (college.top_recruiters as Recruiter[]) || [];
-  const branchRankings = (college.branch_wise_rankings as Record<string, Record<string, number>>) || {};
+  // Parse JSON data safely with proper type assertions
+  const branches: Branch[] = Array.isArray(college.branches_offered) 
+    ? (college.branches_offered as unknown as Branch[])
+    : [];
+  const recruiters: Recruiter[] = Array.isArray(college.top_recruiters) 
+    ? (college.top_recruiters as unknown as Recruiter[])
+    : [];
+  const branchRankings = (college.branch_wise_rankings && typeof college.branch_wise_rankings === 'object') 
+    ? (college.branch_wise_rankings as Record<string, Record<string, number>>)
+    : {};
 
   return (
     <div className="min-h-screen bg-gray-50">

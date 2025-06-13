@@ -198,11 +198,13 @@ const Profile = () => {
   const updateNotificationPreference = (key: string, value: boolean) => {
     if (!profile) return;
     
-    const currentPrefs = (profile.notification_preferences as NotificationPreferences) || {
-      scholarships: true,
-      admissions: true,
-      events: true
-    };
+    const currentPrefs: NotificationPreferences = (profile.notification_preferences && typeof profile.notification_preferences === 'object') 
+      ? (profile.notification_preferences as unknown as NotificationPreferences)
+      : {
+          scholarships: true,
+          admissions: true,
+          events: true
+        };
     
     setProfile({
       ...profile,
@@ -294,11 +296,13 @@ const Profile = () => {
     );
   }
 
-  const notificationPrefs = (profile.notification_preferences as NotificationPreferences) || {
-    scholarships: true,
-    admissions: true,
-    events: true
-  };
+  const notificationPrefs: NotificationPreferences = (profile.notification_preferences && typeof profile.notification_preferences === 'object') 
+    ? (profile.notification_preferences as unknown as NotificationPreferences)
+    : {
+        scholarships: true,
+        admissions: true,
+        events: true
+      };
 
   return (
     <div className="min-h-screen bg-gray-100 pb-20">
