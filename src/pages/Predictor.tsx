@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -170,49 +169,49 @@ const Predictor = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white shadow-lg p-4 border-b-2 border-green-100">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-xl font-bold text-gray-900">Rank & College Predictor</h1>
-        </div>
-      </div>
-
       {/* Content */}
-      <div className="max-w-md mx-auto p-4 pb-24">
+      <div className="max-w-4xl mx-auto p-4 lg:p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+            Rank & College Predictor
+          </h1>
+          <p className="text-gray-600">Predict your rank and find suitable colleges based on your exam scores</p>
+        </div>
+
         {/* Navigation Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-green-200 hover:border-green-400 bg-white">
-            <div className="text-center space-y-2">
-              <TrendingUp className="w-8 h-8 text-green-600 mx-auto" />
-              <h3 className="text-base font-bold text-green-700">Rank Predictor</h3>
-              <p className="text-xs text-gray-600">Predict your rank based on marks</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card className="p-6 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-green-200 hover:border-green-400 bg-white hover:scale-105">
+            <div className="text-center space-y-3">
+              <TrendingUp className="w-12 h-12 text-green-600 mx-auto" />
+              <h3 className="text-xl font-bold text-green-700">Rank Predictor</h3>
+              <p className="text-gray-600">Predict your rank based on marks</p>
             </div>
           </Card>
           <Card 
-            className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-200 hover:border-blue-400 bg-white"
+            className="p-6 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-200 hover:border-blue-400 bg-white hover:scale-105"
             onClick={() => navigate('/college-predictor')}
           >
-            <div className="text-center space-y-2">
-              <GraduationCap className="w-8 h-8 text-blue-600 mx-auto" />
-              <h3 className="text-base font-bold text-blue-700">College Predictor</h3>
-              <p className="text-xs text-gray-600">Find colleges based on your rank</p>
+            <div className="text-center space-y-3">
+              <GraduationCap className="w-12 h-12 text-blue-600 mx-auto" />
+              <h3 className="text-xl font-bold text-blue-700">College Predictor</h3>
+              <p className="text-gray-600">Find colleges based on your rank</p>
             </div>
           </Card>
         </div>
 
         {/* Rank Predictor Section */}
-        <Card className="p-6 mb-6 bg-white shadow-xl border-2 border-green-200">
-          <div className="flex items-center mb-4">
-            <Calculator className="w-7 h-7 text-green-600 mr-2" />
-            <h2 className="text-xl font-bold text-gray-900">Predict Your Rank</h2>
+        <Card className="p-6 mb-6 bg-white shadow-xl border-t-4 border-gradient-to-r from-green-400 to-blue-400">
+          <div className="flex items-center mb-6">
+            <Calculator className="w-8 h-8 text-green-600 mr-3" />
+            <h2 className="text-2xl font-bold text-gray-900">Predict Your Rank</h2>
           </div>
           
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Exam Selection */}
             <div>
-              <Label htmlFor="exam" className="text-base font-semibold text-gray-900">Select Exam</Label>
+              <Label htmlFor="exam" className="text-base font-semibold text-gray-900 mb-2 block">Select Exam</Label>
               <Select value={exam} onValueChange={setExam}>
-                <SelectTrigger className="border-2 border-blue-200 focus:border-blue-400">
+                <SelectTrigger className="h-12 border-2 border-green-200 focus:border-green-400">
                   <SelectValue placeholder="Choose exam" />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,44 +224,11 @@ const Predictor = () => {
               </Select>
             </div>
 
-            {/* Marks Input */}
-            <div>
-              <Label htmlFor="marks" className="text-base font-semibold text-gray-900">
-                {isEAMCET ? 'EAMCET Marks (out of 160)' : `${exam.toUpperCase()} Marks`}
-              </Label>
-              <Input
-                id="marks"
-                type="number"
-                value={marks}
-                onChange={(e) => setMarks(e.target.value)}
-                placeholder={isEAMCET ? "Enter marks out of 160" : "Enter your marks"}
-                className="text-base border-2 border-purple-200 focus:border-purple-400"
-              />
-            </div>
-
-            {/* IPE Marks for EAMCET */}
-            {isEAMCET && (
-              <div>
-                <Label htmlFor="ipe-marks" className="text-base font-semibold text-gray-900">IPE Marks (out of 1000)</Label>
-                <Input
-                  id="ipe-marks"
-                  type="number"
-                  value={ipeMarks}
-                  onChange={(e) => setIpeMarks(e.target.value)}
-                  placeholder="Enter IPE marks out of 1000"
-                  className="text-base border-2 border-orange-200 focus:border-orange-400"
-                />
-                <div className="text-sm text-gray-600 mt-1 bg-orange-50 p-2 rounded border-l-4 border-orange-300">
-                  IPE marks are required for accurate EAMCET rank prediction
-                </div>
-              </div>
-            )}
-
             {/* Category Selection */}
             <div>
-              <Label htmlFor="category" className="text-base font-semibold text-gray-900">Category</Label>
+              <Label htmlFor="category" className="text-base font-semibold text-gray-900 mb-2 block">Category</Label>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="border-2 border-indigo-200 focus:border-indigo-400">
+                <SelectTrigger className="h-12 border-2 border-blue-200 focus:border-blue-400">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,125 +241,115 @@ const Predictor = () => {
               </Select>
             </div>
 
-            <Button onClick={predictRank} className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white text-lg font-semibold py-3 shadow-lg">
-              <TrendingUp className="w-5 h-5 mr-2" />
-              Predict Rank
-            </Button>
+            {/* Marks Input */}
+            <div>
+              <Label htmlFor="marks" className="text-base font-semibold text-gray-900 mb-2 block">
+                {isEAMCET ? 'EAMCET Marks (out of 160)' : `${exam.toUpperCase()} Marks`}
+              </Label>
+              <Input
+                id="marks"
+                type="number"
+                value={marks}
+                onChange={(e) => setMarks(e.target.value)}
+                placeholder={isEAMCET ? "Enter marks out of 160" : "Enter your marks"}
+                className="h-12 text-base border-2 border-purple-200 focus:border-purple-400"
+              />
+            </div>
+
+            {/* IPE Marks for EAMCET */}
+            {isEAMCET && (
+              <div>
+                <Label htmlFor="ipe-marks" className="text-base font-semibold text-gray-900 mb-2 block">IPE Marks (out of 1000)</Label>
+                <Input
+                  id="ipe-marks"
+                  type="number"
+                  value={ipeMarks}
+                  onChange={(e) => setIpeMarks(e.target.value)}
+                  placeholder="Enter IPE marks out of 1000"
+                  className="h-12 text-base border-2 border-orange-200 focus:border-orange-400"
+                />
+              </div>
+            )}
           </div>
+
+          {/* IPE Info for EAMCET */}
+          {isEAMCET && (
+            <div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border-l-4 border-orange-400">
+              <p className="text-orange-800 font-medium">💡 IPE marks are required for accurate EAMCET rank prediction</p>
+            </div>
+          )}
+
+          <Button 
+            onClick={predictRank} 
+            className="w-full mt-6 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white text-lg font-semibold py-4 shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <TrendingUp className="w-5 h-5 mr-2" />
+            Predict Rank
+          </Button>
         </Card>
 
         {/* EAMCET Formula Explanation */}
         {isEAMCET && (
-          <Card className="p-4 mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 shadow-lg">
-            <h3 className="text-lg font-bold text-blue-900 mb-2">EAMCET Scoring Formula</h3>
-            <div className="text-sm text-blue-800 space-y-2">
-              <p className="font-semibold bg-white p-2 rounded">Final Score = (EAMCET/160 × 75) + (IPE/600 × 25)</p>
-              <p>• 75% weightage for EAMCET marks</p>
-              <p>• 25% weightage for IPE Group marks (PCM out of 600)</p>
-              <p>• IPE marks are converted from 1000 to 600 scale</p>
+          <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 shadow-lg">
+            <h3 className="text-xl font-bold text-blue-900 mb-3">EAMCET Scoring Formula</h3>
+            <div className="text-sm text-blue-800 space-y-3">
+              <p className="font-semibold bg-white p-3 rounded-lg shadow">Final Score = (EAMCET/160 × 75) + (IPE/600 × 25)</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <p className="bg-white p-2 rounded">• 75% weightage for EAMCET marks</p>
+                <p className="bg-white p-2 rounded">• 25% weightage for IPE Group marks</p>
+              </div>
+              <p className="bg-white p-2 rounded">• IPE marks are converted from 1000 to 600 scale (PCM)</p>
             </div>
           </Card>
         )}
 
         {/* Results */}
         {result && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <Card className="p-6 bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 shadow-xl">
-              <div className="flex items-center mb-4">
-                <TrendingUp className="w-7 h-7 text-green-600 mr-2" />
-                <h3 className="text-xl font-bold text-gray-900">Prediction Results</h3>
+              <div className="flex items-center mb-6">
+                <TrendingUp className="w-8 h-8 text-green-600 mr-3" />
+                <h3 className="text-2xl font-bold text-gray-900">Prediction Results</h3>
               </div>
               
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {result.finalScore && (
-                  <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg border-2 border-green-300">
-                    <div className="text-sm font-medium text-green-700 mb-1">Final Weighted Score</div>
-                    <div className="text-3xl font-bold text-green-800">
+                  <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-6 rounded-lg border-2 border-green-300">
+                    <div className="text-sm font-medium text-green-700 mb-2">Final Weighted Score</div>
+                    <div className="text-4xl font-bold text-green-800">
                       {result.finalScore.toFixed(2)}/100
                     </div>
                   </div>
                 )}
                 
-                <div className="bg-gradient-to-r from-blue-100 to-indigo-100 p-4 rounded-lg border-2 border-blue-300">
-                  <div className="text-sm font-medium text-blue-700 mb-1">Expected Rank Range</div>
-                  <div className="text-2xl font-bold text-blue-800">{result.rank}</div>
+                <div className="bg-gradient-to-r from-blue-100 to-indigo-100 p-6 rounded-lg border-2 border-blue-300">
+                  <div className="text-sm font-medium text-blue-700 mb-2">Expected Rank Range</div>
+                  <div className="text-3xl font-bold text-blue-800">{result.rank}</div>
                 </div>
-                
-                <div className="text-sm text-gray-600 bg-gradient-to-r from-orange-50 to-yellow-50 p-3 rounded-lg border-2 border-orange-200">
-                  <strong className="text-orange-800">Disclaimer:</strong> This is an estimated prediction based on previous year data. 
-                  Actual ranks may vary based on exam difficulty, number of candidates, and other factors.
-                </div>
+              </div>
+              
+              <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border-2 border-orange-200">
+                <p className="text-orange-800"><strong>Disclaimer:</strong> This is an estimated prediction based on previous year data. 
+                Actual ranks may vary based on exam difficulty, number of candidates, and other factors.</p>
               </div>
             </Card>
 
             {/* General College Suggestions */}
             <Card className="p-6 bg-white shadow-xl border-2 border-gray-200">
-              <h4 className="text-lg font-bold text-gray-900 mb-3">General College Categories:</h4>
-              <div className="space-y-2">
+              <h4 className="text-xl font-bold text-gray-900 mb-4">General College Categories:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {result.colleges.map((college, index) => (
-                  <div key={index} className="bg-gradient-to-r from-gray-100 to-blue-100 p-3 rounded-lg border border-gray-200">
+                  <div key={index} className="bg-gradient-to-r from-gray-100 to-blue-100 p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                     <span className="text-base font-medium text-gray-800">{college}</span>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-blue-800 font-medium">💡 For detailed college predictions with branch-wise cutoffs, use our College Predictor above!</p>
               </div>
             </Card>
           </div>
         )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-evenly gap-2 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
-              onClick={() => navigate('/home')}
-            >
-              <HomeIcon className="w-7 h-7" />
-              <span className="text-xs">Home</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-purple-600"
-              onClick={() => navigate('/colleges')}
-            >
-              <Users className="w-7 h-7" />
-              <span className="text-xs">Colleges</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-green-600 bg-green-50"
-            >
-              <BookOpen className="w-7 h-7" />
-              <span className="text-xs">Predictor</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-orange-600"
-              onClick={() => navigate('/news')}
-            >
-              <Newspaper className="w-7 h-7" />
-              <span className="text-xs">News</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-indigo-600"
-              onClick={() => navigate('/profile')}
-            >
-              <User className="w-7 h-7" />
-              <span className="text-xs">Profile</span>
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );
