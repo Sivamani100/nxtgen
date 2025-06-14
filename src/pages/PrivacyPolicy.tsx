@@ -13,6 +13,24 @@ type Policy = {
 const PAGE_SIZE = 1;
 const MIN_CONTENT = 1000;
 const MAX_CONTENT = 100000;
+const DEMO_PAGES = 25;
+
+// Generate deterministic demo privacy policy pages (1,000+ chars each)
+const getDemoPages = (): Policy[] => {
+  const demoContentBlock =
+    "This is a sample privacy policy page. " +
+    "Our commitment to your privacy ensures your personal information is safe with us. All data collected, stored, and processed is handled in accordance with our most stringent security protocols. " +
+    "Any information you provide is utilized only to enhance your experience and never shared with third-party vendors without your consent. ".repeat(16);
+  const minContent = demoContentBlock.slice(0, MIN_CONTENT);
+  return Array.from({ length: DEMO_PAGES }).map((_, idx) => ({
+    id: `demo-${idx + 1}`,
+    page_number: idx + 1,
+    title: `Privacy Policy Section ${idx + 1}`,
+    content:
+      minContent +
+      `\n\nThis is demo privacy policy page ${idx + 1}, generated because no data was found in the database.`,
+  }));
+};
 
 const PrivacyPolicy = () => {
   const [pages, setPages] = useState<Policy[]>([]);
@@ -26,13 +44,17 @@ const PrivacyPolicy = () => {
       .from("privacy_policies")
       .select()
       .order("page_number", { ascending: true })
-      .limit(25) // Fetch up to 25 pages
+      .limit(25)
       .then(({ data, error }) => {
         if (error) {
           setError("Could not fetch privacy policy pages.");
           setPages([]);
+        } else if (!data || data.length === 0) {
+          // No content found in Supabase, use demo pages
+          setPages(getDemoPages());
+          setError(null);
         } else {
-          setPages(data ?? []);
+          setPages(data as Policy[]);
           setError(null);
         }
         setLoading(false);
