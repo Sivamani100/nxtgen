@@ -53,17 +53,18 @@ const Layout = ({ children }: LayoutProps) => {
       }`}>
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-            <div className="flex items-center gap-2 w-full">
+          <div className="flex items-center justify-between h-20 px-4 border-b border-gray-200">
+            {/* Logo and Branding */}
+            <div className={`flex items-center w-full gap-3 transition-all duration-200 ${isSidebarCollapsed ? "justify-center" : ""}`}>
               <img
-                src="/lovable-uploads/939fc116-2a44-4f85-aeee-11014a6bc796.png"
+                src="/lovable-uploads/b8a2ef09-3f96-4f67-930c-656bd4135ddb.png"
                 alt="NXTGEN Logo"
-                className={`transition-all duration-200 ${isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10"} object-contain`}
-                style={{ minWidth: isSidebarCollapsed ? 32 : 40 }}
+                className={`transition-all duration-200 object-contain ${isSidebarCollapsed ? "w-14 h-14" : "w-20 h-20"}`}
+                style={{ minWidth: isSidebarCollapsed ? 56 : 80, minHeight: isSidebarCollapsed ? 56 : 80 }}
               />
               {/* Show NXTGEN text only if expanded */}
               {!isSidebarCollapsed && (
-                <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent ml-2 select-none">
+                <span className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent ml-1 select-none tracking-wide">
                   NXTGEN
                 </span>
               )}
@@ -72,7 +73,8 @@ const Layout = ({ children }: LayoutProps) => {
               variant="ghost"
               size="sm"
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-2 hover:bg-green-50"
+              className="p-2 hover:bg-green-50 ml-2"
+              aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isSidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
             </Button>
@@ -84,7 +86,6 @@ const Layout = ({ children }: LayoutProps) => {
               if (item.desktopOnly && typeof window !== "undefined" && window.innerWidth < 1024) {
                 return null;
               }
-              // Hide separator from mini sidebar for the last 2 items
               return (
                 <Button
                   key={item.path}
