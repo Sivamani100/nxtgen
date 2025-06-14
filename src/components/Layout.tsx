@@ -7,6 +7,9 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+const COLLAPSED_WIDTH = 86; // 71 + 15
+const EXPANDED_WIDTH = 279; // 264 + 15
+
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,14 +51,19 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen bg-white">
       {/* Desktop Sidebar - Left side - Only show on lg and above */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
-        isSidebarCollapsed ? 'lg:w-[71px]' : 'lg:w-64'
+        isSidebarCollapsed ? `lg:w-[${COLLAPSED_WIDTH}px]` : `lg:w-[${EXPANDED_WIDTH}px]`
       }`}>
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
           <div className="flex items-center justify-between h-16 px-2 border-b border-gray-200">
-            <div className="flex items-center justify-center w-full">
-              {/* Logo removed as per user request */}
-              {/* No image, no text */}
+            <div className={`flex items-center justify-center w-full transition-all duration-200 ${isSidebarCollapsed ? "px-0" : "pl-3 pr-2"}`}>
+              {/* Show logo in both collapsed and expanded mode */}
+              <img
+                src="/lovable-uploads/6faa7868-db80-4ff3-8c9b-b64f6f460aeb.png"
+                alt="NXTGEN Logo"
+                className={`${isSidebarCollapsed ? "h-8 w-8" : "h-10 w-32"} object-contain`}
+                draggable={false}
+              />
             </div>
             <Button
               variant="ghost"
@@ -86,7 +94,6 @@ const Layout = ({ children }: LayoutProps) => {
                   title={isSidebarCollapsed ? item.label : undefined}
                 >
                   {item.icon && <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />}
-                  {/* Don't show text if collapsed */}
                   {!isSidebarCollapsed && item.label}
                 </Button>
               );
@@ -96,7 +103,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
 
       {/* Main Content - Adjust margin for desktop sidebar */}
-      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-[71px]' : 'lg:pl-64'}`}>
+      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? `lg:pl-[${COLLAPSED_WIDTH}px]` : `lg:pl-[${EXPANDED_WIDTH}px]`}`}>
         <div className="pb-[70px] lg:pb-0 min-h-screen">
           {children}
         </div>
