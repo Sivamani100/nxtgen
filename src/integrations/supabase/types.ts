@@ -9,12 +9,37 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      college_comparisons: {
+        Row: {
+          college_ids: number[]
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          college_ids: number[]
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          college_ids?: number[]
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       colleges: {
         Row: {
           accreditation: Json | null
           affiliation: string | null
           apply_link: string | null
           average_package: number | null
+          branch_cutoff_predictions: Json | null
           branch_wise_rankings: Json | null
           branches_offered: Json | null
           campus_area: string | null
@@ -58,6 +83,7 @@ export type Database = {
           affiliation?: string | null
           apply_link?: string | null
           average_package?: number | null
+          branch_cutoff_predictions?: Json | null
           branch_wise_rankings?: Json | null
           branches_offered?: Json | null
           campus_area?: string | null
@@ -101,6 +127,7 @@ export type Database = {
           affiliation?: string | null
           apply_link?: string | null
           average_package?: number | null
+          branch_cutoff_predictions?: Json | null
           branch_wise_rankings?: Json | null
           branches_offered?: Json | null
           campus_area?: string | null

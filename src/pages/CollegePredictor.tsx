@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calculator, TrendingUp, BookOpen, Home as HomeIcon, Users, Newspaper, User, GraduationCap } from "lucide-react";
+import { ArrowLeft, Calculator, TrendingUp, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 
@@ -126,33 +126,37 @@ const CollegePredictor = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white shadow-lg p-4 border-b-2 border-green-100">
-        <div className="max-w-md mx-auto flex items-center">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/predictor')} className="mr-3">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-xl font-bold text-gray-900">College Predictor</h1>
-        </div>
-      </div>
+  const getBranchPrediction = (college: College, userRank: number, category: string) => {
+    const branchCutoffs = (college.branch_cutoff_predictions && typeof college.branch_cutoff_predictions === 'object') 
+      ? (college.branch_cutoff_predictions as Record<string, Record<string, number>>)
+      : {};
+    
+    const availableBranches = Object.entries(branchCutoffs)
+      .filter(([branch, cutoffs]) => {
+        const cutoff = (cutoffs as Record<string, number>)[category];
+        return cutoff && userRank <= cutoff;
+      })
+      .map(([branch]) => branch);
 
-      {/* Content */}
-      <div className="max-w-md mx-auto p-4 pb-24">
+    return availableBranches;
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-4xl mx-auto p-4 pb-24 lg:pb-4">
         {/* Predictor Form */}
-        <Card className="p-6 mb-6 bg-white shadow-xl border-2 border-blue-200">
-          <div className="flex items-center mb-4">
-            <GraduationCap className="w-7 h-7 text-blue-600 mr-2" />
-            <h2 className="text-xl font-bold text-gray-900">Find Your Colleges</h2>
+        <Card className="p-8 mb-6 bg-white shadow-lg border border-gray-200">
+          <div className="flex items-center mb-6">
+            <GraduationCap className="w-8 h-8 text-blue-600 mr-3" />
+            <h2 className="text-2xl font-bold text-gray-900">College Predictor</h2>
           </div>
           
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Exam Selection */}
             <div>
-              <Label htmlFor="exam" className="text-base font-semibold text-gray-900">Select Exam</Label>
+              <Label htmlFor="exam" className="text-lg font-semibold text-gray-900 mb-2 block">Select Exam</Label>
               <Select value={exam} onValueChange={setExam}>
-                <SelectTrigger className="border-2 border-blue-200 focus:border-blue-400">
+                <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-500">
                   <SelectValue placeholder="Choose exam" />
                 </SelectTrigger>
                 <SelectContent>
@@ -165,42 +169,24 @@ const CollegePredictor = () => {
               </Select>
             </div>
 
-            {/* Branch Selection (Optional) */}
-            <div>
-              <Label htmlFor="branch" className="text-base font-semibold text-gray-900">Select Branch (Optional)</Label>
-              <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                <SelectTrigger className="border-2 border-purple-200 focus:border-purple-400">
-                  <SelectValue placeholder="Choose branch (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Branches</SelectItem>
-                  {branches.map((branch) => (
-                    <SelectItem key={branch} value={branch}>
-                      {branch}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Rank Input */}
             <div>
-              <Label htmlFor="rank" className="text-base font-semibold text-gray-900">Your Rank</Label>
+              <Label htmlFor="rank" className="text-lg font-semibold text-gray-900 mb-2 block">Your Rank</Label>
               <Input
                 id="rank"
                 type="number"
                 value={rank}
                 onChange={(e) => setRank(e.target.value)}
                 placeholder="Enter your rank"
-                className="text-base border-2 border-green-200 focus:border-green-400"
+                className="h-12 text-lg border-2 border-gray-200 focus:border-green-500"
               />
             </div>
 
             {/* Category Selection */}
             <div>
-              <Label htmlFor="category" className="text-base font-semibold text-gray-900">Category</Label>
+              <Label htmlFor="category" className="text-lg font-semibold text-gray-900 mb-2 block">Category</Label>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="border-2 border-indigo-200 focus:border-indigo-400">
+                <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-indigo-500">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -213,120 +199,107 @@ const CollegePredictor = () => {
               </Select>
             </div>
 
-            <Button 
-              onClick={predictColleges} 
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-lg font-semibold py-3 shadow-lg"
-            >
-              <Calculator className="w-5 h-5 mr-2" />
-              {loading ? 'Predicting...' : 'Predict Colleges'}
-            </Button>
+            {/* Branch Selection (Optional) */}
+            <div>
+              <Label htmlFor="branch" className="text-lg font-semibold text-gray-900 mb-2 block">Select Branch (Optional)</Label>
+              <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-purple-500">
+                  <SelectValue placeholder="Choose branch (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Branches</SelectItem>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch} value={branch}>
+                      {branch}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          <Button 
+            onClick={predictColleges} 
+            disabled={loading}
+            className="w-full mt-8 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-lg font-semibold py-4 shadow-lg"
+          >
+            <Calculator className="w-5 h-5 mr-2" />
+            {loading ? 'Predicting...' : 'Predict Colleges'}
+          </Button>
         </Card>
 
         {/* Results */}
         {colleges.length > 0 && (
-          <Card className="p-6 bg-white shadow-xl border-2 border-green-200">
-            <div className="flex items-center mb-4">
-              <TrendingUp className="w-7 h-7 text-green-600 mr-2" />
-              <h3 className="text-xl font-bold text-gray-900">Predicted Colleges ({colleges.length})</h3>
+          <Card className="p-8 bg-white shadow-lg border border-gray-200">
+            <div className="flex items-center mb-6">
+              <TrendingUp className="w-8 h-8 text-green-600 mr-3" />
+              <h3 className="text-2xl font-bold text-gray-900">Predicted Colleges ({colleges.length})</h3>
             </div>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {colleges.map((college) => {
-                const branches: Branch[] = Array.isArray(college.branches_offered) 
-                  ? (college.branches_offered as unknown as Branch[])
-                  : [];
                 const examCutoffs = (college.exam_cutoffs && typeof college.exam_cutoffs === 'object') 
                   ? (college.exam_cutoffs as Record<string, Record<string, number>>)
                   : {};
                 const cutoffRank = examCutoffs?.[exam]?.[category];
+                const availableBranches = getBranchPrediction(college, parseInt(rank), category);
 
                 return (
                   <div 
                     key={college.id} 
-                    className="bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border-2 border-gray-200 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all duration-300"
+                    className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all duration-300"
                     onClick={() => navigate(`/college-details/${college.id}`)}
                   >
-                    <h4 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h4>
-                    <p className="text-base font-medium text-gray-700 mb-2">{college.location}</p>
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-gray-600 bg-gray-100 px-2 py-1 rounded">{college.type}</span>
-                      <span className="font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">
-                        ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L/year
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-blue-600 font-medium bg-blue-100 px-2 py-1 rounded">
-                        {exam.toUpperCase()} Cutoff: {cutoffRank?.toLocaleString() || 'N/A'}
-                      </span>
-                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded border border-indigo-200">
-                        {category.toUpperCase()}
-                      </span>
-                    </div>
-                    {selectedBranch && (
-                      <div className="text-xs text-gray-600 mt-2 bg-yellow-50 p-2 rounded">
-                        Branch: {selectedBranch}
+                    <h4 className="text-xl font-bold text-gray-900 mb-2">{college.name}</h4>
+                    <p className="text-lg font-medium text-gray-700 mb-3">{college.location}</p>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 bg-gray-100 px-3 py-1 rounded">{college.type}</span>
+                        <span className="font-semibold text-green-600 bg-green-100 px-3 py-1 rounded">
+                          ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L/year
+                        </span>
                       </div>
-                    )}
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-blue-600 font-medium bg-blue-100 px-3 py-1 rounded">
+                          {exam.toUpperCase()} Cutoff: {cutoffRank?.toLocaleString() || 'N/A'}
+                        </span>
+                        <span className="text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded border border-indigo-200">
+                          {category.toUpperCase()}
+                        </span>
+                      </div>
+
+                      {availableBranches.length > 0 && (
+                        <div className="bg-green-50 p-3 rounded border border-green-200">
+                          <p className="text-sm font-semibold text-green-800 mb-2">Branches you can get:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {availableBranches.slice(0, 3).map((branch, index) => (
+                              <span key={index} className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                {branch}
+                              </span>
+                            ))}
+                            {availableBranches.length > 3 && (
+                              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                +{availableBranches.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedBranch && (
+                        <div className="text-sm text-gray-600 bg-yellow-50 p-2 rounded">
+                          Filtered for: {selectedBranch}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
           </Card>
         )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-evenly gap-2 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
-              onClick={() => navigate('/home')}
-            >
-              <HomeIcon className="w-7 h-7" />
-              <span className="text-xs">Home</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-purple-600"
-              onClick={() => navigate('/colleges')}
-            >
-              <Users className="w-7 h-7" />
-              <span className="text-xs">Colleges</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-green-600 bg-green-50"
-            >
-              <BookOpen className="w-7 h-7" />
-              <span className="text-xs">Predictor</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-orange-600"
-              onClick={() => navigate('/news')}
-            >
-              <Newspaper className="w-7 h-7" />
-              <span className="text-xs">News</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-indigo-600"
-              onClick={() => navigate('/profile')}
-            >
-              <User className="w-7 h-7" />
-              <span className="text-xs">Profile</span>
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );

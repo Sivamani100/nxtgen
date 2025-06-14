@@ -106,7 +106,7 @@ const CollegeDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
       </div>
     );
@@ -114,7 +114,7 @@ const CollegeDetails = () => {
 
   if (!college) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-2">College not found</h2>
           <Button onClick={() => navigate('/colleges')} className="bg-green-600 hover:bg-green-700">
@@ -141,17 +141,17 @@ const CollegeDetails = () => {
   const eligibleExams = Array.isArray(college.eligible_exams) ? college.eligible_exams : [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-white shadow-sm p-4 sticky top-0 z-10">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
+      <div className="bg-white shadow-sm p-4 sticky top-0 z-10 border-b border-gray-200">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center">
             <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')} className="mr-3">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-lg font-bold text-gray-900">College Details</h1>
           </div>
-          <Button onClick={handleSaveCollege} variant="outline" size="sm">
+          <Button onClick={handleSaveCollege} variant="outline" size="sm" className="border-green-500 text-green-600 hover:bg-green-50">
             <Heart className="w-4 h-4 mr-2" />
             Save
           </Button>
@@ -159,15 +159,15 @@ const CollegeDetails = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
+      <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
         {/* College Header */}
-        <Card className="p-6">
+        <Card className="p-6 shadow-sm border border-gray-200">
           <div className="flex flex-col lg:flex-row gap-6">
             {college.image_url && (
               <img 
                 src={college.image_url} 
                 alt={college.name}
-                className="w-full lg:w-48 h-48 object-cover rounded-lg"
+                className="w-full lg:w-64 h-48 lg:h-64 object-cover rounded-lg"
                 onError={(e) => {
                   console.error('Image failed to load:', college.image_url);
                   e.currentTarget.src = '/fallback-image.jpg';
@@ -176,61 +176,61 @@ const CollegeDetails = () => {
               />
             )}
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{college.name}</h1>
-              <div className="flex items-center text-gray-600 mb-3">
-                <MapPin className="w-4 h-4 mr-2" />
-                <span className="text-base">{college.location}</span>
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">{college.name}</h1>
+              <div className="flex items-center text-gray-600 mb-4">
+                <MapPin className="w-5 h-5 mr-2" />
+                <span className="text-lg">{college.location}</span>
               </div>
               
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <div className="text-center">
                   <div className="flex items-center justify-center">
-                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                    <span className="text-lg font-bold text-gray-900">{college.rating}</span>
+                    <Star className="w-5 h-5 text-yellow-500 mr-1" />
+                    <span className="text-xl font-bold text-gray-900">{college.rating}</span>
                   </div>
-                  <span className="text-xs text-gray-600">Rating</span>
+                  <span className="text-sm text-gray-600">Rating</span>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-green-600">
+                  <div className="text-xl font-bold text-green-600">
                     ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L
                   </div>
-                  <span className="text-xs text-gray-600">Min Fees</span>
+                  <span className="text-sm text-gray-600">Min Fees</span>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-blue-600">{college.placement_percentage}%</div>
-                  <span className="text-xs text-gray-600">Placement</span>
+                  <div className="text-xl font-bold text-blue-600">{college.placement_percentage}%</div>
+                  <span className="text-sm text-gray-600">Placement</span>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-purple-600">
+                  <div className="text-xl font-bold text-purple-600">
                     ₹{college.highest_package ? (college.highest_package / 100000).toFixed(1) : '0'}L
                   </div>
-                  <span className="text-xs text-gray-600">Highest Package</span>
+                  <span className="text-sm text-gray-600">Highest Package</span>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">{college.type}</span>
+                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">{college.type}</span>
                 {college.affiliation && (
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">{college.affiliation}</span>
+                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">{college.affiliation}</span>
                 )}
-                <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Est. {college.established_year}</span>
+                <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">Est. {college.established_year}</span>
               </div>
             </div>
           </div>
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {college.website_url && (
             <Button 
               variant="outline" 
               onClick={() => window.open(college.website_url!, '_blank')}
-              className="flex items-center justify-center py-2 h-auto"
+              className="flex items-center justify-center py-3 h-auto border-blue-500 text-blue-600 hover:bg-blue-50"
             >
-              <Globe className="w-4 h-4 mr-2" />
+              <Globe className="w-5 h-5 mr-2" />
               <div>
-                <div className="font-semibold text-sm">Visit Website</div>
-                <div className="text-xs text-gray-600">Official site</div>
+                <div className="font-semibold">Visit Website</div>
+                <div className="text-sm opacity-75">Official site</div>
               </div>
             </Button>
           )}
@@ -238,12 +238,12 @@ const CollegeDetails = () => {
           {college.apply_link && (
             <Button 
               onClick={() => window.open(college.apply_link!, '_blank')}
-              className="flex items-center justify-center py-2 h-auto bg-green-600 hover:bg-green-700"
+              className="flex items-center justify-center py-3 h-auto bg-green-600 hover:bg-green-700"
             >
-              <ExternalLink className="w-4 h-4 mr-2" />
+              <ExternalLink className="w-5 h-5 mr-2" />
               <div>
-                <div className="font-semibold text-sm">Apply Now</div>
-                <div className="text-xs opacity-90">Start application</div>
+                <div className="font-semibold">Apply Now</div>
+                <div className="text-sm opacity-90">Start application</div>
               </div>
             </Button>
           )}
@@ -304,16 +304,16 @@ const CollegeDetails = () => {
 
         {/* Description */}
         {college.description && (
-          <Card className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">About</h2>
+          <Card className="p-6 border border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">About</h2>
             <p className="text-gray-700 leading-relaxed text-base">{college.description}</p>
           </Card>
         )}
 
         {/* Exam-wise Cutoff Ranks */}
         {eligibleExams.length > 0 && (
-          <Card className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Exam-wise Cutoff Ranks</h2>
+          <Card className="p-6 border border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Exam-wise Cutoff Ranks</h2>
             <div className="space-y-6">
               {eligibleExams.map((exam) => {
                 const cutoffs = examCutoffs[exam];
@@ -372,20 +372,20 @@ const CollegeDetails = () => {
 
         {/* Available Branches */}
         {branches.length > 0 && (
-          <Card className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Available Branches</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card className="p-6 border border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Available Branches</h2>
+            <div className="grid grid-cols-1 gap-4">
               {branches.map((branch, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-lg border">
-                  <h3 className="text-base font-bold text-gray-900 mb-2">{branch.name}</h3>
-                  <div className="space-y-2">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{branch.name}</h3>
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-600 text-sm">Seats:</span>
-                      <span className="font-medium text-sm">{branch.seats}</span>
+                      <span className="text-gray-600">Seats:</span>
+                      <span className="font-medium">{branch.seats}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-600 text-sm">Fees per year:</span>
-                      <span className="font-bold text-green-600 text-sm">
+                      <span className="text-gray-600">Fees per year:</span>
+                      <span className="font-bold text-green-600">
                         ₹{(branch.fees_per_year / 100000).toFixed(1)}L
                       </span>
                     </div>
@@ -411,7 +411,7 @@ const CollegeDetails = () => {
 
         {/* Key Statistics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="p-6">
+          <Card className="p-6 border border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Key Statistics</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -419,7 +419,7 @@ const CollegeDetails = () => {
                   <DollarSign className="w-4 h-4 text-green-600 mr-2" />
                   <span className="text-gray-700 text-base">Fee Range</span>
                 </div>
-                <span className="font-bold text-base">
+                <span className="font-bold text-sm">
                   ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
                 </span>
               </div>
@@ -429,7 +429,7 @@ const CollegeDetails = () => {
                   <TrendingUp className="w-4 h-4 text-blue-600 mr-2" />
                   <span className="text-gray-700 text-base">Placement Rate</span>
                 </div>
-                <span className="font-bold text-base text-blue-600">{college.placement_percentage}%</span>
+                <span className="font-bold text-blue-600">{college.placement_percentage}%</span>
               </div>
               
               <div className="flex items-center justify-between">
@@ -458,21 +458,21 @@ const CollegeDetails = () => {
                     <Building className="w-4 h-4 text-gray-600 mr-2" />
                     <span className="text-gray-700 text-base">Campus Area</span>
                   </div>
-                  <span className="font-bold text-base">{college.campus_area} acres</span>
+                  <span className="font-bold">{college.campus_area} acres</span>
                 </div>
               )}
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 border border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Contact Information</h2>
             <div className="space-y-4">
               {college.contact_email && (
                 <div className="flex items-center">
                   <Mail className="w-4 h-4 text-blue-600 mr-3" />
                   <div>
-                    <span className="text-gray-600 block text-base">Email</span>
-                    <a href={`mailto:${college.contact_email}`} className="text-blue-600 hover:underline font-medium text-base">
+                    <span className="text-gray-600 block">Email</span>
+                    <a href={`mailto:${college.contact_email}`} className="text-blue-600 hover:underline font-medium">
                       {college.contact_email}
                     </a>
                   </div>
@@ -483,8 +483,8 @@ const CollegeDetails = () => {
                 <div className="flex items-center">
                   <Phone className="w-4 h-4 text-green-600 mr-3" />
                   <div>
-                    <span className="text-gray-600 block text-base">Phone</span>
-                    <a href={`tel:${college.contact_phone}`} className="text-green-600 hover:underline font-medium text-base ">{college.contact_phone}</a>
+                    <span className="text-gray-600 block">Phone</span>
+                    <a href={`tel:${college.contact_phone}`} className="text-green-600 hover:underline font-medium">{college.contact_phone}</a>
                   </div>
                 </div>
               )}
@@ -492,10 +492,10 @@ const CollegeDetails = () => {
               <div className="flex items-start">
                 <MapPin className="w-4 h-4 text-red-600 mr-3 mt-1" />
                 <div>
-                  <span className="text-gray-600 block text-base">Address</span>
-                  <span className="font-medium text-base">{college.location}</span>
+                  <span className="text-gray-600 block">Address</span>
+                  <span className="font-medium">{college.location}</span>
                   <br />
-                  <span className="text-gray-600 text-base">{college.city}, {college.state}</span>
+                  <span className="text-gray-600">{college.city}, {college.state}</span>
                 </div>
               </div>
             </div>
@@ -504,7 +504,7 @@ const CollegeDetails = () => {
 
         {/* Top Recruiters */}
         {recruiters.length > 0 && (
-          <Card className="p-6">
+          <Card className="p-6 border border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Top Recruiters</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {recruiters.map((recruiter, index) => (

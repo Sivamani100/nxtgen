@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, Menu, X, ChevronLeft, ChevronRight, GitCompare } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,6 +19,7 @@ const Layout = ({ children }: LayoutProps) => {
     { icon: Users, label: "Colleges", path: "/colleges" },
     { icon: BookOpen, label: "Predictor", path: "/predictor" },
     { icon: Newspaper, label: "News", path: "/news" },
+    { icon: GitCompare, label: "Compare", path: "/compare" },
     { icon: Heart, label: "Favorites", path: "/favorites" },
     { icon: Bell, label: "Notifications", path: "/notifications" },
     { icon: User, label: "Profile", path: "/profile" },
@@ -32,7 +33,7 @@ const Layout = ({ children }: LayoutProps) => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-green-100">
+    <div className="min-h-screen bg-white">
       {/* Desktop Sidebar - Left side */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
         isSidebarCollapsed ? 'lg:w-16' : 'lg:w-64'
