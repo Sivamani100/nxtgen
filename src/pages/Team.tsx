@@ -2,32 +2,37 @@
 import React from "react";
 import { Instagram, Linkedin, Phone, Users } from "lucide-react";
 
+// Use user-uploaded images for founder and cofounder
 const founders = [
   {
     name: "Sivamanikanta Mallipurapu",
     title: "Founder & CEO",
-    image: "/Sivamanikanta.jpg",
+    // Use uploaded image for the founder
+    image: "/lovable-uploads/ba52f761-d817-4827-9991-1365c4d6fc8f.png",
     linkedin: "https://www.linkedin.com/in/sivamanikanta-mallipurapu/",
     instagram: "https://www.instagram.com/sivamanikanta.mallipurapu/",
     email: "mallipurapusiva@gmail.com",
     phone: "+91 9849497911",
-    about: "Visionary founder of NXTGEN. Sivamanikanta leads the team with passion for transforming student guidance through technology, focusing on accessible, data-driven insights for academic and career success."
+    about:
+      "Visionary founder of NXTGEN. Sivamanikanta leads the team with passion for transforming student guidance through technology, focusing on accessible, data-driven insights for academic and career success.",
   },
   {
     name: "Chandrika Bogireddy",
     title: "Co-founder & Product Lead",
-    image: "/Chandrika.jpg",
+    // Use uploaded image for the cofounder
+    image: "/lovable-uploads/9602b8f1-9a2f-49b0-8b5a-eea50bc74771.png",
     linkedin: "https://www.linkedin.com/in/chandrika-bogireddy/",
     instagram: "https://www.instagram.com/chandrika.bogireddy/",
     email: "chandrika.nxtgen@gmail.com",
     phone: "+91 9876543210",
-    about: "Co-founder and key builder of NXTGEN. Chandrika specializes in product experience and outreach, helping empower students and create innovative solutions for the education community."
+    about:
+      "Co-founder and key builder of NXTGEN. Chandrika specializes in product experience and outreach, helping empower students and create innovative solutions for the education community.",
   },
 ];
 
 const cardBgColors = [
   "bg-gradient-to-br from-green-100 to-green-200",
-  "bg-gradient-to-br from-blue-100 to-blue-200"
+  "bg-gradient-to-br from-blue-100 to-blue-200",
 ];
 
 const Team = () => (
@@ -53,7 +58,12 @@ const Team = () => (
                 src={member.image}
                 alt={member.name}
                 className="w-36 h-36 rounded-full object-cover"
-                onError={e => (e.currentTarget.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name) + "&background=2563eb&color=fff")}
+                onError={e =>
+                  (e.currentTarget.src =
+                    "https://ui-avatars.com/api/?name=" +
+                    encodeURIComponent(member.name) +
+                    "&background=2563eb&color=fff")
+                }
               />
             </div>
             <h2 className="text-2xl font-bold text-blue-800 mb-1">{member.name}</h2>
@@ -76,7 +86,7 @@ const Team = () => (
                   />
                 </svg>
               </a>
-              <a href={`tel:${member.phone.replace(/\s/g, '')}`} title="Phone">
+              <a href={`tel:${member.phone.replace(/\s/g, "")}`} title="Phone">
                 <Phone className="w-6 h-6 text-green-600 hover:scale-110 hover:text-green-400 transition" />
               </a>
             </div>
@@ -87,7 +97,7 @@ const Team = () => (
               </span>
               <span className="text-gray-500 mt-1">
                 <span className="font-medium">Phone:</span>&nbsp;
-                <a href={`tel:${member.phone.replace(/\s/g, '')}`} className="underline text-green-700">{member.phone}</a>
+                <a href={`tel:${member.phone.replace(/\s/g, "")}`} className="underline text-green-700">{member.phone}</a>
               </span>
             </div>
           </div>
@@ -101,3 +111,4 @@ const Team = () => (
 );
 
 export default Team;
+
