@@ -33,7 +33,9 @@ export type Database = {
           cutoff_rank_sc: number | null
           cutoff_rank_st: number | null
           description: string | null
+          eligible_exams: string[] | null
           established_year: number | null
+          exam_cutoffs: Json | null
           facilities: Json | null
           highest_package: number | null
           id: number
@@ -74,7 +76,9 @@ export type Database = {
           cutoff_rank_sc?: number | null
           cutoff_rank_st?: number | null
           description?: string | null
+          eligible_exams?: string[] | null
           established_year?: number | null
+          exam_cutoffs?: Json | null
           facilities?: Json | null
           highest_package?: number | null
           id?: number
@@ -115,7 +119,9 @@ export type Database = {
           cutoff_rank_sc?: number | null
           cutoff_rank_st?: number | null
           description?: string | null
+          eligible_exams?: string[] | null
           established_year?: number | null
+          exam_cutoffs?: Json | null
           facilities?: Json | null
           highest_package?: number | null
           id?: number

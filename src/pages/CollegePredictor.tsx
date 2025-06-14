@@ -62,7 +62,7 @@ const CollegePredictor = () => {
   ];
 
   const predictColleges = async () => {
-    if (!exam || !rank || !category || !selectedBranch) {
+    if (!exam || !rank || !category) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -71,33 +71,44 @@ const CollegePredictor = () => {
     try {
       const userRank = parseInt(rank);
       
-      // Fetch colleges with branch-wise rankings
+      // Fetch colleges that accept the selected exam
       const { data, error } = await supabase
         .from('colleges')
         .select('*')
-        .not('branch_wise_rankings', 'is', null);
+        .contains('eligible_exams', [exam])
+        .not('exam_cutoffs', 'is', null);
 
       if (error) throw error;
 
-      // Filter colleges based on branch availability and rank
+      // Filter colleges based on exam cutoff and branch availability
       const suitableColleges = data?.filter((college) => {
-        const branches: Branch[] = Array.isArray(college.branches_offered) 
-          ? (college.branches_offered as unknown as Branch[])
-          : [];
-        const branchRankings = (college.branch_wise_rankings && typeof college.branch_wise_rankings === 'object') 
-          ? (college.branch_wise_rankings as Record<string, Record<string, number>>)
+        const examCutoffs = (college.exam_cutoffs && typeof college.exam_cutoffs === 'object') 
+          ? (college.exam_cutoffs as Record<string, Record<string, number>>)
           : {};
         
-        // Check if branch is offered
-        const hasBranch = branches && Array.isArray(branches) && branches.some((branch) => branch.name === selectedBranch);
-        
-        if (!hasBranch || !branchRankings || !branchRankings[selectedBranch]) {
+        // Check if exam cutoff exists for this exam
+        if (!examCutoffs[exam]) {
           return false;
         }
 
-        // Check if user's rank is within cutoff
-        const cutoffRank = branchRankings[selectedBranch][category];
-        return cutoffRank && userRank <= cutoffRank;
+        // Check if user's rank is within cutoff for their category
+        const cutoffRank = examCutoffs[exam][category];
+        if (!cutoffRank || userRank > cutoffRank) {
+          return false;
+        }
+
+        // If branch is selected, check branch availability
+        if (selectedBranch) {
+          const branches: Branch[] = Array.isArray(college.branches_offered) 
+            ? (college.branches_offered as unknown as Branch[])
+            : [];
+          const hasBranch = branches.some((branch) => branch.name === selectedBranch);
+          if (!hasBranch) {
+            return false;
+          }
+        }
+
+        return true;
       }) || [];
 
       setColleges(suitableColleges);
@@ -154,14 +165,15 @@ const CollegePredictor = () => {
               </Select>
             </div>
 
-            {/* Branch Selection */}
+            {/* Branch Selection (Optional) */}
             <div>
-              <Label htmlFor="branch" className="text-base font-semibold text-gray-900">Select Branch</Label>
+              <Label htmlFor="branch" className="text-base font-semibold text-gray-900">Select Branch (Optional)</Label>
               <Select value={selectedBranch} onValueChange={setSelectedBranch}>
                 <SelectTrigger className="border-2 border-purple-200 focus:border-purple-400">
-                  <SelectValue placeholder="Choose branch" />
+                  <SelectValue placeholder="Choose branch (optional)" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">All Branches</SelectItem>
                   {branches.map((branch) => (
                     <SelectItem key={branch} value={branch}>
                       {branch}
@@ -225,11 +237,10 @@ const CollegePredictor = () => {
                 const branches: Branch[] = Array.isArray(college.branches_offered) 
                   ? (college.branches_offered as unknown as Branch[])
                   : [];
-                const branchRankings = (college.branch_wise_rankings && typeof college.branch_wise_rankings === 'object') 
-                  ? (college.branch_wise_rankings as Record<string, Record<string, number>>)
+                const examCutoffs = (college.exam_cutoffs && typeof college.exam_cutoffs === 'object') 
+                  ? (college.exam_cutoffs as Record<string, Record<string, number>>)
                   : {};
-                const selectedBranchData = branches?.find(b => b.name === selectedBranch);
-                const cutoffRank = branchRankings?.[selectedBranch]?.[category];
+                const cutoffRank = examCutoffs?.[exam]?.[category];
 
                 return (
                   <div 
@@ -238,24 +249,24 @@ const CollegePredictor = () => {
                     onClick={() => navigate(`/college-details/${college.id}`)}
                   >
                     <h4 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h4>
-                    <p className="text-base font-medium text-gray-700 mb-2">{selectedBranch}</p>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600 bg-gray-100 px-2 py-1 rounded">{college.location}</span>
+                    <p className="text-base font-medium text-gray-700 mb-2">{college.location}</p>
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-gray-600 bg-gray-100 px-2 py-1 rounded">{college.type}</span>
                       <span className="font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">
-                        ₹{selectedBranchData ? (selectedBranchData.fees_per_year / 100000).toFixed(1) : '0'}L/year
+                        ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L/year
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-sm mt-2">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-blue-600 font-medium bg-blue-100 px-2 py-1 rounded">
-                        Cutoff Rank: {cutoffRank?.toLocaleString() || 'N/A'}
+                        {exam.toUpperCase()} Cutoff: {cutoffRank?.toLocaleString() || 'N/A'}
                       </span>
                       <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded border border-indigo-200">
                         {category.toUpperCase()}
                       </span>
                     </div>
-                    {selectedBranchData && (
+                    {selectedBranch && (
                       <div className="text-xs text-gray-600 mt-2 bg-yellow-50 p-2 rounded">
-                        Available Seats: {selectedBranchData.seats}
+                        Branch: {selectedBranch}
                       </div>
                     )}
                   </div>

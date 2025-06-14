@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,6 +135,10 @@ const CollegeDetails = () => {
   const branchRankings = (college.branch_wise_rankings && typeof college.branch_wise_rankings === 'object') 
     ? (college.branch_wise_rankings as Record<string, Record<string, number>>)
     : {};
+  const examCutoffs = (college.exam_cutoffs && typeof college.exam_cutoffs === 'object') 
+    ? (college.exam_cutoffs as Record<string, Record<string, number>>)
+    : {};
+  const eligibleExams = Array.isArray(college.eligible_exams) ? college.eligible_exams : [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -304,6 +307,66 @@ const CollegeDetails = () => {
           <Card className="p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">About</h2>
             <p className="text-gray-700 leading-relaxed text-base">{college.description}</p>
+          </Card>
+        )}
+
+        {/* Exam-wise Cutoff Ranks */}
+        {eligibleExams.length > 0 && (
+          <Card className="p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Exam-wise Cutoff Ranks</h2>
+            <div className="space-y-6">
+              {eligibleExams.map((exam) => {
+                const cutoffs = examCutoffs[exam];
+                if (!cutoffs) return null;
+
+                const examLabels: Record<string, string> = {
+                  'jee-main': 'JEE Main',
+                  'jee-advanced': 'JEE Advanced',
+                  'neet': 'NEET',
+                  'ap-eamcet': 'AP EAMCET (EAPCET)',
+                  'ts-eamcet': 'TS EAMCET'
+                };
+
+                const categoryLabels: Record<string, string> = {
+                  'general': 'General/OC',
+                  'obc': 'OBC',
+                  'sc': 'SC',
+                  'st': 'ST',
+                  'bc_a': 'BC-A',
+                  'bc_b': 'BC-B',
+                  'bc_c': 'BC-C',
+                  'bc_d': 'BC-D',
+                  'bc_e': 'BC-E'
+                };
+
+                return (
+                  <div key={exam} className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <h4 className="text-lg font-bold text-blue-700 mb-3 flex items-center">
+                      <span className="bg-blue-100 px-3 py-1 rounded-full">
+                        {examLabels[exam] || exam.toUpperCase()}
+                      </span>
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {Object.entries(cutoffs).map(([category, rank]) => (
+                        <div key={category} className="bg-white p-3 rounded-lg border border-blue-200">
+                          <div className="text-xs text-gray-600 mb-1">
+                            {categoryLabels[category] || category.toUpperCase()}
+                          </div>
+                          <div className="text-sm font-bold text-blue-600">
+                            {rank.toLocaleString()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 p-3 bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg">
+              <p className="text-sm text-orange-800 font-medium">
+                <strong>Note:</strong> These are previous year cutoff ranks and may vary this year based on various factors like exam difficulty, number of candidates, etc.
+              </p>
+            </div>
           </Card>
         )}
 
