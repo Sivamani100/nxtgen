@@ -381,190 +381,198 @@ const Profile = () => {
           </Card>
         </div>
 
-        {/* Main Content (3 columns) */}
-        <div className="lg:col-span-3 space-y-4">
-          {/* Personal Information */}
+        {/* Main Content (3 columns, 4-row grid) */}
+        <div className="lg:col-span-3 grid grid-rows-4 gap-4">
+          {/* Personal Information (Row 1) */}
           <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
             {isEditing ? (
               <div className="space-y-4">
-                <div>
-                  <Label className="text-gray-600">Full Name</Label>
-                  <Input
-                    value={profile.full_name || ''}
-                    onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                    className="border-gray-200 focus:border-teal-500 rounded-md"
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div>
-                  <Label className="text-gray-600">Email</Label>
-                  <Input
-                    value={profile.email || ''}
-                    disabled
-                    className="bg-gray-100 border-gray-200 rounded-md"
-                  />
-                </div>
-                <div>
-                  <Label className="text-gray-600">Phone Number</Label>
-                  <Input
-                    value={profile.phone_number || ''}
-                    onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
-                    className="border-gray-200 focus:border-teal-500 rounded-md"
-                    placeholder="Enter your phone number"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-600">Full Name</Label>
+                    <Input
+                      value={profile.full_name || ''}
+                      onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                      className="border-gray-200 focus:border-teal-500 rounded-md"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-600">Email</Label>
+                    <Input
+                      value={profile.email || ''}
+                      disabled
+                      className="bg-gray-100 border-gray-200 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-600">Phone Number</Label>
+                    <Input
+                      value={profile.phone_number || ''}
+                      onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                      className="border-gray-200 focus:border-teal-500 rounded-md"
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
-                <div>
-                  <Label className="text-gray-600 font-medium">Full Name</Label>
-                  <p className="text-gray-800">{profile.full_name || 'Not set'}</p>
-                </div>
-                <div>
-                  <Label className="text-gray-600 font-medium">Email</Label>
-                  <p className="text-gray-800">{profile.email}</p>
-                </div>
-                <div>
-                  <Label className="text-gray-600 font-medium">Phone Number</Label>
-                  <p className="text-gray-800">{profile.phone_number || 'Not set'}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-gray-600 font-medium">Full Name</Label>
+                    <p className="text-gray-800">{profile.full_name || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600 font-medium">Email</Label>
+                    <p className="text-gray-800">{profile.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600 font-medium">Phone Number</Label>
+                    <p className="text-gray-800">{profile.phone_number || 'Not set'}</p>
+                  </div>
                 </div>
               </div>
             )}
           </Card>
 
-          {/* Academic Information */}
+          {/* Academic Information (Row 2) */}
           <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Academic Information</h3>
             {isEditing ? (
               <div className="space-y-4">
-                <div>
-                  <Label className="text-gray-600">Current Education Level</Label>
-                  <Select
-                    value={profile.academic_field || ''}
-                    onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
-                  >
-                    <SelectTrigger className="border-gray-200 focus:border-teal-500 rounded-md">
-                      <SelectValue placeholder="Select your education level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="12th Grade">12th Grade</SelectItem>
-                      <SelectItem value="engineering">Engineering</SelectItem>
-                      <SelectItem value="medical">Medical</SelectItem>
-                      <SelectItem value="commerce">Commerce</SelectItem>
-                      <SelectItem value="arts">Arts</SelectItem>
-                      <SelectItem value="science">Science</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-gray-600">Preferred Course</Label>
-                  <Select
-                    value={profile.preferred_course || ''}
-                    onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
-                  >
-                    <SelectTrigger className="border-gray-200 focus:border-teal-500 rounded-md">
-                      <SelectValue placeholder="Select your preferred course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="B.Tech">B.Tech</SelectItem>
-                      <SelectItem value="MBBS">MBBS</SelectItem>
-                      <SelectItem value="B.Com">B.Com</SelectItem>
-                      <SelectItem value="BBA">BBA</SelectItem>
-                      <SelectItem value="B.Sc">B.Sc</SelectItem>
-                      <SelectItem value="B.A">B.A</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-600">Current Education Level</Label>
+                    <Select
+                      value={profile.academic_field || ''}
+                      onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
+                    >
+                      <SelectTrigger className="border-gray-200 focus:border-teal-500 rounded-md">
+                        <SelectValue placeholder="Select your education level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="12th Grade">12th Grade</SelectItem>
+                        <SelectItem value="engineering">Engineering</SelectItem>
+                        <SelectItem value="medical">Medical</SelectItem>
+                        <SelectItem value="commerce">Commerce</SelectItem>
+                        <SelectItem value="arts">Arts</SelectItem>
+                        <SelectItem value="science">Science</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600">Preferred Course</Label>
+                    <Select
+                      value={profile.preferred_course || ''}
+                      onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
+                    >
+                      <SelectTrigger className="border-gray-200 focus:border-teal-500 rounded-md">
+                        <SelectValue placeholder="Select your preferred course" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="B.Tech">B.Tech</SelectItem>
+                        <SelectItem value="MBBS">MBBS</SelectItem>
+                        <SelectItem value="B.Com">B.Com</SelectItem>
+                        <SelectItem value="BBA">BBA</SelectItem>
+                        <SelectItem value="B.Sc">B.Sc</SelectItem>
+                        <SelectItem value="B.A">B.A</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="space-y-1">
-                <div>
-                  <Label className="text-gray-600 font-medium">Current Education Level</Label>
-                  <p className="text-gray-800">{profile.academic_field || 'Not set'}</p>
-                </div>
-                <div>
-                  <Label className="text-gray-600 font-medium">Preferred Course</Label>
-                  <p className="text-gray-800">{profile.preferred_course || 'Not set'}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-gray-600 font-medium">Current Education Level</Label>
+                    <p className="text-gray-800">{profile.academic_field || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600 font-medium">Preferred Course</Label>
+                    <p className="text-gray-800">{profile.preferred_course || 'Not set'}</p>
+                  </div>
                 </div>
               </div>
             )}
           </Card>
 
-          {/* Preferences */}
+          {/* Preferences (Row 3) */}
           <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Preferences</h3>
             {isEditing ? (
-              <div className="space-y-6">
-                <div>
-                  <Label className="text-gray-600 mb-2 block">Preferred Branches</Label>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {profile.preferred_branches?.map((branch, idx) => (
-                      <Badge 
-                        key={idx} 
-                        className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default rounded-full"
-                      >
-                        {branch}
-                        <button 
-                          onClick={() => removeBranch(branch)}
-                          className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-600 mb-2 block">Preferred Branches</Label>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {profile.preferred_branches?.map((branch, idx) => (
+                        <Badge 
+                          key={idx} 
+                          className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default rounded-full"
                         >
-                          ×
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={branchInput}
-                      onChange={(e) => setBranchInput(e.target.value)}
-                      placeholder="Add branch"
-                      className="border-gray-200 focus:border-teal-500 rounded-md"
-                    />
-                    <Button 
-                      onClick={addBranch} 
-                      size="sm" 
-                      className="bg-teal-500 hover:bg-teal-600 text-white rounded-md"
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-gray-600 mb-2 block">Preferred Locations</Label>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {profile.preferred_locations?.map((location, idx) => (
-                      <Badge 
-                        key={idx} 
-                        className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default rounded-full"
+                          {branch}
+                          <button 
+                            onClick={() => removeBranch(branch)}
+                            className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
+                          >
+                            ×
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={branchInput}
+                        onChange={(e) => setBranchInput(e.target.value)}
+                        placeholder="Add branch"
+                        className="border-gray-200 focus:border-teal-500 rounded-md"
+                      />
+                      <Button 
+                        onClick={addBranch} 
+                        size="sm" 
+                        className="bg-teal-500 hover:bg-teal-600 text-white rounded-md"
                       >
-                        {location}
-                        <button 
-                          onClick={() => removeLocation(location)}
-                          className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600 mb-2 block">Preferred Locations</Label>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {profile.preferred_locations?.map((location, idx) => (
+                        <Badge 
+                          key={idx} 
+                          className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default rounded-full"
                         >
-                          ×
-                        </button>
-                      </Badge>
-                    ))}
+                          {location}
+                          <button 
+                            onClick={() => removeLocation(location)}
+                            className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
+                          >
+                            ×
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={locationInput}
+                        onChange={(e) => setLocationInput(e.target.value)}
+                        placeholder="Add location"
+                        className="border-gray-200 focus:border-teal-500 rounded-md"
+                      />
+                      <Button 
+                        onClick={addLocation} 
+                        size="sm" 
+                        className="bg-teal-500 hover:bg-teal-600 text-white rounded-md"
+                      >
+                        Add
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={locationInput}
-                      onChange={(e) => setLocationInput(e.target.value)}
-                      placeholder="Add location"
-                      className="border-gray-200 focus:border-teal-500 rounded-md"
-                    />
-                    <Button 
-                      onClick={addLocation} 
-                      size="sm" 
-                      className="bg-teal-500 hover:bg-teal-600 text-white rounded-md"
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-600">Budget Min (₹)</Label>
                     <Input
@@ -589,31 +597,31 @@ const Profile = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                <div>
-                  <Label className="text-gray-600 font-medium">Preferred Branches</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.preferred_branches?.length ? (
-                      profile.preferred_branches.map((branch, idx) => (
-                        <Badge key={idx} className="bg-teal-100 text-teal-800 rounded-full">{branch}</Badge>
-                      ))
-                    ) : (
-                      <p className="text-gray-800">None</p>
-                    )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-gray-600 font-medium">Preferred Branches</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.preferred_branches?.length ? (
+                        profile.preferred_branches.map((branch, idx) => (
+                          <Badge key={idx} className="bg-teal-100 text-teal-800 rounded-full">{branch}</Badge>
+                        ))
+                      ) : (
+                        <p className="text-gray-800">None</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <Label className="text-gray-600 font-medium">Preferred Locations</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.preferred_locations?.length ? (
-                      profile.preferred_locations.map((location, idx) => (
-                        <Badge key={idx} className="bg-teal-100 text-teal-800 rounded-full">{location}</Badge>
-                      ))
-                    ) : (
-                      <p className="text-gray-800">None</p>
-                    )}
+                  <div>
+                    <Label className="text-gray-600 font-medium">Preferred Locations</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.preferred_locations?.length ? (
+                        profile.preferred_locations.map((location, idx) => (
+                          <Badge key={idx} className="bg-teal-100 text-teal-800 rounded-full">{location}</Badge>
+                        ))
+                      ) : (
+                        <p className="text-gray-800">None</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-600 font-medium">Budget Min (₹)</Label>
                     <p className="text-gray-800">{profile.budget_min || 'Not set'}</p>
@@ -627,61 +635,65 @@ const Profile = () => {
             )}
           </Card>
 
-          {/* Notification Preferences */}
+          {/* Notification Preferences (Row 4) */}
           <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Notification Preferences</h3>
             {isEditing ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-gray-600">Scholarship Updates</Label>
-                    <p className="text-sm text-gray-500">Get notified about new scholarships</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-gray-600">Scholarship Updates</Label>
+                      <p className="text-sm text-gray-500">Get notified about new scholarships</p>
+                    </div>
+                    <Switch
+                      checked={notificationPrefs?.scholarships ?? true}
+                      onCheckedChange={(checked) => updateNotificationPreference('scholarships', checked)}
+                      disabled={!isEditing}
+                      className="data-[state=checked]:bg-teal-500"
+                    />
                   </div>
-                  <Switch
-                    checked={notificationPrefs?.scholarships ?? true}
-                    onCheckedChange={(checked) => updateNotificationPreference('scholarships', checked)}
-                    disabled={!isEditing}
-                    className="data-[state=checked]:bg-teal-500"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-gray-600">Admission Updates</Label>
-                    <p className="text-sm text-gray-500">Get notified about admission deadlines</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-gray-600">Admission Updates</Label>
+                      <p className="text-sm text-gray-500">Get notified about admission deadlines</p>
+                    </div>
+                    <Switch
+                      checked={notificationPrefs?.admissions ?? true}
+                      onCheckedChange={(checked) => updateNotificationPreference('admissions', checked)}
+                      disabled={!isEditing}
+                      className="data-[state=checked]:bg-teal-500"
+                    />
                   </div>
-                  <Switch
-                    checked={notificationPrefs?.admissions ?? true}
-                    onCheckedChange={(checked) => updateNotificationPreference('admissions', checked)}
-                    disabled={!isEditing}
-                    className="data-[state=checked]:bg-teal-500"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-gray-600">Event Updates</Label>
-                    <p className="text-sm text-gray-500">Get notified about educational events</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-gray-600">Event Updates</Label>
+                      <p className="text-sm text-gray-500">Get notified about educational events</p>
+                    </div>
+                    <Switch
+                      checked={notificationPrefs?.events ?? true}
+                      onCheckedChange={(checked) => updateNotificationPreference('events', checked)}
+                      disabled={!isEditing}
+                      className="data-[state=checked]:bg-teal-500"
+                    />
                   </div>
-                  <Switch
-                    checked={notificationPrefs?.events ?? true}
-                    onCheckedChange={(checked) => updateNotificationPreference('events', checked)}
-                    disabled={!isEditing}
-                    className="data-[state=checked]:bg-teal-500"
-                  />
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
-                <div>
-                  <Label className="text-gray-600 font-medium">Scholarship Updates</Label>
-                  <p className="text-gray-800">{notificationPrefs?.scholarships ? 'On' : 'Off'}</p>
-                </div>
-                <div>
-                  <Label className="text-gray-600 font-medium">Admission Updates</Label>
-                  <p className="text-gray-800">{notificationPrefs?.admissions ? 'On' : 'Off'}</p>
-                </div>
-                <div>
-                  <Label className="text-gray-600 font-medium">Event Updates</Label>
-                  <p className="text-gray-800">{notificationPrefs?.events ? 'On' : 'Off'}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-gray-600 font-medium">Scholarship Updates</Label>
+                    <p className="text-gray-800">{notificationPrefs?.scholarships ? 'On' : 'Off'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600 font-medium">Admission Updates</Label>
+                    <p className="text-gray-800">{notificationPrefs?.admissions ? 'On' : 'Off'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600 font-medium">Event Updates</Label>
+                    <p className="text-gray-800">{notificationPrefs?.events ? 'On' : 'Off'}</p>
+                  </div>
                 </div>
               </div>
             )}
