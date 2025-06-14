@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,12 +13,6 @@ import { Database } from "@/integrations/supabase/types";
 
 type College = Database['public']['Tables']['colleges']['Row'];
 
-interface Branch {
-  name: string;
-  seats: number;
-  fees_per_year: number;
-}
-
 const CollegePredictor = () => {
   const [exam, setExam] = useState('');
   const [rank, setRank] = useState('');
@@ -25,6 +20,7 @@ const CollegePredictor = () => {
   const [selectedBranch, setSelectedBranch] = useState('');
   const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const navigate = useNavigate();
 
   const exams = [
@@ -67,12 +63,14 @@ const CollegePredictor = () => {
     }
 
     setLoading(true);
+    setHasSearched(true);
+    
     try {
       const userRank = parseInt(rank);
       
       console.log('Predicting colleges for:', { exam, userRank, category, selectedBranch });
       
-      // Get all colleges first, then filter
+      // Get all colleges with a more generous query
       const { data: allColleges, error } = await supabase
         .from('colleges')
         .select('*')
@@ -86,35 +84,100 @@ const CollegePredictor = () => {
 
       console.log('Fetched colleges:', allColleges?.length || 0);
 
-      // Simple filtering based on rank ranges
-      const suitableColleges = allColleges?.filter((college) => {
-        // Basic rank filtering - you can make this more sophisticated
-        const generalCutoff = college.cutoff_rank_general;
-        const categoryCutoff = category === 'general' ? generalCutoff :
-                              category === 'obc' ? college.cutoff_rank_obc :
-                              category === 'sc' ? college.cutoff_rank_sc :
-                              category === 'st' ? college.cutoff_rank_st :
-                              category === 'bc_a' ? college.cutoff_rank_bc_a :
-                              category === 'bc_b' ? college.cutoff_rank_bc_b :
-                              category === 'bc_c' ? college.cutoff_rank_bc_c :
-                              category === 'bc_d' ? college.cutoff_rank_bc_d :
-                              category === 'bc_e' ? college.cutoff_rank_bc_e :
-                              generalCutoff;
+      if (!allColleges || allColleges.length === 0) {
+        setColleges([]);
+        toast.error('No colleges found in database. Please contact admin.');
+        return;
+      }
 
-        return categoryCutoff ? userRank <= categoryCutoff : false;
-      }) || [];
+      // Improved filtering based on rank ranges with more flexible criteria
+      const suitableColleges = allColleges.filter((college) => {
+        // Get the appropriate cutoff based on category
+        let categoryCutoff = null;
+        
+        switch (category) {
+          case 'general':
+            categoryCutoff = college.cutoff_rank_general;
+            break;
+          case 'obc':
+            categoryCutoff = college.cutoff_rank_obc || college.cutoff_rank_general;
+            break;
+          case 'sc':
+            categoryCutoff = college.cutoff_rank_sc || college.cutoff_rank_general;
+            break;
+          case 'st':
+            categoryCutoff = college.cutoff_rank_st || college.cutoff_rank_general;
+            break;
+          case 'bc_a':
+            categoryCutoff = college.cutoff_rank_bc_a || college.cutoff_rank_general;
+            break;
+          case 'bc_b':
+            categoryCutoff = college.cutoff_rank_bc_b || college.cutoff_rank_general;
+            break;
+          case 'bc_c':
+            categoryCutoff = college.cutoff_rank_bc_c || college.cutoff_rank_general;
+            break;
+          case 'bc_d':
+            categoryCutoff = college.cutoff_rank_bc_d || college.cutoff_rank_general;
+            break;
+          case 'bc_e':
+            categoryCutoff = college.cutoff_rank_bc_e || college.cutoff_rank_general;
+            break;
+          default:
+            categoryCutoff = college.cutoff_rank_general;
+        }
 
-      console.log('Suitable colleges:', suitableColleges.length);
-      setColleges(suitableColleges);
+        // If no specific cutoff available, use a flexible approach
+        if (!categoryCutoff) {
+          // For colleges without cutoff data, include if rank is reasonable (under 100k)
+          return userRank <= 100000;
+        }
+
+        // Include colleges where user rank is within 20% buffer of cutoff
+        const buffer = Math.max(categoryCutoff * 0.2, 5000);
+        return userRank <= (categoryCutoff + buffer);
+      });
+
+      console.log('Suitable colleges after filtering:', suitableColleges.length);
       
-      if (suitableColleges.length === 0) {
-        toast.error('No colleges found matching your criteria. Try adjusting your filters.');
+      // Sort by relevance (closer to cutoff ranks first)
+      const sortedColleges = suitableColleges.sort((a, b) => {
+        const getCutoff = (college: College) => {
+          switch (category) {
+            case 'general': return college.cutoff_rank_general;
+            case 'obc': return college.cutoff_rank_obc || college.cutoff_rank_general;
+            case 'sc': return college.cutoff_rank_sc || college.cutoff_rank_general;
+            case 'st': return college.cutoff_rank_st || college.cutoff_rank_general;
+            case 'bc_a': return college.cutoff_rank_bc_a || college.cutoff_rank_general;
+            case 'bc_b': return college.cutoff_rank_bc_b || college.cutoff_rank_general;
+            case 'bc_c': return college.cutoff_rank_bc_c || college.cutoff_rank_general;
+            case 'bc_d': return college.cutoff_rank_bc_d || college.cutoff_rank_general;
+            case 'bc_e': return college.cutoff_rank_bc_e || college.cutoff_rank_general;
+            default: return college.cutoff_rank_general;
+          }
+        };
+        
+        const cutoffA = getCutoff(a) || 999999;
+        const cutoffB = getCutoff(b) || 999999;
+        
+        // Sort by how close the cutoff is to user rank (closer = better match)
+        const diffA = Math.abs(cutoffA - userRank);
+        const diffB = Math.abs(cutoffB - userRank);
+        
+        return diffA - diffB;
+      });
+
+      setColleges(sortedColleges);
+      
+      if (sortedColleges.length === 0) {
+        toast.error('No colleges found matching your criteria. Try with a different rank or category.');
       } else {
-        toast.success(`Found ${suitableColleges.length} colleges matching your criteria!`);
+        toast.success(`Found ${sortedColleges.length} colleges matching your criteria!`);
       }
     } catch (error) {
       console.error('Error predicting colleges:', error);
-      toast.error('Failed to predict colleges');
+      toast.error('Failed to predict colleges. Please try again.');
+      setColleges([]);
     } finally {
       setLoading(false);
     }
@@ -137,24 +200,6 @@ const CollegePredictor = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b">
-        <div className="flex items-center p-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate(-1)}
-            className="mr-2 p-2"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center">
-            <GraduationCap className="w-6 h-6 text-blue-600 mr-2" />
-            <h1 className="text-lg font-bold text-gray-900">College Predictor</h1>
-          </div>
-        </div>
-      </div>
-
       {/* Desktop Header */}
       <div className="hidden lg:block bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto p-6">
@@ -246,6 +291,37 @@ const CollegePredictor = () => {
           </Button>
         </Card>
 
+        {/* Loading State */}
+        {loading && (
+          <Card className="p-8 bg-white shadow-xl border-t-4 border-blue-500 rounded-lg">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Finding colleges for you...</p>
+            </div>
+          </Card>
+        )}
+
+        {/* No Results State */}
+        {hasSearched && !loading && colleges.length === 0 && (
+          <Card className="p-8 bg-white shadow-xl border-t-4 border-orange-500 rounded-lg">
+            <div className="text-center">
+              <GraduationCap className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No Colleges Found</h3>
+              <p className="text-gray-600 mb-4">
+                We couldn't find colleges matching your criteria. Try adjusting your rank or category.
+              </p>
+              <div className="text-sm text-gray-500">
+                <p>Tips:</p>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Check if your rank is entered correctly</li>
+                  <li>Try a different category</li>
+                  <li>Consider expanding your search criteria</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Results */}
         {colleges.length > 0 && (
           <Card className="p-4 lg:p-8 bg-white shadow-xl border-t-4 border-green-500 rounded-lg">
@@ -268,13 +344,31 @@ const CollegePredictor = () => {
                                       college.cutoff_rank_general;
 
                 const availableBranches = getBranchPrediction(college, parseInt(rank), category);
+                const userRank = parseInt(rank);
+                const isGoodMatch = categoryCutoff ? userRank <= categoryCutoff : true;
 
                 return (
                   <div 
                     key={college.id} 
-                    className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 lg:p-6 rounded-xl border-2 border-gray-200 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all duration-300"
+                    className={`bg-gradient-to-br from-gray-50 to-blue-50 p-4 lg:p-6 rounded-xl border-2 cursor-pointer hover:shadow-lg transition-all duration-300 ${
+                      isGoodMatch ? 'border-green-300 hover:border-green-400' : 'border-orange-300 hover:border-orange-400'
+                    }`}
                     onClick={() => navigate(`/college-details/${college.id}`)}
                   >
+                    {college.image_url && (
+                      <div className="mb-4">
+                        <img 
+                          src={college.image_url} 
+                          alt={college.name}
+                          className="w-full h-32 object-cover rounded-lg"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
                     <h4 className="text-base lg:text-xl font-bold text-gray-900 mb-2">{college.name}</h4>
                     <p className="text-sm lg:text-base font-medium text-gray-700 mb-3">{college.location}</p>
                     
@@ -287,7 +381,9 @@ const CollegePredictor = () => {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-blue-600 font-medium bg-blue-100 px-2 lg:px-3 py-1 rounded text-xs lg:text-sm">
+                        <span className={`font-medium px-2 lg:px-3 py-1 rounded text-xs lg:text-sm ${
+                          isGoodMatch ? 'text-green-600 bg-green-100' : 'text-orange-600 bg-orange-100'
+                        }`}>
                           Cutoff: {categoryCutoff?.toLocaleString() || 'N/A'}
                         </span>
                         <span className="text-xs lg:text-sm bg-indigo-100 text-indigo-700 px-2 lg:px-3 py-1 rounded border border-indigo-200">
@@ -295,27 +391,33 @@ const CollegePredictor = () => {
                         </span>
                       </div>
 
-                      {availableBranches.length > 0 && (
+                      {isGoodMatch && (
                         <div className="bg-green-50 p-2 lg:p-3 rounded border border-green-200">
-                          <p className="text-xs lg:text-sm font-semibold text-green-800 mb-2">Branches you can get:</p>
+                          <p className="text-xs lg:text-sm font-semibold text-green-800">✅ Good Match!</p>
+                        </div>
+                      )}
+
+                      {!isGoodMatch && categoryCutoff && (
+                        <div className="bg-orange-50 p-2 lg:p-3 rounded border border-orange-200">
+                          <p className="text-xs lg:text-sm font-semibold text-orange-800">⚠️ Reach College</p>
+                        </div>
+                      )}
+
+                      {availableBranches.length > 0 && (
+                        <div className="bg-blue-50 p-2 lg:p-3 rounded border border-blue-200">
+                          <p className="text-xs lg:text-sm font-semibold text-blue-800 mb-2">Available branches:</p>
                           <div className="flex flex-wrap gap-1">
                             {availableBranches.slice(0, 3).map((branch, index) => (
-                              <span key={index} className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                              <span key={index} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
                                 {branch}
                               </span>
                             ))}
                             {availableBranches.length > 3 && (
-                              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
                                 +{availableBranches.length - 3} more
                               </span>
                             )}
                           </div>
-                        </div>
-                      )}
-
-                      {selectedBranch && (
-                        <div className="text-xs lg:text-sm text-gray-600 bg-yellow-50 p-2 rounded">
-                          Filtered for: {selectedBranch}
                         </div>
                       )}
                     </div>
