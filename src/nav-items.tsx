@@ -1,4 +1,3 @@
-
 import { HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, GitCompare } from "lucide-react";
 import Index from "./pages/Index.jsx";
 import Home from "./pages/Home.jsx";
@@ -18,6 +17,8 @@ import Signup from "./pages/Signup.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Processing from "./pages/Processing.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Help from "./pages/Help";
 
 export const navItems = [
   {
@@ -120,5 +121,17 @@ export const navItems = [
     title: "404",
     to: "/404",
     page: <NotFound />,
+  },
+  {
+    title: "Privacy Policy",
+    to: "/privacy-policy",
+    page: <PrivacyPolicy />,
+    desktopOnly: true,
+  },
+  {
+    title: "Help",
+    to: "/help",
+    page: <Help />,
+    desktopOnly: true,
   },
 ];

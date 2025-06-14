@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,8 @@ const Layout = ({ children }: LayoutProps) => {
     { icon: Bell, label: "Notifications", path: "/notifications" },
     { icon: Search, label: "Search", path: "/search" },
     { icon: User, label: "Profile", path: "/profile" },
+    { icon: null, label: "Privacy Policy", path: "/privacy-policy", desktopOnly: true },
+    { icon: null, label: "Help", path: "/help", desktopOnly: true },
   ];
 
   // Mobile navigation items (only 5 main ones)
@@ -68,22 +69,28 @@ const Layout = ({ children }: LayoutProps) => {
 
           {/* Navigation Links */}
           <nav className="flex-1 px-2 py-6 space-y-2">
-            {navigationItems.map((item) => (
-              <Button
-                key={item.path}
-                variant={isActive(item.path) ? "default" : "ghost"}
-                className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'} text-left h-12 transition-all duration-200 ${
-                  isActive(item.path)
-                    ? "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 shadow-md"
-                    : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 hover:text-green-700"
-                }`}
-                onClick={() => navigate(item.path)}
-                title={isSidebarCollapsed ? item.label : undefined}
-              >
-                <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
-                {!isSidebarCollapsed && item.label}
-              </Button>
-            ))}
+            {navigationItems.map((item) => {
+              if (item.desktopOnly && typeof window !== "undefined" && window.innerWidth < 1024) {
+                return null;
+              }
+              // Hide separator from mini sidebar for the last 2 items
+              return (
+                <Button
+                  key={item.path}
+                  variant={isActive(item.path) ? "default" : "ghost"}
+                  className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'} text-left h-12 transition-all duration-200 ${
+                    isActive(item.path)
+                      ? "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 shadow-md"
+                      : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 hover:text-green-700"
+                  }`}
+                  onClick={() => navigate(item.path)}
+                  title={isSidebarCollapsed ? item.label : undefined}
+                >
+                  {item.icon && <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />}
+                  {!isSidebarCollapsed && item.label}
+                </Button>
+              );
+            })}
           </nav>
         </div>
       </div>

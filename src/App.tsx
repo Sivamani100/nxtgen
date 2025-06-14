@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -36,6 +35,8 @@ const App = () => (
                 <Route path="/notifications" element={navItems.find(item => item.to === "/notifications")?.page} />
                 <Route path="/profile" element={navItems.find(item => item.to === "/profile")?.page} />
                 <Route path="/search" element={navItems.find(item => item.to === "/search")?.page} />
+                <Route path="/privacy-policy" element={navItems.find(item => item.to === "/privacy-policy")?.page} />
+                <Route path="/help" element={navItems.find(item => item.to === "/help")?.page} />
                 <Route path="*" element={navItems.find(item => item.to === "/404")?.page} />
               </Routes>
             </Layout>
