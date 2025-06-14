@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -53,11 +54,20 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-            {!isSidebarCollapsed && (
-              <h1 className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                NXTGEN
-              </h1>
-            )}
+            <div className="flex items-center gap-2 w-full">
+              <img
+                src="/lovable-uploads/939fc116-2a44-4f85-aeee-11014a6bc796.png"
+                alt="NXTGEN Logo"
+                className={`transition-all duration-200 ${isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10"} object-contain`}
+                style={{ minWidth: isSidebarCollapsed ? 32 : 40 }}
+              />
+              {/* Show NXTGEN text only if expanded */}
+              {!isSidebarCollapsed && (
+                <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent ml-2 select-none">
+                  NXTGEN
+                </span>
+              )}
+            </div>
             <Button
               variant="ghost"
               size="sm"
