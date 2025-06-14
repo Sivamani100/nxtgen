@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -129,7 +130,7 @@ const ProfilePage = () => {
           ...data,
           notification_preferences: typeof data.notification_preferences === "string"
             ? JSON.parse(data.notification_preferences)
-            : data.notification_preferences // ensure correct shape for TS (fix bug)
+            : data.notification_preferences
         });
       }
     } catch (error) {
@@ -187,7 +188,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pb-16 lg:pb-0">
+    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
       {/* Mobile Header */}
       <div className="lg:hidden bg-white shadow-sm border-b">
         <div className="flex items-center justify-between p-4">
@@ -216,30 +217,30 @@ const ProfilePage = () => {
 
       {/* Desktop Header */}
       <div className="hidden lg:block bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center mb-2">
+              <div className="flex items-center mb-3">
                 <User className="w-8 h-8 text-green-600 mr-3" />
-                <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
+                <h1 className="text-4xl font-bold text-gray-900">Profile Settings</h1>
               </div>
-              <p className="text-gray-600">Manage your account settings and preferences</p>
+              <p className="text-lg text-gray-600">Manage your account settings and preferences</p>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               {editing ? (
                 <>
-                  <Button variant="outline" onClick={() => setEditing(false)}>
-                    <X className="w-4 h-4 mr-2" />
+                  <Button variant="outline" size="lg" onClick={() => setEditing(false)}>
+                    <X className="w-5 h-5 mr-2" />
                     Cancel
                   </Button>
-                  <Button onClick={updateProfile} disabled={saving}>
-                    <Save className="w-4 h-4 mr-2" />
+                  <Button size="lg" onClick={updateProfile} disabled={saving}>
+                    <Save className="w-5 h-5 mr-2" />
                     {saving ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </>
               ) : (
-                <Button onClick={() => setEditing(true)}>
-                  <Edit className="w-4 h-4 mr-2" />
+                <Button size="lg" onClick={() => setEditing(true)}>
+                  <Edit className="w-5 h-5 mr-2" />
                   Edit Profile
                 </Button>
               )}
@@ -248,36 +249,36 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-4 lg:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* Profile Summary Card */}
+      <div className="max-w-7xl mx-auto p-4 lg:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+          {/* Left Sidebar - Profile Summary */}
           <div className="lg:col-span-1">
-            <Card className="p-4 lg:p-6 bg-white shadow-lg">
+            <Card className="p-6 bg-white shadow-lg">
               <div className="text-center">
-                <div className="relative inline-block mb-4">
-                  <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-2xl lg:text-3xl font-bold">
+                <div className="relative inline-block mb-6">
+                  <div className="w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl lg:text-4xl font-bold shadow-lg">
                     {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
                   </div>
                   {editing && (
-                    <button className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border">
-                      <Camera className="w-4 h-4 text-gray-600" />
+                    <button className="absolute bottom-0 right-0 bg-white rounded-full p-3 shadow-lg border border-gray-200 hover:bg-gray-50">
+                      <Camera className="w-5 h-5 text-gray-600" />
                     </button>
                   )}
                 </div>
                 
-                <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">
+                <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
                   {profile.full_name || 'Complete Your Profile'}
                 </h2>
-                <p className="text-sm lg:text-base text-gray-600 mb-4">{profile.email}</p>
+                <p className="text-gray-600 mb-6">{profile.email}</p>
                 
-                <div className="mb-4">
-                  <div className="flex justify-between text-xs lg:text-sm text-gray-600 mb-1">
+                <div className="mb-6">
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
                     <span>Profile Completion</span>
                     <span>{profile.profile_completion_percentage || 0}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-full h-3">
                     <div 
-                      className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-500"
                       style={{ width: `${profile.profile_completion_percentage || 0}%` }}
                     ></div>
                   </div>
@@ -285,7 +286,6 @@ const ProfilePage = () => {
 
                 <Button 
                   variant="outline" 
-                  size="sm" 
                   onClick={handleSignOut}
                   className="w-full text-red-600 border-red-200 hover:bg-red-50"
                 >
@@ -296,161 +296,173 @@ const ProfilePage = () => {
             </Card>
           </div>
 
-          {/* Profile Details */}
-          <div className="lg:col-span-2">
-            <Card className="p-4 lg:p-6 bg-white shadow-lg">
-              <div className="space-y-6">
-                {/* Personal Information */}
-                <div>
-                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <User className="w-5 h-5 mr-2 text-blue-600" />
+          {/* Main Content - Profile Details */}
+          <div className="lg:col-span-3">
+            <div className="space-y-6 lg:space-y-8">
+              {/* Personal Information */}
+              <Card className="p-6 lg:p-8 bg-white shadow-lg">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
+                    <User className="w-6 h-6 mr-3 text-blue-600" />
                     Personal Information
                   </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-900">Full Name</Label>
-                      {editing ? (
-                        <Input
-                          value={profile.full_name || ''}
-                          onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                          placeholder="Enter your full name"
-                          className="mt-1"
-                        />
-                      ) : (
-                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
-                          {profile.full_name || 'Not provided'}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <Label className="text-sm font-medium text-gray-900">Email</Label>
-                      <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
-                        {profile.email}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-sm font-medium text-gray-900">Phone Number</Label>
-                      {editing ? (
-                        <Input
-                          value={profile.phone_number || ''}
-                          onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
-                          placeholder="Enter your phone number"
-                          className="mt-1"
-                        />
-                      ) : (
-                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
-                          {profile.phone_number || 'Not provided'}
-                        </p>
-                      )}
+                  <p className="text-gray-600">Update your personal details</p>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Full Name</Label>
+                    {editing ? (
+                      <Input
+                        value={profile.full_name || ''}
+                        onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                        placeholder="Enter your full name"
+                        className="h-12"
+                      />
+                    ) : (
+                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                        <span className="text-gray-900">{profile.full_name || 'Not provided'}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Email</Label>
+                    <div className="h-12 bg-gray-100 border border-gray-200 rounded-md px-4 flex items-center">
+                      <Mail className="w-4 h-4 text-gray-400 mr-2" />
+                      <span className="text-gray-700">{profile.email}</span>
                     </div>
                   </div>
+                  
+                  <div className="lg:col-span-2">
+                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Phone Number</Label>
+                    {editing ? (
+                      <Input
+                        value={profile.phone_number || ''}
+                        onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                        placeholder="Enter your phone number"
+                        className="h-12"
+                      />
+                    ) : (
+                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                        <Phone className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-gray-900">{profile.phone_number || 'Not provided'}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
+              </Card>
 
-                <Separator />
-
-                {/* Academic Information */}
-                <div>
-                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <GraduationCap className="w-5 h-5 mr-2 text-green-600" />
+              {/* Academic Information */}
+              <Card className="p-6 lg:p-8 bg-white shadow-lg">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
+                    <GraduationCap className="w-6 h-6 mr-3 text-green-600" />
                     Academic Information
                   </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-900">Academic Field</Label>
-                      {editing ? (
-                        <Select 
-                          value={profile.academic_field || ''} 
-                          onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
-                        >
-                          <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select academic field" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {academicFields.map((field) => (
-                              <SelectItem key={field} value={field}>{field}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
-                          {profile.academic_field || 'Not selected'}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <Label className="text-sm font-medium text-gray-900">Preferred Course</Label>
-                      {editing ? (
-                        <Select 
-                          value={profile.preferred_course || ''} 
-                          onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
-                        >
-                          <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select preferred course" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {courses.map((course) => (
-                              <SelectItem key={course} value={course}>{course}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
-                          {profile.preferred_course || 'Not selected'}
-                        </p>
-                      )}
-                    </div>
+                  <p className="text-gray-600">Your educational preferences</p>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Academic Field</Label>
+                    {editing ? (
+                      <Select 
+                        value={profile.academic_field || ''} 
+                        onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
+                      >
+                        <SelectTrigger className="h-12">
+                          <SelectValue placeholder="Select academic field" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {academicFields.map((field) => (
+                            <SelectItem key={field} value={field}>{field}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                        <span className="text-gray-900">{profile.academic_field || 'Not selected'}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Preferred Course</Label>
+                    {editing ? (
+                      <Select 
+                        value={profile.preferred_course || ''} 
+                        onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
+                      >
+                        <SelectTrigger className="h-12">
+                          <SelectValue placeholder="Select preferred course" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {courses.map((course) => (
+                            <SelectItem key={course} value={course}>{course}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                        <span className="text-gray-900">{profile.preferred_course || 'Not selected'}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
+              </Card>
 
-                <Separator />
-
-                {/* Budget Information */}
-                <div>
-                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2 text-purple-600" />
+              {/* Budget Information */}
+              <Card className="p-6 lg:p-8 bg-white shadow-lg">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
+                    <DollarSign className="w-6 h-6 mr-3 text-purple-600" />
                     Budget Range
                   </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-900">Minimum Budget (₹)</Label>
-                      {editing ? (
-                        <Input
-                          type="number"
-                          value={profile.budget_min || ''}
-                          onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || 0 })}
-                          placeholder="Enter minimum budget"
-                          className="mt-1"
-                        />
-                      ) : (
-                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
-                          ₹{profile.budget_min?.toLocaleString() || 'Not set'}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <Label className="text-sm font-medium text-gray-900">Maximum Budget (₹)</Label>
-                      {editing ? (
-                        <Input
-                          type="number"
-                          value={profile.budget_max || ''}
-                          onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || 0 })}
-                          placeholder="Enter maximum budget"
-                          className="mt-1"
-                        />
-                      ) : (
-                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
-                          ₹{profile.budget_max?.toLocaleString() || 'Not set'}
-                        </p>
-                      )}
-                    </div>
+                  <p className="text-gray-600">Set your budget preferences</p>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Minimum Budget (₹)</Label>
+                    {editing ? (
+                      <Input
+                        type="number"
+                        value={profile.budget_min || ''}
+                        onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || 0 })}
+                        placeholder="Enter minimum budget"
+                        className="h-12"
+                      />
+                    ) : (
+                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                        <span className="text-gray-900">
+                          {profile.budget_min ? `₹${profile.budget_min.toLocaleString()}` : 'Not set'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Maximum Budget (₹)</Label>
+                    {editing ? (
+                      <Input
+                        type="number"
+                        value={profile.budget_max || ''}
+                        onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || 0 })}
+                        placeholder="Enter maximum budget"
+                        className="h-12"
+                      />
+                    ) : (
+                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                        <span className="text-gray-900">
+                          {profile.budget_max ? `₹${profile.budget_max.toLocaleString()}` : 'Not set'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
         </div>
       </div>

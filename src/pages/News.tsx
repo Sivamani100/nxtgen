@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,16 +59,24 @@ const News = () => {
   const fetchNews = async () => {
     try {
       setLoading(true);
+      console.log('Fetching news from resources table...');
+      
+      // Query all resources that could be news-related
       const { data, error } = await supabase
         .from('resources')
         .select('*')
-        .eq('category', 'news')
+        .in('category', ['news', 'admission', 'exam', 'scholarship', 'result', 'notification'])
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching news:', error);
+        throw error;
+      }
 
+      console.log('News data fetched:', data);
       setNews(data || []);
     } catch (error) {
+      console.error('Failed to fetch news:', error);
       toast.error('Failed to load news');
       setNews([]);
     } finally {
@@ -125,7 +134,6 @@ const News = () => {
           });
 
         if (error) {
-          // no need for code 23505 check; ignore duplicate insert for now
           toast.error('Failed to save news');
           return;
         }
@@ -147,7 +155,6 @@ const News = () => {
         navigate('/login');
         return;
       }
-      // Navigate to a saved news page or show saved items
       toast.info('Saved news feature coming soon!');
     } catch (error) {
       console.error('Error checking auth:', error);
@@ -230,7 +237,7 @@ const News = () => {
         </div>
 
         {/* Mobile Filters */}
-        <div className="flex space-x-3">
+        <div className="flex space-x-3 mb-4">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
               <SelectValue placeholder="All Categories" />
@@ -243,20 +250,10 @@ const News = () => {
               ))}
             </SelectContent>
           </Select>
-
-          <Select defaultValue="latest">
-            <SelectTrigger className="w-32 h-10 border-gray-200 rounded-full">
-              <SelectValue placeholder="Latest First" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="latest">Latest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Results Count */}
-        <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-3">
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
           <p className="text-sm font-medium text-orange-800">
             {filteredNews.length} updates found
           </p>
@@ -329,7 +326,7 @@ const News = () => {
                 <div className="p-4 lg:p-5">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
-                    <Badge className="bg-blue-100 text-blue-800 text-xs font-medium">
+                    <Badge className={getCategoryColor(item.category)}>
                       {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                     </Badge>
                     <div className="flex items-center text-xs text-gray-500">
