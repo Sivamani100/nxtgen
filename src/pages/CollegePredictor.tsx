@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Calculator, TrendingUp, GraduationCap } from "lucide-react";
+import { Calculator, TrendingUp, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 
@@ -71,6 +71,8 @@ const CollegePredictor = () => {
     try {
       const userRank = parseInt(rank);
       
+      console.log('Predicting colleges for:', { exam, userRank, category, selectedBranch });
+      
       // Fetch colleges that accept the selected exam
       const { data, error } = await supabase
         .from('colleges')
@@ -78,7 +80,12 @@ const CollegePredictor = () => {
         .contains('eligible_exams', [exam])
         .not('exam_cutoffs', 'is', null);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Fetched colleges:', data?.length || 0);
 
       // Filter colleges based on exam cutoff and branch availability
       const suitableColleges = data?.filter((college) => {
@@ -111,6 +118,7 @@ const CollegePredictor = () => {
         return true;
       }) || [];
 
+      console.log('Suitable colleges:', suitableColleges.length);
       setColleges(suitableColleges);
       
       if (suitableColleges.length === 0) {
@@ -144,17 +152,21 @@ const CollegePredictor = () => {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-4xl mx-auto p-4 pb-24 lg:pb-4">
-        {/* Predictor Form */}
-        <Card className="p-8 mb-6 bg-white shadow-lg border border-gray-200">
-          <div className="flex items-center mb-6">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center mb-4">
             <GraduationCap className="w-8 h-8 text-blue-600 mr-3" />
-            <h2 className="text-2xl font-bold text-gray-900">College Predictor</h2>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">College Predictor</h1>
           </div>
-          
+          <p className="text-gray-600">Find colleges based on your entrance exam rank and preferences</p>
+        </div>
+
+        {/* Predictor Form */}
+        <Card className="p-6 lg:p-8 mb-6 bg-white shadow-lg border border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Exam Selection */}
             <div>
-              <Label htmlFor="exam" className="text-lg font-semibold text-gray-900 mb-2 block">Select Exam</Label>
+              <Label htmlFor="exam" className="text-base lg:text-lg font-semibold text-gray-900 mb-2 block">Select Exam</Label>
               <Select value={exam} onValueChange={setExam}>
                 <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-500">
                   <SelectValue placeholder="Choose exam" />
@@ -171,7 +183,7 @@ const CollegePredictor = () => {
 
             {/* Rank Input */}
             <div>
-              <Label htmlFor="rank" className="text-lg font-semibold text-gray-900 mb-2 block">Your Rank</Label>
+              <Label htmlFor="rank" className="text-base lg:text-lg font-semibold text-gray-900 mb-2 block">Your Rank</Label>
               <Input
                 id="rank"
                 type="number"
@@ -184,7 +196,7 @@ const CollegePredictor = () => {
 
             {/* Category Selection */}
             <div>
-              <Label htmlFor="category" className="text-lg font-semibold text-gray-900 mb-2 block">Category</Label>
+              <Label htmlFor="category" className="text-base lg:text-lg font-semibold text-gray-900 mb-2 block">Category</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-indigo-500">
                   <SelectValue placeholder="Select category" />
@@ -201,7 +213,7 @@ const CollegePredictor = () => {
 
             {/* Branch Selection (Optional) */}
             <div>
-              <Label htmlFor="branch" className="text-lg font-semibold text-gray-900 mb-2 block">Select Branch (Optional)</Label>
+              <Label htmlFor="branch" className="text-base lg:text-lg font-semibold text-gray-900 mb-2 block">Select Branch (Optional)</Label>
               <Select value={selectedBranch} onValueChange={setSelectedBranch}>
                 <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-purple-500">
                   <SelectValue placeholder="Choose branch (optional)" />
@@ -230,10 +242,10 @@ const CollegePredictor = () => {
 
         {/* Results */}
         {colleges.length > 0 && (
-          <Card className="p-8 bg-white shadow-lg border border-gray-200">
+          <Card className="p-6 lg:p-8 bg-white shadow-lg border border-gray-200">
             <div className="flex items-center mb-6">
               <TrendingUp className="w-8 h-8 text-green-600 mr-3" />
-              <h3 className="text-2xl font-bold text-gray-900">Predicted Colleges ({colleges.length})</h3>
+              <h3 className="text-xl lg:text-2xl font-bold text-gray-900">Predicted Colleges ({colleges.length})</h3>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -250,8 +262,8 @@ const CollegePredictor = () => {
                     className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all duration-300"
                     onClick={() => navigate(`/college-details/${college.id}`)}
                   >
-                    <h4 className="text-xl font-bold text-gray-900 mb-2">{college.name}</h4>
-                    <p className="text-lg font-medium text-gray-700 mb-3">{college.location}</p>
+                    <h4 className="text-lg lg:text-xl font-bold text-gray-900 mb-2">{college.name}</h4>
+                    <p className="text-base lg:text-lg font-medium text-gray-700 mb-3">{college.location}</p>
                     
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">

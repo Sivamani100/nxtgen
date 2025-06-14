@@ -135,26 +135,34 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation - Enhanced Design */}
+      {/* Mobile Bottom Navigation - Clean Design like in image */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-        <div className="grid grid-cols-5 gap-1 py-1 px-1">
+        <div className="flex justify-around items-center py-2 px-1">
           {mobileNavigationItems.map((item) => (
-            <Button
+            <button
               key={item.path}
-              variant="ghost"
-              size="sm"
-              className={`flex flex-col items-center space-y-1 p-2 h-16 transition-all duration-200 rounded-lg ${
+              className={`flex flex-col items-center justify-center p-2 min-w-0 flex-1 transition-all duration-200 ${
                 isActive(item.path)
-                  ? "text-white bg-gradient-to-br from-green-500 to-blue-500 shadow-lg"
-                  : "text-gray-600 hover:text-green-600 hover:bg-green-50"
+                  ? ""
+                  : ""
               }`}
               onClick={() => navigate(item.path)}
             >
-              <item.icon className={`w-6 h-6 ${isActive(item.path) ? 'scale-110' : ''} transition-transform duration-200`} />
-              <span className={`text-xs font-medium ${isActive(item.path) ? 'font-semibold' : ''}`}>
+              <div className={`p-2 rounded-full transition-all duration-200 ${
+                isActive(item.path)
+                  ? "bg-green-500 text-white"
+                  : "text-gray-600"
+              }`}>
+                <item.icon className="w-5 h-5" />
+              </div>
+              <span className={`text-xs mt-1 font-medium transition-colors duration-200 ${
+                isActive(item.path)
+                  ? "text-green-500"
+                  : "text-gray-600"
+              }`}>
                 {item.label}
               </span>
-            </Button>
+            </button>
           ))}
         </div>
       </div>

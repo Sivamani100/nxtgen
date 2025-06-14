@@ -42,6 +42,7 @@ interface NewsItem {
   date: string;
   image_url?: string;
   external_link?: string;
+  created_at: string;
 }
 
 const Home = () => {
@@ -93,6 +94,7 @@ const Home = () => {
         .limit(6);
 
       if (error) throw error;
+      console.log('Popular colleges fetched:', data?.length || 0);
       setPopularColleges(data || []);
     } catch (error) {
       console.error('Error fetching popular colleges:', error);
@@ -101,17 +103,37 @@ const Home = () => {
 
   const fetchLatestNews = async () => {
     try {
+      console.log('Fetching latest news...');
       const { data, error } = await supabase
         .from('resources')
-        .select('id, title, description, category, date, image_url, external_link')
+        .select('id, title, description, category, date, image_url, external_link, created_at')
         .eq('category', 'news')
         .order('created_at', { ascending: false })
         .limit(2);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error fetching news:', error);
+        throw error;
+      }
+      
+      console.log('Latest news fetched:', data?.length || 0, data);
       setLatestNews(data || []);
     } catch (error) {
       console.error('Error fetching latest news:', error);
+      // Try to fetch from a different approach if the first fails
+      try {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('resources')
+          .select('*')
+          .limit(2);
+        
+        if (!fallbackError && fallbackData) {
+          console.log('Fallback news data:', fallbackData);
+          setLatestNews(fallbackData.slice(0, 2));
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback news fetch failed:', fallbackErr);
+      }
     }
   };
 
@@ -306,32 +328,39 @@ const Home = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          {latestNews.map((news) => (
-            <Card
-              key={news.id}
-              className="cursor-pointer transition-all duration-300 hover:shadow-lg bg-white border border-gray-200"
-              onClick={() => news.external_link ? window.open(news.external_link, '_blank') : null}
-            >
-              <div className="p-4 lg:p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <span className="px-2 lg:px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                    {news.category}
-                  </span>
-                  {news.external_link && (
-                    <ExternalLink className="w-4 h-4 text-gray-400" />
-                  )}
+        {latestNews.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+            {latestNews.map((news) => (
+              <Card
+                key={news.id}
+                className="cursor-pointer transition-all duration-300 hover:shadow-lg bg-white border border-gray-200"
+                onClick={() => news.external_link ? window.open(news.external_link, '_blank') : null}
+              >
+                <div className="p-4 lg:p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="px-2 lg:px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                      {news.category}
+                    </span>
+                    {news.external_link && (
+                      <ExternalLink className="w-4 h-4 text-gray-400" />
+                    )}
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm lg:text-base">{news.title}</h3>
+                  <p className="text-gray-600 text-xs lg:text-sm mb-3 line-clamp-3">{news.description}</p>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                    {new Date(news.date || news.created_at).toLocaleDateString()}
+                  </div>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm lg:text-base">{news.title}</h3>
-                <p className="text-gray-600 text-xs lg:text-sm mb-3 line-clamp-3">{news.description}</p>
-                <div className="flex items-center text-xs text-gray-500">
-                  <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-                  {new Date(news.date).toLocaleDateString()}
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Newspaper className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">No news available at the moment.</p>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions Section */}
