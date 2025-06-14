@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ExternalLink, X, Trophy, Calendar, ArrowLeft } from "lucide-react";
+import { ExternalLink, Trophy, Calendar, ArrowLeft } from "lucide-react";
 
 interface EamcetResultsPopupProps {
   open: boolean;
@@ -31,15 +31,7 @@ const EamcetResultsPopup = ({ open, onClose }: EamcetResultsPopupProps) => {
       <DialogContent className={`${showWebview ? 'max-w-5xl h-[90vh]' : 'max-w-md'} mx-auto bg-gradient-to-br from-blue-50 to-green-50 border-2 border-green-200`}>
         {!showWebview ? (
           <>
-            <DialogHeader className="text-center relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute -top-2 -right-2 p-1 hover:bg-red-50"
-                onClick={onClose}
-              >
-                <X className="w-4 h-4 text-gray-500" />
-              </Button>
+            <DialogHeader className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <Trophy className="w-8 h-8 text-yellow-600 mr-2" />
                 <DialogTitle className="text-xl font-bold text-green-700">
@@ -102,14 +94,7 @@ const EamcetResultsPopup = ({ open, onClose }: EamcetResultsPopupProps) => {
               <DialogTitle className="text-lg font-bold text-green-700">
                 AP EAPCET Results 2025
               </DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-1 hover:bg-red-50"
-                onClick={handleCloseAll}
-              >
-                <X className="w-4 h-4 text-gray-500" />
-              </Button>
+              <div className="w-16"></div>
             </DialogHeader>
             
             <div className="flex-1 bg-white rounded-lg border-2 border-green-200 overflow-hidden">

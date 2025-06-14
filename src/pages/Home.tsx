@@ -30,10 +30,12 @@ interface NewsItem {
 
 const Home = () => {
   const [colleges, setColleges] = useState<College[]>([]);
+  const [searchResults, setSearchResults] = useState<College[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showEamcetPopup, setShowEamcetPopup] = useState(false);
   const navigate = useNavigate();
@@ -164,10 +166,34 @@ const Home = () => {
     }
   };
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
     }
+
+    setSearching(true);
+    try {
+      const { data, error } = await supabase
+        .from('colleges')
+        .select('*')
+        .or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%`)
+        .order('rating', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error) {
+      console.error('Search error:', error);
+      toast.error('Failed to search colleges');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
   };
 
   if (loading) {
@@ -224,79 +250,144 @@ const Home = () => {
               className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-blue-400 cursor-pointer"
               onClick={handleSearch}
             />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                onClick={clearSearch}
+              >
+                ×
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-md mx-auto p-4 pb-24">
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <Button
-            variant="outline"
-            className="h-24 flex-col space-y-3 border-3 border-green-200 hover:border-green-400 hover:bg-green-50 bg-white shadow-lg"
-            onClick={() => navigate('/predictor')}
-          >
-            <TrendingUp className="w-8 h-8 text-green-600" />
-            <span className="text-base font-bold text-green-700">Rank Predictor</span>
-          </Button>
-          <Button
-            variant="outline"
-            className="h-24 flex-col space-y-3 border-3 border-blue-200 hover:border-blue-400 hover:bg-blue-50 bg-white shadow-lg"
-            onClick={() => navigate('/colleges')}
-          >
-            <Award className="w-8 h-8 text-blue-600" />
-            <span className="text-base font-bold text-blue-700">Browse Colleges</span>
-          </Button>
-        </div>
+        {/* Search Results */}
+        {searchQuery && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Search Results</h2>
+              {searching && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              )}
+            </div>
+            
+            {searchResults.length > 0 ? (
+              <div className="space-y-4">
+                {searchResults.map((college) => (
+                  <Card key={college.id} className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300 bg-white"
+                        onClick={() => navigate(`/college-details/${college.id}`)}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h3>
+                        <div className="flex items-center text-base text-gray-600 mb-1">
+                          <MapPin className="w-4 h-4 mr-1 text-red-500" />
+                          {college.location}
+                        </div>
+                        <div className="flex items-center space-x-3 text-sm">
+                          <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                            <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                            <span className="font-bold text-gray-900">{college.rating}/5.0</span>
+                          </div>
+                          <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                            ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
+                          </span>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="p-1 hover:bg-red-50">
+                        <Heart className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full font-medium border border-blue-200">{college.type}</span>
+                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{college.placement_percentage}% placement</span>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : !searching && searchQuery ? (
+              <div className="text-center py-4 text-gray-500">
+                No colleges found for "{searchQuery}"
+              </div>
+            ) : null}
+          </div>
+        )}
 
-        {/* Recommended Colleges */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
-              {userProfile?.preferred_locations?.length > 0 || userProfile?.budget_min ? 
-                'Recommended For You' : 'Top Colleges'}
-            </h2>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')} className="text-green-600 font-medium hover:bg-green-50">
-              View all
+        {/* Quick Actions - only show when not searching */}
+        {!searchQuery && (
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <Button
+              variant="outline"
+              className="h-24 flex-col space-y-3 border-3 border-green-200 hover:border-green-400 hover:bg-green-50 bg-white shadow-lg"
+              onClick={() => navigate('/predictor')}
+            >
+              <TrendingUp className="w-8 h-8 text-green-600" />
+              <span className="text-base font-bold text-green-700">Rank Predictor</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-24 flex-col space-y-3 border-3 border-blue-200 hover:border-blue-400 hover:bg-blue-50 bg-white shadow-lg"
+              onClick={() => navigate('/colleges')}
+            >
+              <Award className="w-8 h-8 text-blue-600" />
+              <span className="text-base font-bold text-blue-700">Browse Colleges</span>
             </Button>
           </div>
-          <div className="space-y-4">
-            {colleges.map((college) => (
-              <Card key={college.id} className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300 bg-white"
-                    onClick={() => navigate(`/college-details/${college.id}`)}>
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h3>
-                    <div className="flex items-center text-base text-gray-600 mb-1">
-                      <MapPin className="w-4 h-4 mr-1 text-red-500" />
-                      {college.location}
-                    </div>
-                    <div className="flex items-center space-x-3 text-sm">
-                      <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                        <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                        <span className="font-bold text-gray-900">{college.rating}/5.0</span>
-                      </div>
-                      <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                        ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
-                      </span>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="p-1 hover:bg-red-50">
-                    <Heart className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full font-medium border border-blue-200">{college.type}</span>
-                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{college.placement_percentage}% placement</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
+        )}
 
-        {/* Latest News Section */}
-        {news.length > 0 && (
+        {/* Recommended Colleges - only show when not searching */}
+        {!searchQuery && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                {userProfile?.preferred_locations?.length > 0 || userProfile?.budget_min ? 
+                  'Recommended For You' : 'Top Colleges'}
+              </h2>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')} className="text-green-600 font-medium hover:bg-green-50">
+                View all
+              </Button>
+            </div>
+            <div className="space-y-4">
+              {colleges.map((college) => (
+                <Card key={college.id} className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300 bg-white"
+                      onClick={() => navigate(`/college-details/${college.id}`)}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h3>
+                      <div className="flex items-center text-base text-gray-600 mb-1">
+                        <MapPin className="w-4 h-4 mr-1 text-red-500" />
+                        {college.location}
+                      </div>
+                      <div className="flex items-center space-x-3 text-sm">
+                        <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                          <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                          <span className="font-bold text-gray-900">{college.rating}/5.0</span>
+                        </div>
+                        <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                          ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
+                        </span>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" className="p-1 hover:bg-red-50">
+                      <Heart className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full font-medium border border-blue-200">{college.type}</span>
+                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{college.placement_percentage}% placement</span>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Latest News Section - only show when not searching */}
+        {!searchQuery && news.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">Latest Updates</h2>
@@ -328,8 +419,8 @@ const Home = () => {
           </div>
         )}
 
-        {/* User Preferences Info */}
-        {userProfile && (userProfile.preferred_locations?.length > 0 || userProfile.budget_min) && (
+        {/* User Preferences Info - only show when not searching */}
+        {!searchQuery && userProfile && (userProfile.preferred_locations?.length > 0 || userProfile.budget_min) && (
           <Card className="p-4 mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 shadow-lg">
             <h3 className="text-lg font-bold text-green-900 mb-2">Your Preferences</h3>
             <div className="space-y-1 text-sm text-green-800">
@@ -408,4 +499,3 @@ const Home = () => {
 };
 
 export default Home;
-
