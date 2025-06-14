@@ -25,6 +25,7 @@ const Layout = ({ children }: LayoutProps) => {
     { icon: User, label: "Profile", path: "/profile" },
     { icon: null, label: "Privacy Policy", path: "/privacy-policy", desktopOnly: true },
     { icon: null, label: "Help", path: "/help", desktopOnly: true },
+    { icon: null, label: "Team", path: "/team", desktopOnly: true },
   ];
 
   // Mobile navigation items (only 5 main ones)

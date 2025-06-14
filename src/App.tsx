@@ -37,6 +37,7 @@ const App = () => (
                 <Route path="/search" element={navItems.find(item => item.to === "/search")?.page} />
                 <Route path="/privacy-policy" element={navItems.find(item => item.to === "/privacy-policy")?.page} />
                 <Route path="/help" element={navItems.find(item => item.to === "/help")?.page} />
+                <Route path="/team" element={navItems.find(item => item.to === "/team")?.page} />
                 <Route path="*" element={navItems.find(item => item.to === "/404")?.page} />
               </Routes>
             </Layout>

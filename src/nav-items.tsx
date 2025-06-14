@@ -19,6 +19,7 @@ import Processing from "./pages/Processing.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Help from "./pages/Help";
+import Team from "./pages/Team";
 
 export const navItems = [
   {
@@ -132,6 +133,12 @@ export const navItems = [
     title: "Help",
     to: "/help",
     page: <Help />,
+    desktopOnly: true,
+  },
+  {
+    title: "Team",
+    to: "/team",
+    page: <Team />,
     desktopOnly: true,
   },
 ];
