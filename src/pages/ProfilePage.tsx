@@ -187,7 +187,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+    <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
       <div className="lg:hidden bg-white shadow-sm border-b">
         <div className="flex items-center justify-between p-4">
@@ -249,219 +249,266 @@ const ProfilePage = () => {
       </div>
 
       {/* Main Profile Layout */}
-      <div className="max-w-7xl mx-auto p-2 lg:p-8">
-        {/* Use a 4-column responsive grid for desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
-          {/* Left Sidebar/Profile Summary */}
-          <div className="lg:col-span-1">
-            <Card className="p-6 bg-white shadow-lg flex flex-col items-center">
-              <div className="text-center w-full">
-                <div className="relative inline-block mb-6">
-                  <div className="w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl lg:text-4xl font-bold shadow-lg">
-                    {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                  {editing && (
-                    <button className="absolute bottom-0 right-0 bg-white rounded-full p-3 shadow-lg border border-gray-200 hover:bg-gray-50">
-                      <Camera className="w-5 h-5 text-gray-600" />
-                    </button>
-                  )}
+      <div className="max-w-7xl mx-auto p-4 lg:p-8 lg:grid lg:grid-cols-4 lg:gap-8">
+        {/* Left Sidebar/Profile Summary (1 column) */}
+        <div className="lg:col-span-1 mb-6 lg:mb-0">
+          <Card className="p-6 bg-white shadow-lg flex flex-col items-center">
+            <div className="text-center w-full">
+              <div className="relative inline-block mb-6">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl lg:text-4xl font-bold shadow-lg">
+                  {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
-                  {profile.full_name || 'Complete Your Profile'}
-                </h2>
-                <p className="text-gray-600 mb-6">{profile.email}</p>
-
-                <div className="mb-6">
-                  <div className="flex justify-between text-sm text-gray-600 mb-2">
-                    <span>Profile Completion</span>
-                    <span>{profile.profile_completion_percentage || 0}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
-                      className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-500"
-                      style={{ width: `${profile.profile_completion_percentage || 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  onClick={handleSignOut}
-                  className="w-full text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
+                {editing && (
+                  <button className="absolute bottom-0 right-0 bg-white rounded-full p-3 shadow-lg border border-gray-200 hover:bg-gray-50">
+                    <Camera className="w-5 h-5 text-gray-600" />
+                  </button>
+                )}
               </div>
-            </Card>
-          </div>
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
+                {profile.full_name || 'Complete Your Profile'}
+              </h2>
+              <p className="text-gray-600 mb-6">{profile.email}</p>
 
-          {/* Main Content - Occupy 3/4 on desktop */}
-          <div className="lg:col-span-3 flex flex-col gap-6">
-            <div className="space-y-6 lg:space-y-8">
-              {/* Personal Information */}
-              <Card className="p-6 lg:p-8 bg-white shadow-lg">
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-                    <User className="w-6 h-6 mr-3 text-blue-600" />
-                    Personal Information
-                  </h3>
-                  <p className="text-gray-600">Update your personal details</p>
+              <div className="mb-6">
+                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                  <span>Profile Completion</span>
+                  <span>{profile.profile_completion_percentage || 0}%</span>
                 </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Full Name</Label>
-                    {editing ? (
-                      <Input
-                        value={profile.full_name || ''}
-                        onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                        placeholder="Enter your full name"
-                        className="h-12"
-                      />
-                    ) : (
-                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
-                        <span className="text-gray-900">{profile.full_name || 'Not provided'}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Email</Label>
-                    <div className="h-12 bg-gray-100 border border-gray-200 rounded-md px-4 flex items-center">
-                      <Mail className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-gray-700">{profile.email}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="lg:col-span-2">
-                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Phone Number</Label>
-                    {editing ? (
-                      <Input
-                        value={profile.phone_number || ''}
-                        onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
-                        placeholder="Enter your phone number"
-                        className="h-12"
-                      />
-                    ) : (
-                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
-                        <Phone className="w-4 h-4 text-gray-400 mr-2" />
-                        <span className="text-gray-900">{profile.phone_number || 'Not provided'}</span>
-                      </div>
-                    )}
-                  </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${profile.profile_completion_percentage || 0}%` }}
+                  ></div>
                 </div>
-              </Card>
-
-              {/* Academic Information */}
-              <Card className="p-6 lg:p-8 bg-white shadow-lg">
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-                    <GraduationCap className="w-6 h-6 mr-3 text-green-600" />
-                    Academic Information
-                  </h3>
-                  <p className="text-gray-600">Your educational preferences</p>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Academic Field</Label>
-                    {editing ? (
-                      <Select 
-                        value={profile.academic_field || ''} 
-                        onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
-                      >
-                        <SelectTrigger className="h-12">
-                          <SelectValue placeholder="Select academic field" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {academicFields.map((field) => (
-                            <SelectItem key={field} value={field}>{field}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
-                        <span className="text-gray-900">{profile.academic_field || 'Not selected'}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Preferred Course</Label>
-                    {editing ? (
-                      <Select 
-                        value={profile.preferred_course || ''} 
-                        onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
-                      >
-                        <SelectTrigger className="h-12">
-                          <SelectValue placeholder="Select preferred course" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {courses.map((course) => (
-                            <SelectItem key={course} value={course}>{course}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
-                        <span className="text-gray-900">{profile.preferred_course || 'Not selected'}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-
-              {/* Budget Information */}
-              <Card className="p-6 lg:p-8 bg-white shadow-lg">
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-                    <DollarSign className="w-6 h-6 mr-3 text-purple-600" />
-                    Budget Range
-                  </h3>
-                  <p className="text-gray-600">Set your budget preferences</p>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Minimum Budget (₹)</Label>
-                    {editing ? (
-                      <Input
-                        type="number"
-                        value={profile.budget_min || ''}
-                        onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || 0 })}
-                        placeholder="Enter minimum budget"
-                        className="h-12"
-                      />
-                    ) : (
-                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
-                        <span className="text-gray-900">
-                          {profile.budget_min ? `₹${profile.budget_min.toLocaleString()}` : 'Not set'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-900 mb-2 block">Maximum Budget (₹)</Label>
-                    {editing ? (
-                      <Input
-                        type="number"
-                        value={profile.budget_max || ''}
-                        onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || 0 })}
-                        placeholder="Enter maximum budget"
-                        className="h-12"
-                      />
-                    ) : (
-                      <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
-                        <span className="text-gray-900">
-                          {profile.budget_max ? `₹${profile.budget_max.toLocaleString()}` : 'Not set'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={handleSignOut}
+                className="w-full text-red-600 border-red-200 hover:bg-red-50"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
+          </Card>
+        </div>
+
+        {/* Main Content (3 columns) */}
+        <div className="lg:col-span-3 flex flex-col gap-6">
+          {/* Personal Information */}
+          <Card className="p-6 lg:p-8 bg-white shadow-lg">
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
+                <User className="w-6 h-6 mr-3 text-blue-600" />
+                Personal Information
+              </h3>
+              <p className="text-gray-600">Update your personal details</p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <Label className="text-sm font-semibold text-gray-900 mb-2 block">Full Name</Label>
+                {editing ? (
+                  <Input
+                    value={profile.full_name || ''}
+                    onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                    placeholder="Enter your full name"
+                    className="h-12"
+                  />
+                ) : (
+                  <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                    <span className="text-gray-900">{profile.full_name || 'Not provided'}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <Label className="text-sm font-semibold text-gray-900 mb-2 block">Email</Label>
+                <div className="h-12 bg-gray-100 border border-gray-200 rounded-md px-4 flex items-center">
+                  <Mail className="w-4 h-4 text-gray-400 mr-2" />
+                  <span className="text-gray-700">{profile.email}</span>
+                </div>
+              </div>
+              
+              <div className="lg:col-span-2">
+                <Label className="text-sm font-semibold text-gray-900 mb-2 block">Phone Number</Label>
+                {editing ? (
+                  <Input
+                    value={profile.phone_number || ''}
+                    onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                    placeholder="Enter your phone number"
+                    className="h-12"
+                  />
+                ) : (
+                  <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                    <Phone className="w-4 h-4 text-gray-400 mr-2" />
+                    <span className="text-gray-900">{profile.phone_number || 'Not provided'}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Academic Information */}
+          <Card className="p-6 lg:p-8 bg-white shadow-lg">
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
+                <GraduationCap className="w-6 h-6 mr-3 text-green-600" />
+                Academic Information
+              </h3>
+              <p className="text-gray-600">Your educational preferences</p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <Label className="text-sm font-semibold text-gray-900 mb-2 block">Academic Field</Label>
+                {editing ? (
+                  <Select 
+                    value={profile.academic_field || ''} 
+                    onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select academic field" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {academicFields.map((field) => (
+                        <SelectItem key={field} value={field}>{field}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                    <span className="text-gray-900">{profile.academic_field || 'Not selected'}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <Label className="text-sm font-semibold text-gray-900 mb-2 block">Preferred Course</Label>
+                {editing ? (
+                  <Select 
+                    value={profile.preferred_course || ''} 
+                    onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select preferred course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {courses.map((course) => (
+                        <SelectItem key={course} value={course}>{course}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                    <span className="text-gray-900">{profile.preferred_course || 'Not selected'}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Budget Information */}
+          <Card className="p-6 lg:p-8 bg-white shadow-lg">
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
+                <DollarSign className="w-6 h-6 mr-3 text-purple-600" />
+                Budget Range
+              </h3>
+              <p className="text-gray-600">Set your budget preferences</p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <Label className="text-sm font-semibold text-gray-900 mb-2 block">Minimum Budget (₹)</Label>
+                {editing ? (
+                  <Input
+                    type="number"
+                    value={profile.budget_min || ''}
+                    onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || 0 })}
+                    placeholder="Enter minimum budget"
+                    className="h-12"
+                  />
+                ) : (
+                  <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                    <span className="text-gray-900">
+                      {profile.budget_min ? `₹${profile.budget_min.toLocaleString()}` : 'Not set'}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <Label className="text-sm font-semibold text-gray-900 mb-2 block">Maximum Budget (₹)</Label>
+                {editing ? (
+                  <Input
+                    type="number"
+                    value={profile.budget_max || ''}
+                    onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || 0 })}
+                    placeholder="Enter maximum budget"
+                    className="h-12"
+                  />
+                ) : (
+                  <div className="h-12 bg-gray-50 border border-gray-200 rounded-md px-4 flex items-center">
+                    <span className="text-gray-900">
+                      {profile.budget_max ? `₹${profile.budget_max.toLocaleString()}` : 'Not set'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Bottom Navigation (Mobile Only) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-evenly gap-2 py-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
+              onClick={() => navigate('/home')}
+            >
+              <User className="w-6 h-6" />
+              <span className="text-xs">Home</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
+              onClick={() => navigate('/colleges')}
+            >
+              <MapPin className="w-6 h-6" />
+              <span className="text-xs">Colleges</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
+              onClick={() => navigate('/predictor')}
+            >
+              <GraduationCap className="w-6 h-6" />
+              <span className="text-xs">Predictor</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
+              onClick={() => navigate('/news')}
+            >
+              <Bell className="w-6 h-6" />
+              <span className="text-xs">News</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-green-600 bg-green-50 rounded-full"
+            >
+              <Settings className="w-6 h-6" />
+              <span className="text-xs">Profile</span>
+            </Button>
           </div>
         </div>
       </div>
