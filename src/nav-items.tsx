@@ -1,5 +1,5 @@
 import { HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, GitCompare } from "lucide-react";
-import Index from "./pages/Index.jsx";
+import Index from "./pages/Index.tsx";
 import Home from "./pages/Home.jsx";
 import Colleges from "./pages/Colleges.jsx";
 import Predictor from "./pages/Predictor.jsx";
