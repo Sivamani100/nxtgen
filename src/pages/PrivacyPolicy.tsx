@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Shield } from "lucide-react";
 
 type Policy = {
   id: string;
@@ -9,15 +10,11 @@ type Policy = {
   content: string;
 };
 
-const PAGE_SIZE = 1; // One "policy page" per route page (simulate book-like pagination)
+const PAGE_SIZE = 1;
 const MIN_CONTENT = 1000;
 const MAX_CONTENT = 100000;
 
-/**
- * For true pagination, fetches per-page policy page.
- */
 const PrivacyPolicy = () => {
-  // Fetch all pages and order by page_number
   const [pages, setPages] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,7 +26,7 @@ const PrivacyPolicy = () => {
       .from("privacy_policies")
       .select()
       .order("page_number", { ascending: true })
-      .limit(25) // Only first 25 for now
+      .limit(25) // Fetch up to 25 pages
       .then(({ data, error }) => {
         if (error) {
           setError("Could not fetch privacy policy pages.");
@@ -42,7 +39,6 @@ const PrivacyPolicy = () => {
       });
   }, []);
 
-  // Check content length constraints for UI
   const contentTooShort = (content: string) => content.length < MIN_CONTENT;
   const contentTooLong = (content: string) => content.length > MAX_CONTENT;
 
@@ -54,7 +50,8 @@ const PrivacyPolicy = () => {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow mt-8 text-center text-lg font-semibold text-blue-700">
+      <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-lg mt-10 text-center text-lg font-semibold text-blue-700">
+        <Shield className="inline-block w-8 h-8 mr-2 text-green-600" />
         Loading Privacy Policy...
       </div>
     );
@@ -62,7 +59,8 @@ const PrivacyPolicy = () => {
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow mt-8 text-center text-red-600 text-lg">
+      <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-lg mt-10 text-center text-red-600 text-lg">
+        <Shield className="inline-block w-8 h-8 mr-2 text-green-600" />
         {error}
       </div>
     );
@@ -70,40 +68,38 @@ const PrivacyPolicy = () => {
 
   if (pages.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow mt-8 text-center text-gray-700">
+      <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-lg mt-10 text-center text-gray-700">
+        <Shield className="inline-block w-8 h-8 mr-2 text-green-600" />
         Privacy Policy content is not available.
       </div>
     );
   }
 
-  // Ensure no out of bounds
   const safePage = Math.min(Math.max(1, currentPage), pages.length);
   const page = pages[safePage - 1];
 
   return (
-    <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow mt-8 space-y-6 text-gray-800 overflow-y-auto" style={{ fontSize: "1rem", lineHeight: "2" }}>
-      <div className="flex flex-col gap-2 items-center mb-4">
-        <h1 className="text-3xl font-extrabold text-blue-800">{page?.title || `Privacy Policy Page ${page?.page_number}`}</h1>
-        <small className="text-blue-500 mb-2">
-          Page {safePage} of {pages.length}
-        </small>
-        {/* Navigation */}
+    <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-lg mt-12 space-y-6 text-gray-800 overflow-y-auto" style={{ fontSize: "1.06rem", lineHeight: "2" }}>
+      <div className="flex flex-col md:flex-row gap-3 md:items-end md:justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Shield className="w-7 h-7 text-green-600" />
+          <h1 className="text-3xl font-extrabold text-blue-800">Privacy Policy</h1>
+        </div>
         <div className="flex gap-2 items-center">
           <button
-            className="px-2 py-1 rounded border shadow-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
+            className="px-3 py-1 rounded border shadow-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
             onClick={() => goToPage(safePage - 1)}
             disabled={safePage === 1}
           >
             Previous
           </button>
           <button
-            className="px-2 py-1 rounded border shadow-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
+            className="px-3 py-1 rounded border shadow-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
             onClick={() => goToPage(safePage + 1)}
             disabled={safePage === pages.length}
           >
             Next
           </button>
-          {/* <Page numbers dropdown for quick nav> */}
           <select
             value={safePage}
             onChange={e => goToPage(Number(e.target.value))}
@@ -115,18 +111,15 @@ const PrivacyPolicy = () => {
               </option>
             ))}
           </select>
+          <span className="text-blue-500 ml-4">Page {safePage}/{pages.length}</span>
         </div>
       </div>
-      {/* Actual policy for the page */}
       <div>
         <h2 className="text-2xl font-bold text-green-800 mb-2">{page?.title}</h2>
         <div
-          className={`whitespace-pre-wrap break-words bg-gray-50 p-4 border border-gray-200 rounded-lg min-h-[300px]`}
-          style={{ fontSize: "1.07rem", lineHeight: "2" }}
+          className="whitespace-pre-wrap break-words bg-gray-50 p-6 border border-gray-200 rounded-lg min-h-[300px] text-base"
         >
           {page?.content}
-
-          {/* Warn if too short/long? */}
           {page && contentTooShort(page.content) && (
             <div className="mt-4 text-sm text-orange-600 bg-orange-50 px-2 py-1 rounded">
               Warning: Content for this page is less than {MIN_CONTENT} characters.
@@ -139,7 +132,6 @@ const PrivacyPolicy = () => {
           )}
         </div>
       </div>
-      {/* End page info */}
       <div className="mt-8 text-gray-400 text-xs text-center">
         (Each policy page supports {MIN_CONTENT} - {MAX_CONTENT} characters.
         Total pages: {pages.length} — This page is only visible on desktop devices.)
@@ -149,4 +141,3 @@ const PrivacyPolicy = () => {
 };
 
 export default PrivacyPolicy;
-

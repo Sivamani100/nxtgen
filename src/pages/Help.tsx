@@ -1,18 +1,13 @@
 
 import React, { useState } from "react";
-import { Mail, Phone, MapPin, MessageCircle } from "lucide-react";
+import { Mail, Phone, MapPin, MessageCircle, HelpCircle } from "lucide-react";
 
 const Help = () => {
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    message: "",
-  });
-
+  const [user, setUser] = useState({ name: "", email: "", message: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // On form submit: open WhatsApp with prefilled details
+  // WhatsApp form submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -28,12 +23,15 @@ const Help = () => {
   };
 
   return (
-    <div className="hidden lg:block max-w-2xl mx-auto bg-white p-8 rounded-lg shadow mt-8">
-      <h1 className="text-3xl font-bold text-blue-700 mb-4">Help & Contact</h1>
-      <p className="mb-6 text-gray-600">
+    <div className="hidden lg:block max-w-2xl mx-auto bg-white rounded-2xl shadow-lg mt-12 p-10">
+      <div className="flex items-center gap-2 mb-5">
+        <HelpCircle className="w-8 h-8 text-blue-600" />
+        <h1 className="text-3xl font-bold text-blue-700 tracking-tight">Help & Contact</h1>
+      </div>
+      <p className="mb-7 text-gray-600">
         Need assistance? Please fill out the form below or contact us directly via WhatsApp, email, or phone.
       </p>
-      <form onSubmit={handleSubmit} className="space-y-4 bg-blue-50 p-6 rounded-lg">
+      <form onSubmit={handleSubmit} className="space-y-5 bg-blue-50/70 p-6 rounded-xl border border-blue-100 shadow-inner">
         <div>
           <label className="block text-sm font-semibold mb-1" htmlFor="name">
             Name*
@@ -78,12 +76,10 @@ const Help = () => {
           className="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 transition-colors font-semibold"
           disabled={loading}
         >
-          {loading ? "Sending..." : (
-            <>Send Message via WhatsApp</>
-          )}
+          {loading ? "Sending..." : <>Send Message via WhatsApp</>}
         </button>
       </form>
-      <div className="mt-6 space-y-6">
+      <div className="mt-8 space-y-6">
         <div className="flex items-center gap-3">
           <MessageCircle className="text-green-600 w-6 h-6" />
           <a
@@ -120,4 +116,5 @@ const Help = () => {
     </div>
   );
 };
+
 export default Help;

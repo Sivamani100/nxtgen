@@ -1,11 +1,36 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, Menu, X, ChevronLeft, ChevronRight, GitCompare } from "lucide-react";
+import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, Menu, X, ChevronLeft, ChevronRight, GitCompare, HelpCircle, Shield } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
+
+// Side bar navigation items (with icons)
+const navigationItems = [
+  { icon: HomeIcon, label: "Home", path: "/home" },
+  { icon: Users, label: "Colleges", path: "/colleges" },
+  { icon: BookOpen, label: "Predictor", path: "/predictor" },
+  { icon: Newspaper, label: "News", path: "/news" },
+  { icon: GitCompare, label: "Compare", path: "/compare" },
+  { icon: Heart, label: "Favorites", path: "/favorites" },
+  { icon: Bell, label: "Notifications", path: "/notifications" },
+  { icon: Search, label: "Search", path: "/search" },
+  { icon: User, label: "Profile", path: "/profile" },
+  { icon: Shield, label: "Privacy Policy", path: "/privacy-policy", desktopOnly: true },  // Now uses Shield icon
+  { icon: HelpCircle, label: "Help", path: "/help", desktopOnly: true },                  // Help icon
+  { icon: Users, label: "Team", path: "/team", desktopOnly: true },                       // Users icon for Team
+];
+
+const mobileNavigationItems = [
+  { icon: HomeIcon, label: "Home", path: "/home" },
+  { icon: Users, label: "Colleges", path: "/colleges" },
+  { icon: BookOpen, label: "Predictor", path: "/predictor" },
+  { icon: Newspaper, label: "News", path: "/news" },
+  { icon: User, label: "Profile", path: "/profile" },
+];
 
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
@@ -13,49 +38,23 @@ const Layout = ({ children }: LayoutProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const navigationItems = [
-    { icon: HomeIcon, label: "Home", path: "/home" },
-    { icon: Users, label: "Colleges", path: "/colleges" },
-    { icon: BookOpen, label: "Predictor", path: "/predictor" },
-    { icon: Newspaper, label: "News", path: "/news" },
-    { icon: GitCompare, label: "Compare", path: "/compare" },
-    { icon: Heart, label: "Favorites", path: "/favorites" },
-    { icon: Bell, label: "Notifications", path: "/notifications" },
-    { icon: Search, label: "Search", path: "/search" },
-    { icon: User, label: "Profile", path: "/profile" },
-    { icon: null, label: "Privacy Policy", path: "/privacy-policy", desktopOnly: true },
-    { icon: null, label: "Help", path: "/help", desktopOnly: true },
-    { icon: null, label: "Team", path: "/team", desktopOnly: true },
-  ];
-
-  // Mobile navigation items (only 5 main ones)
-  const mobileNavigationItems = [
-    { icon: HomeIcon, label: "Home", path: "/home" },
-    { icon: Users, label: "Colleges", path: "/colleges" },
-    { icon: BookOpen, label: "Predictor", path: "/predictor" },
-    { icon: Newspaper, label: "News", path: "/news" },
-    { icon: User, label: "Profile", path: "/profile" },
-  ];
-
   const isActive = (path: string) => location.pathname === path;
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Desktop Sidebar - Left side - Only show on lg and above */}
+      {/* Desktop Sidebar */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
-        isSidebarCollapsed ? 'lg:w-[86px]' : 'lg:w-[279px]'
+        isSidebarCollapsed ? 'lg:w-[101px]' : 'lg:w-[294px]'
       }`}>
         <div className="flex flex-col h-full">
-          {/* Logo/Brand */}
+          {/* Top blank */}
           <div className="flex items-center justify-between h-16 px-2 border-b border-gray-200">
             <div className="flex items-center justify-center w-full">
-              {/* Logo removed as per user request */}
-              {/* No image, no text */}
+              {/* Logo area (left blank as per previous setup) */}
             </div>
             <Button
               variant="ghost"
@@ -66,8 +65,7 @@ const Layout = ({ children }: LayoutProps) => {
               {isSidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
             </Button>
           </div>
-
-          {/* Navigation Links */}
+          {/* Navigation */}
           <nav className="flex-1 px-2 py-6 space-y-2">
             {navigationItems.map((item) => {
               if (item.desktopOnly && typeof window !== "undefined" && window.innerWidth < 1024) {
@@ -85,8 +83,7 @@ const Layout = ({ children }: LayoutProps) => {
                   onClick={() => navigate(item.path)}
                   title={isSidebarCollapsed ? item.label : undefined}
                 >
-                  {item.icon && <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />}
-                  {/* Don't show text if collapsed */}
+                  {item.icon && <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? "" : "mr-3"}`} />}
                   {!isSidebarCollapsed && item.label}
                 </Button>
               );
@@ -94,15 +91,13 @@ const Layout = ({ children }: LayoutProps) => {
           </nav>
         </div>
       </div>
-
-      {/* Main Content - Adjust margin for desktop sidebar */}
-      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-[86px]' : 'lg:pl-[279px]'}`}>
+      {/* Main Content */}
+      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-[101px]' : 'lg:pl-[294px]'}`}>
         <div className="pb-[70px] lg:pb-0 min-h-screen">
           {children}
         </div>
       </div>
-
-      {/* Mobile Bottom Navigation - Only show on mobile (below lg) */}
+      {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 h-[70px]">
         <div className="flex justify-around items-center py-2 px-1 h-full">
           {mobileNavigationItems.map((item) => (

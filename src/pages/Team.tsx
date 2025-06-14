@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Instagram, Linkedin, Phone } from "lucide-react";
+import { Instagram, Linkedin, Phone, Users } from "lucide-react";
 
 const founders = [
   {
@@ -33,9 +33,12 @@ const cardBgColors = [
 const Team = () => (
   <div className="hidden lg:block min-h-screen py-14 px-4 bg-white">
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-4xl font-extrabold text-center text-blue-800 mb-2 tracking-tight animate-fade-in">
-        Meet Our <span className="text-green-600">Team</span>
-      </h1>
+      <div className="flex gap-3 items-center justify-center mb-4">
+        <Users className="w-9 h-9 text-blue-700" />
+        <h1 className="text-4xl font-extrabold text-center text-blue-800 mb-2 tracking-tight animate-fade-in">
+          Meet Our <span className="text-green-600">Team</span>
+        </h1>
+      </div>
       <p className="text-lg text-center text-blue-500/80 mb-12 max-w-2xl mx-auto animate-fade-in">
         NXTGEN is built by passionate students and innovators dedicated to helping you succeed. Connect with us and explore our mission!
       </p>
