@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ import {
   ArrowRight,
   Bell
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface College {
   id: number;
@@ -153,6 +155,10 @@ const Home = () => {
     }
   };
 
+  const handleNotifications = () => {
+    navigate('/notifications');
+  };
+
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
       {/* Welcome Header with Search */}
@@ -163,12 +169,15 @@ const Home = () => {
               <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Welcome Back!</h1>
               <p className="text-sm lg:text-base text-gray-600">Find your perfect college</p>
             </div>
-            <div className="relative">
+            <button 
+              onClick={handleNotifications}
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <Bell className="w-6 h-6 text-gray-600" />
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                 1
               </span>
-            </div>
+            </button>
           </div>
           
           {/* Search Bar */}
@@ -185,8 +194,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Hero Section - removed hero image */}
-      <section className="bg-gradient-to-br from-green-50 to-blue-50 py-12 lg:py-20">
+      {/* Hero Section - Hidden on mobile, visible on desktop */}
+      <section className="hidden lg:block bg-gradient-to-br from-green-50 to-blue-50 py-12 lg:py-20">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
             <div className="text-center lg:text-left">
@@ -205,7 +214,6 @@ const Home = () => {
                 </Button>
               </div>
             </div>
-            {/* Removed hero image from right column */}
           </div>
         </div>
       </section>

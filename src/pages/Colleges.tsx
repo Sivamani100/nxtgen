@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,6 +143,7 @@ const Colleges = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error('Please login to save colleges');
+        navigate('/login');
         return;
       }
 
@@ -187,6 +187,21 @@ const Colleges = () => {
     }
   };
 
+  const handleSavedClick = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please login to view saved colleges');
+        navigate('/login');
+        return;
+      }
+      navigate('/favorites');
+    } catch (error) {
+      console.error('Error checking auth:', error);
+      navigate('/login');
+    }
+  };
+
   const getUniqueStates = () => {
     const states = [...new Set(colleges.map(college => college.state))];
     return states.sort();
@@ -206,7 +221,12 @@ const Colleges = () => {
       <div className="lg:hidden bg-white shadow-sm border-b p-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-gray-900">Browse Colleges</h1>
-          <Button variant="ghost" size="sm" className="text-pink-500 hover:text-pink-600 hover:bg-pink-50">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-pink-500 hover:text-pink-600 hover:bg-pink-50"
+            onClick={handleSavedClick}
+          >
             <Heart className="w-5 h-5 mr-1" />
             Saved
           </Button>

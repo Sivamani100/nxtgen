@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,8 @@ const News = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [savedNews, setSavedNews] = useState<number[]>([]);
+  const navigate = useNavigate();
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -46,6 +48,7 @@ const News = () => {
 
   useEffect(() => {
     fetchNews();
+    fetchSavedNews();
   }, []);
 
   useEffect(() => {
@@ -69,6 +72,89 @@ const News = () => {
       setNews([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSavedNews = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_news_favorites')
+        .select('news_id')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setSavedNews(data?.map(item => item.news_id) || []);
+    } catch (error) {
+      console.error('Error fetching saved news:', error);
+    }
+  };
+
+  const handleSaveNews = async (newsId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please login to save news');
+        navigate('/login');
+        return;
+      }
+
+      const isAlreadySaved = savedNews.includes(newsId);
+      
+      if (isAlreadySaved) {
+        // Remove from saved
+        const { error } = await supabase
+          .from('user_news_favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('news_id', newsId);
+
+        if (error) throw error;
+        setSavedNews(prev => prev.filter(id => id !== newsId));
+        toast.success('News removed from favorites');
+      } else {
+        // Add to saved
+        const { error } = await supabase
+          .from('user_news_favorites')
+          .insert({
+            user_id: user.id,
+            news_id: newsId
+          });
+
+        if (error) {
+          if (error.code === '23505') {
+            toast.error('News already saved');
+          } else {
+            throw error;
+          }
+          return;
+        }
+
+        setSavedNews(prev => [...prev, newsId]);
+        toast.success('News saved to favorites');
+      }
+    } catch (error) {
+      console.error('Error saving news:', error);
+      toast.error('Failed to save news');
+    }
+  };
+
+  const handleSavedClick = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please login to view saved news');
+        navigate('/login');
+        return;
+      }
+      // Navigate to a saved news page or show saved items
+      toast.info('Saved news feature coming soon!');
+    } catch (error) {
+      console.error('Error checking auth:', error);
+      navigate('/login');
     }
   };
 
@@ -124,7 +210,12 @@ const News = () => {
       <div className="lg:hidden bg-white shadow-sm border-b p-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-gray-900">Latest Updates</h1>
-          <Button variant="ghost" size="sm" className="text-pink-500 hover:text-pink-600 hover:bg-pink-50">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-pink-500 hover:text-pink-600 hover:bg-pink-50"
+            onClick={handleSavedClick}
+          >
             <Heart className="w-5 h-5 mr-1" />
             Saved
           </Button>
@@ -266,8 +357,19 @@ const News = () => {
                         <span>Read More</span>
                       </div>
                     )}
-                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-pink-500 hover:bg-pink-50 p-2">
-                      <Heart className="w-4 h-4" />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-gray-400 hover:text-pink-500 hover:bg-pink-50 p-2"
+                      onClick={(e) => handleSaveNews(item.id, e)}
+                    >
+                      <Heart 
+                        className={`w-4 h-4 transition-colors ${
+                          savedNews.includes(item.id) 
+                            ? 'text-pink-500 fill-pink-500' 
+                            : 'text-gray-400 hover:text-pink-500'
+                        }`} 
+                      />
                     </Button>
                   </div>
                 </div>
