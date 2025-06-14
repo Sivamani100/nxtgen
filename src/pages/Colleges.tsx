@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -274,11 +275,33 @@ const Colleges = () => {
           {filteredColleges.map((college) => (
             <Card 
               key={college.id} 
-              className="bg-white hover:shadow-xl transition-all duration-300 border hover:border-blue-300 cursor-pointer group"
+              className="bg-white hover:shadow-xl transition-all duration-300 border hover:border-blue-300 cursor-pointer group overflow-hidden"
               onClick={() => navigate(`/college-details/${college.id}`)}
             >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
+              {/* College Image */}
+              <div className="h-48 overflow-hidden">
+                {college.image_url ? (
+                  <img 
+                    src={college.image_url} 
+                    alt={college.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <div className="w-16 h-16 mx-auto mb-2 bg-white rounded-full flex items-center justify-center">
+                        <span className="text-2xl font-bold text-blue-600">
+                          {college.name.charAt(0)}
+                        </span>
+                      </div>
+                      <p className="text-xs">No Image</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
                       {college.name}

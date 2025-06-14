@@ -18,7 +18,8 @@ import {
   Clock,
   MapPin,
   Star,
-  ExternalLink
+  ExternalLink,
+  GitCompare
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -151,7 +152,7 @@ const Home = () => {
     {
       title: "Compare Colleges",
       description: "Compare multiple colleges",
-      icon: Award,
+      icon: GitCompare,
       path: "/compare",
       gradient: "from-pink-500 to-pink-600",
       bgGradient: "from-pink-50 to-pink-100"
@@ -229,42 +230,6 @@ const Home = () => {
               )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Quick Actions Section */}
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Quick Actions
-          </h2>
-          <p className="text-gray-600">
-            Everything you need for your educational journey
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {quickActions.map((action, index) => (
-            <Card
-              key={index}
-              className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border border-gray-200 hover:border-green-300 bg-white p-6"
-              onClick={() => navigate(action.path)}
-            >
-              <div className="text-center space-y-4">
-                <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-r ${action.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md`}>
-                  <action.icon className="w-8 h-8 text-white" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-700 transition-colors">
-                    {action.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    {action.description}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
         </div>
       </div>
 
@@ -362,6 +327,44 @@ const Home = () => {
               </div>
             </Card>
           ))}
+        </div>
+      </div>
+
+      {/* Quick Actions Section */}
+      <div className="bg-gradient-to-br from-blue-50 to-green-50 border-y border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Quick Actions
+            </h2>
+            <p className="text-gray-600">
+              Everything you need for your educational journey
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {quickActions.map((action, index) => (
+              <Card
+                key={index}
+                className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border border-gray-200 hover:border-green-300 bg-white p-6"
+                onClick={() => navigate(action.path)}
+              >
+                <div className="text-center space-y-4">
+                  <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-r ${action.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+                    <action.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-700 transition-colors">
+                      {action.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {action.description}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </div>

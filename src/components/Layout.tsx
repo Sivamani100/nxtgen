@@ -22,6 +22,16 @@ const Layout = ({ children }: LayoutProps) => {
     { icon: GitCompare, label: "Compare", path: "/compare" },
     { icon: Heart, label: "Favorites", path: "/favorites" },
     { icon: Bell, label: "Notifications", path: "/notifications" },
+    { icon: Search, label: "Search", path: "/search" },
+    { icon: User, label: "Profile", path: "/profile" },
+  ];
+
+  // Mobile navigation items (only 5 main ones)
+  const mobileNavigationItems = [
+    { icon: HomeIcon, label: "Home", path: "/home" },
+    { icon: Users, label: "Colleges", path: "/colleges" },
+    { icon: BookOpen, label: "Predictor", path: "/predictor" },
+    { icon: Newspaper, label: "News", path: "/news" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
 
@@ -120,28 +130,30 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Main Content */}
       <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
-        <div className="pt-16 lg:pt-0">
+        <div className="pt-16 lg:pt-0 pb-16 lg:pb-0">
           {children}
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation - Enhanced Design */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-        <div className="grid grid-cols-5 gap-1 py-2 px-2">
-          {navigationItems.slice(0, 5).map((item) => (
+        <div className="grid grid-cols-5 gap-1 py-1 px-1">
+          {mobileNavigationItems.map((item) => (
             <Button
               key={item.path}
               variant="ghost"
               size="sm"
-              className={`flex flex-col items-center space-y-1 p-2 h-auto transition-colors ${
+              className={`flex flex-col items-center space-y-1 p-2 h-16 transition-all duration-200 rounded-lg ${
                 isActive(item.path)
-                  ? "text-green-600 bg-green-50"
+                  ? "text-white bg-gradient-to-br from-green-500 to-blue-500 shadow-lg"
                   : "text-gray-600 hover:text-green-600 hover:bg-green-50"
               }`}
               onClick={() => navigate(item.path)}
             >
-              <item.icon className="w-5 h-5" />
-              <span className="text-xs">{item.label}</span>
+              <item.icon className={`w-6 h-6 ${isActive(item.path) ? 'scale-110' : ''} transition-transform duration-200`} />
+              <span className={`text-xs font-medium ${isActive(item.path) ? 'font-semibold' : ''}`}>
+                {item.label}
+              </span>
             </Button>
           ))}
         </div>

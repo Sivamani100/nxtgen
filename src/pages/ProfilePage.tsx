@@ -16,11 +16,6 @@ import {
 import { ProfileHeader } from "@/components/ProfileHeader";
 import { ProfileStats } from "@/components/ProfileStats";
 import { 
-  Home as HomeIcon, 
-  Users, 
-  BookOpen, 
-  Newspaper, 
-  User, 
   LogOut,
   PenLine,
   Check
@@ -228,117 +223,176 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-900">Profile</h1>
-        {!isEditing ? (
-          <Button 
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white"
-          >
-            <PenLine size={16} />
-            Edit
-          </Button>
-        ) : (
-          <Button 
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white"
-          >
-            <Check size={16} />
-            {saving ? 'Saving...' : 'Save'}
-          </Button>
-        )}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto p-4 lg:p-6 flex justify-between items-center">
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Profile</h1>
+          {!isEditing ? (
+            <Button 
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white"
+            >
+              <PenLine size={18} />
+              Edit Profile
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white"
+            >
+              <Check size={18} />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto p-4">
-        <ProfileHeader 
-          profile={profile} 
-          isEditing={isEditing} 
-          onPhotoChange={handlePhotoChange}
-          savedCollegesCount={savedColleges}
-        />
-        
-        {!isEditing ? (
-          <ProfileStats profile={profile} />
-        ) : (
-          <EditProfileForm 
-            profile={profile} 
-            setProfile={setProfile} 
-            branchInput={branchInput}
-            setBranchInput={setBranchInput}
-            addBranch={addBranch}
-            removeBranch={removeBranch}
-            locationInput={locationInput}
-            setLocationInput={setLocationInput}
-            addLocation={addLocation}
-            removeLocation={removeLocation}
-          />
-        )}
+      <div className="max-w-4xl mx-auto p-4 lg:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Profile Info */}
+          <div className="lg:col-span-1">
+            <ProfileHeader 
+              profile={profile} 
+              isEditing={isEditing} 
+              onPhotoChange={handlePhotoChange}
+              savedCollegesCount={savedColleges}
+            />
+            
+            {!isEditing && (
+              <div className="mt-6">
+                <ProfileStats profile={profile} />
+              </div>
+            )}
 
-        {!isEditing && (
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="w-full mt-6 flex items-center justify-center gap-2 text-red-500 border-red-100 hover:bg-red-50"
-          >
-            <LogOut size={18} />
-            Logout
-          </Button>
-        )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-evenly gap-2 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-blue-600"
-              onClick={() => navigate('/home')}
-            >
-              <HomeIcon className="w-7 h-7" />
-              <span className="text-xs">Home</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-purple-600"
-              onClick={() => navigate('/colleges')}
-            >
-              <Users className="w-7 h-7" />
-              <span className="text-xs">Colleges</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
-              onClick={() => navigate('/predictor')}
-            >
-              <BookOpen className="w-7 h-7" />
-              <span className="text-xs">Predictor</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-orange-600"
-              onClick={() => navigate('/news')}
-            >
-              <Newspaper className="w-7 h-7" />
-              <span className="text-xs">News</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-teal-600 bg-teal-50"
-            >
-              <User className="w-7 h-7" />
-              <span className="text-xs">Profile</span>
-            </Button>
+            {!isEditing && (
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full mt-6 flex items-center justify-center gap-2 text-red-500 border-red-200 hover:bg-red-50 hover:border-red-300"
+              >
+                <LogOut size={18} />
+                Logout
+              </Button>
+            )}
           </div>
+
+          {/* Right Column - Edit Form */}
+          {isEditing && (
+            <div className="lg:col-span-2">
+              <EditProfileForm 
+                profile={profile} 
+                setProfile={setProfile} 
+                branchInput={branchInput}
+                setBranchInput={setBranchInput}
+                addBranch={addBranch}
+                removeBranch={removeBranch}
+                locationInput={locationInput}
+                setLocationInput={setLocationInput}
+                addLocation={addLocation}
+                removeLocation={removeLocation}
+              />
+            </div>
+          )}
+
+          {/* Full Width Stats when not editing */}
+          {!isEditing && (
+            <div className="lg:col-span-2">
+              <Card className="p-6 bg-white shadow-sm border border-gray-100">
+                <h3 className="text-xl font-semibold text-gray-800 mb-6">Account Overview</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-gray-600 text-sm">Email Address</Label>
+                      <p className="text-gray-900 font-medium">{profile.email}</p>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-600 text-sm">Phone Number</Label>
+                      <p className="text-gray-900 font-medium">{profile.phone_number || 'Not provided'}</p>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-600 text-sm">Academic Field</Label>
+                      <p className="text-gray-900 font-medium">{profile.academic_field || 'Not specified'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-gray-600 text-sm">Preferred Course</Label>
+                      <p className="text-gray-900 font-medium">{profile.preferred_course || 'Not specified'}</p>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-600 text-sm">Budget Range</Label>
+                      <p className="text-gray-900 font-medium">
+                        {profile.budget_min && profile.budget_max 
+                          ? `₹${(profile.budget_min / 100000).toFixed(1)}L - ₹${(profile.budget_max / 100000).toFixed(1)}L`
+                          : 'Not specified'
+                        }
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-600 text-sm">Profile Completion</Label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-teal-500 h-2 rounded-full transition-all duration-300" 
+                            style={{ width: `${profile.profile_completion_percentage || 0}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                          {profile.profile_completion_percentage || 0}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preferences Section */}
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Preferences</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-gray-600 text-sm mb-2 block">Preferred Branches</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.preferred_branches && profile.preferred_branches.length > 0 ? (
+                          profile.preferred_branches.map((branch, idx) => (
+                            <Badge key={idx} className="bg-blue-100 text-blue-800">
+                              {branch}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-gray-500 text-sm">No preferences set</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-600 text-sm mb-2 block">Preferred Locations</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.preferred_locations && profile.preferred_locations.length > 0 ? (
+                          profile.preferred_locations.map((location, idx) => (
+                            <Badge key={idx} className="bg-green-100 text-green-800">
+                              {location}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-gray-500 text-sm">No preferences set</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </div>
