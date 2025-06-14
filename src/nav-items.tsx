@@ -12,7 +12,7 @@ import Favorites from "./pages/Favorites.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import Profile from "./pages/Profile.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
-import Search from "./pages/Search.jsx";
+import SearchPage from "./pages/Search.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
@@ -89,7 +89,7 @@ export const navItems = [
     title: "Search",
     to: "/search",
     icon: <Search className="h-4 w-4" />,
-    page: <Search />,
+    page: <SearchPage />,
   },
   {
     title: "Index",
