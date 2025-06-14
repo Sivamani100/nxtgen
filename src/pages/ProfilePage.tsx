@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -118,15 +117,21 @@ const ProfilePage = () => {
         navigate('/login');
         return;
       }
-
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      setProfile(data);
+      if (data) {
+        setProfile({
+          ...data,
+          notification_preferences: typeof data.notification_preferences === "string"
+            ? JSON.parse(data.notification_preferences)
+            : data.notification_preferences // ensure correct shape for TS (fix bug)
+        });
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');

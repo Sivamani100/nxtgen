@@ -72,42 +72,24 @@ const Home = () => {
     }
   };
 
-  const fetchLatestNews = async () => {
-    try {
-      console.log('Fetching latest news...');
-      
-      let { data, error } = await supabase
-        .from('resources')
-        .select('id, title, description, category, date, image_url, external_link, created_at')
-        .eq('category', 'news')
-        .order('created_at', { ascending: false })
-        .limit(2);
+const fetchLatestNews = async () => {
+  try {
+    // Always pull from resources where category === 'news'
+    let { data, error } = await supabase
+      .from('resources')
+      .select('id, title, description, category, date, image_url, external_link, created_at')
+      .eq('category', 'news')
+      .order('created_at', { ascending: false })
+      .limit(2);
 
-      if (error) throw error;
-      
-      console.log('Latest news fetched:', data?.length || 0, data);
-      
-      // If no news found, create sample news
-      if (!data || data.length === 0) {
-        console.log('No news found, creating sample news...');
-        await createSampleNews();
-        
-        // Fetch again after creating samples
-        const { data: newData } = await supabase
-          .from('resources')
-          .select('id, title, description, category, date, image_url, external_link, created_at')
-          .eq('category', 'news')
-          .order('created_at', { ascending: false })
-          .limit(2);
-        
-        setNews(newData || []);
-      } else {
-        setNews(data);
-      }
-    } catch (error) {
-      console.error('Error fetching news:', error);
-    }
-  };
+    if (error) throw error;
+
+    setNews(data || []);
+  } catch (error) {
+    console.error('Error fetching news:', error);
+    setNews([]); // fallback to empty, don't crash
+  }
+};
 
   const createSampleNews = async () => {
     const sampleNews = [
@@ -158,7 +140,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
-      {/* Hero Section */}
+      {/* Hero Section - removed hero image */}
       <section className="bg-gradient-to-br from-green-50 to-blue-50 py-12 lg:py-20">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
@@ -178,13 +160,7 @@ const Home = () => {
                 </Button>
               </div>
             </div>
-            <div className="relative">
-              <img
-                src="/hero-image.svg"
-                alt="College Students"
-                className="rounded-lg shadow-lg"
-              />
-            </div>
+            {/* Removed hero image from right column */}
           </div>
         </div>
       </section>

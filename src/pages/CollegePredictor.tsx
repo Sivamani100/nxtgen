@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -169,11 +168,11 @@ const CollegePredictor = () => {
 
       <div className="max-w-4xl mx-auto p-4 pb-24 lg:pb-4">
         {/* Predictor Form */}
-        <Card className="p-4 lg:p-8 mb-6 bg-white shadow-xl border-t-4 border-blue-500">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        <Card className="p-4 lg:p-8 mb-6 bg-white shadow-xl border-t-4 border-blue-500 rounded-lg">
+          <div className="space-y-4 lg:space-y-0 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             {/* Exam Selection */}
             <div>
-              <Label htmlFor="exam" className="text-sm lg:text-base font-semibold text-gray-900 mb-2 block">Select Exam</Label>
+              <Label htmlFor="exam" className="block text-xs lg:text-sm font-semibold text-gray-900 mb-1">Select Exam</Label>
               <Select value={exam} onValueChange={setExam}>
                 <SelectTrigger className="h-10 lg:h-12 border-2 border-gray-200 focus:border-blue-500">
                   <SelectValue placeholder="Choose exam" />
@@ -190,7 +189,7 @@ const CollegePredictor = () => {
 
             {/* Rank Input */}
             <div>
-              <Label htmlFor="rank" className="text-sm lg:text-base font-semibold text-gray-900 mb-2 block">Your Rank</Label>
+              <Label htmlFor="rank" className="block text-xs lg:text-sm font-semibold text-gray-900 mb-1">Your Rank</Label>
               <Input
                 id="rank"
                 type="number"
@@ -203,7 +202,7 @@ const CollegePredictor = () => {
 
             {/* Category Selection */}
             <div>
-              <Label htmlFor="category" className="text-sm lg:text-base font-semibold text-gray-900 mb-2 block">Category</Label>
+              <Label htmlFor="category" className="block text-xs lg:text-sm font-semibold text-gray-900 mb-1">Category</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="h-10 lg:h-12 border-2 border-gray-200 focus:border-indigo-500">
                   <SelectValue placeholder="Select category" />
@@ -220,7 +219,7 @@ const CollegePredictor = () => {
 
             {/* Branch Selection (Optional) */}
             <div>
-              <Label htmlFor="branch" className="text-sm lg:text-base font-semibold text-gray-900 mb-2 block">Select Branch (Optional)</Label>
+              <Label htmlFor="branch" className="block text-xs lg:text-sm font-semibold text-gray-900 mb-1">Select Branch (Optional)</Label>
               <Select value={selectedBranch} onValueChange={setSelectedBranch}>
                 <SelectTrigger className="h-10 lg:h-12 border-2 border-gray-200 focus:border-purple-500">
                   <SelectValue placeholder="Choose branch (optional)" />
@@ -240,7 +239,7 @@ const CollegePredictor = () => {
           <Button 
             onClick={predictColleges} 
             disabled={loading}
-            className="w-full mt-6 lg:mt-8 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-sm lg:text-lg font-semibold py-3 lg:py-4 shadow-lg"
+            className="w-full mt-6 lg:mt-8 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-sm lg:text-lg font-semibold py-3 lg:py-4 shadow-lg rounded"
           >
             <Calculator className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
             {loading ? 'Predicting...' : 'Predict Colleges'}
@@ -249,7 +248,7 @@ const CollegePredictor = () => {
 
         {/* Results */}
         {colleges.length > 0 && (
-          <Card className="p-4 lg:p-8 bg-white shadow-xl border-t-4 border-green-500">
+          <Card className="p-4 lg:p-8 bg-white shadow-xl border-t-4 border-green-500 rounded-lg">
             <div className="flex items-center mb-4 lg:mb-6">
               <TrendingUp className="w-6 h-6 lg:w-8 lg:h-8 text-green-600 mr-3" />
               <h3 className="text-lg lg:text-2xl font-bold text-gray-900">Predicted Colleges ({colleges.length})</h3>
@@ -258,15 +257,15 @@ const CollegePredictor = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               {colleges.map((college) => {
                 const categoryCutoff = category === 'general' ? college.cutoff_rank_general :
-                                     category === 'obc' ? college.cutoff_rank_obc :
-                                     category === 'sc' ? college.cutoff_rank_sc :
-                                     category === 'st' ? college.cutoff_rank_st :
-                                     category === 'bc_a' ? college.cutoff_rank_bc_a :
-                                     category === 'bc_b' ? college.cutoff_rank_bc_b :
-                                     category === 'bc_c' ? college.cutoff_rank_bc_c :
-                                     category === 'bc_d' ? college.cutoff_rank_bc_d :
-                                     category === 'bc_e' ? college.cutoff_rank_bc_e :
-                                     college.cutoff_rank_general;
+                                      category === 'obc' ? college.cutoff_rank_obc :
+                                      category === 'sc' ? college.cutoff_rank_sc :
+                                      category === 'st' ? college.cutoff_rank_st :
+                                      category === 'bc_a' ? college.cutoff_rank_bc_a :
+                                      category === 'bc_b' ? college.cutoff_rank_bc_b :
+                                      category === 'bc_c' ? college.cutoff_rank_bc_c :
+                                      category === 'bc_d' ? college.cutoff_rank_bc_d :
+                                      category === 'bc_e' ? college.cutoff_rank_bc_e :
+                                      college.cutoff_rank_general;
 
                 const availableBranches = getBranchPrediction(college, parseInt(rank), category);
 

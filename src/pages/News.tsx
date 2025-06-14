@@ -7,13 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Newspaper, 
-  Calendar, 
-  ExternalLink, 
-  Search,
   Filter,
   BookOpen,
   Clock,
-  TrendingUp
+  ExternalLink,
+  Search
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -54,98 +52,40 @@ const News = () => {
 
   const fetchNews = async () => {
     try {
-      console.log('Fetching news...');
-      
+      setLoading(true);
       const { data, error } = await supabase
         .from('resources')
         .select('*')
         .eq('category', 'news')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching news:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Fetched news:', data?.length || 0, data);
       setNews(data || []);
-      
-      // If no news found, create some sample news for demonstration
-      if (!data || data.length === 0) {
-        console.log('No news found, creating sample news...');
-        await createSampleNews();
-      }
     } catch (error) {
-      console.error('Error fetching news:', error);
       toast.error('Failed to load news');
+      setNews([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const createSampleNews = async () => {
-    const sampleNews = [
-      {
-        title: 'JEE Main 2024 Registration Opens',
-        description: 'National Testing Agency (NTA) has opened the registration for JEE Main 2024. Students can apply online through the official website.',
-        category: 'exam',
-        date: '2024-01-15',
-        external_link: 'https://jeemain.nta.nic.in'
-      },
-      {
-        title: 'NEET 2024 Exam Date Announced',
-        description: 'The National Eligibility cum Entrance Test (NEET) 2024 will be conducted on May 5, 2024. Registration starts from February 9, 2024.',
-        category: 'exam',
-        date: '2024-01-10',
-        external_link: 'https://neet.nta.nic.in'
-      },
-      {
-        title: 'AP EAMCET Results 2024 Declared',
-        description: 'Andhra Pradesh State Council of Higher Education has declared the results for AP EAMCET 2024. Students can check their results online.',
-        category: 'result',
-        date: '2024-01-08',
-        external_link: 'https://sche.ap.gov.in'
-      }
-    ];
-
-    try {
-      for (const newsItem of sampleNews) {
-        await supabase.from('resources').insert([newsItem]);
-      }
-      
-      // Fetch news again after creating samples
-      const { data } = await supabase
-        .from('resources')
-        .select('*')
-        .eq('category', 'news')
-        .order('created_at', { ascending: false });
-      
-      setNews(data || []);
-    } catch (error) {
-      console.error('Error creating sample news:', error);
-    }
-  };
-
   const filterNews = () => {
     let filtered = news;
-
-    // Filter by search query
     if (searchQuery.trim()) {
       filtered = filtered.filter(item =>
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Filter by category
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(item => item.category === selectedCategory);
     }
-
     setFilteredNews(filtered);
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -188,7 +128,6 @@ const News = () => {
           </div>
         </div>
       </div>
-
       {/* Desktop Header */}
       <div className="hidden lg:block bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto p-6">
@@ -203,7 +142,6 @@ const News = () => {
       <div className="max-w-6xl mx-auto p-4 lg:p-6">
         {/* Search and Filter Section */}
         <div className="mb-6 space-y-4">
-          {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-gray-400" />
             <Input
@@ -213,8 +151,6 @@ const News = () => {
               className="pl-10 lg:pl-12 h-10 lg:h-12 text-sm lg:text-base border-gray-200 focus:border-green-500"
             />
           </div>
-
-          {/* Category Filters */}
           <div className="flex items-center space-x-2 overflow-x-auto pb-2">
             <Filter className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
             {categories.map((category) => (
@@ -234,7 +170,6 @@ const News = () => {
             ))}
           </div>
         </div>
-
         {/* News Content */}
         {filteredNews.length === 0 ? (
           <div className="text-center py-12">
@@ -267,16 +202,13 @@ const News = () => {
                       {formatDate(item.date || item.created_at)}
                     </div>
                   </div>
-
                   {/* Content */}
                   <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
                     {item.title}
                   </h3>
-                  
                   <p className="text-xs lg:text-sm text-gray-600 mb-4 line-clamp-3">
                     {item.description}
                   </p>
-
                   {/* Footer */}
                   {item.external_link && (
                     <div className="flex items-center text-xs lg:text-sm text-green-600 font-medium group-hover:text-green-700">
