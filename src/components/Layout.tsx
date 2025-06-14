@@ -48,7 +48,7 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen bg-white">
       {/* Desktop Sidebar - Left side - Only show on lg and above */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
-        isSidebarCollapsed ? 'lg:w-[61px]' : 'lg:w-64'
+        isSidebarCollapsed ? 'lg:w-[71px]' : 'lg:w-64'
       }`}>
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
@@ -96,7 +96,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
 
       {/* Main Content - Adjust margin for desktop sidebar */}
-      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-[61px]' : 'lg:pl-64'}`}>
+      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-[71px]' : 'lg:pl-64'}`}>
         <div className="pb-[70px] lg:pb-0 min-h-screen">
           {children}
         </div>
