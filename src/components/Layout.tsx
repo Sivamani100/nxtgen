@@ -88,64 +88,20 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       </div>
 
-      {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 shadow-md">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-            NXTGEN
-          </h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="hover:bg-green-50"
-          >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </Button>
-        </div>
-
-        {/* Mobile Menu Dropdown */}
-        {isMobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg">
-            <nav className="px-4 py-2 space-y-1">
-              {navigationItems.map((item) => (
-                <Button
-                  key={item.path}
-                  variant={isActive(item.path) ? "default" : "ghost"}
-                  className={`w-full justify-start text-left h-10 ${
-                    isActive(item.path)
-                      ? "bg-gradient-to-r from-green-500 to-blue-500 text-white"
-                      : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50"
-                  }`}
-                  onClick={() => navigate(item.path)}
-                >
-                  <item.icon className="w-4 h-4 mr-3" />
-                  {item.label}
-                </Button>
-              ))}
-            </nav>
-          </div>
-        )}
-      </div>
-
       {/* Main Content */}
       <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
-        <div className="pt-16 lg:pt-0 pb-16 lg:pb-0">
+        <div className="pb-[70px] lg:pb-0">
           {children}
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation - Clean Design like in image */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-        <div className="flex justify-around items-center py-2 px-1">
+      {/* Mobile Bottom Navigation - Reduced height to 70px */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 h-[70px]">
+        <div className="flex justify-around items-center py-2 px-1 h-full">
           {mobileNavigationItems.map((item) => (
             <button
               key={item.path}
-              className={`flex flex-col items-center justify-center p-2 min-w-0 flex-1 transition-all duration-200 ${
-                isActive(item.path)
-                  ? ""
-                  : ""
-              }`}
+              className={`flex flex-col items-center justify-center p-1 min-w-0 flex-1 transition-all duration-200 h-full`}
               onClick={() => navigate(item.path)}
             >
               <div className={`p-2 rounded-full transition-all duration-200 ${
