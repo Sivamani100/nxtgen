@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -305,7 +304,7 @@ const Profile = () => {
       };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-20">
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-white shadow-sm p-4 flex justify-between items-center">
         <h1 className="text-xl font-semibold text-gray-800">Profile</h1>
@@ -329,368 +328,369 @@ const Profile = () => {
         )}
       </div>
 
-      {/* Content */}
-      <div className="max-w-md mx-auto p-4 space-y-4">
-        {/* Profile Header */}
-        <Card className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-          <div className="text-center">
-            <div className="w-20 h-20 bg-teal-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold">
-              {profile.profile_picture_url ? (
-                <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
-              ) : (
-                profile.full_name ? profile.full_name[0] : profile.email[0]
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-4 lg:grid lg:grid-cols-4 lg:gap-6">
+        {/* Sidebar (1 column) */}
+        <div className="lg:col-span-1 mb-4 lg:mb-0">
+          <Card className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-teal-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold">
+                {profile.profile_picture_url ? (
+                  <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  profile.full_name ? profile.full_name[0] : profile.email[0]
+                )}
+              </div>
+              {isEditing && (
+                <div className="mb-4">
+                  <Label htmlFor="profilePhoto" className="text-gray-600">Change Profile Photo</Label>
+                  <Input
+                    id="profilePhoto"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="mt-1 bg-gray-100 text-gray-800 border-gray-300"
+                  />
+                </div>
+              )}
+              <h2 className="text-xl font-semibold text-gray-800 mb-1">
+                {profile.full_name || profile.email.split('@')[0]}
+              </h2>
+              <p className="text-gray-600 mb-4">{profile.email}</p>
+              <div className="flex justify-center gap-6">
+                <div>
+                  <p className="text-lg font-semibold text-teal-500">{calculateProfileCompletion()}%</p>
+                  <p className="text-sm text-gray-500">Profile Complete</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-teal-500">{savedColleges}</p>
+                  <p className="text-sm text-gray-500">Saved Colleges</p>
+                </div>
+              </div>
+              {!isEditing && (
+                <Button 
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="mt-4 w-full text-red-500 border-gray-300 hover:bg-gray-100 rounded-full flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </Button>
               )}
             </div>
-            {isEditing && (
-              <div className="mb-4">
-                <Label htmlFor="profilePhoto" className="text-gray-600">Change Profile Photo</Label>
-                <Input
-                  id="profilePhoto"
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="mt-1 bg-gray-100 text-gray-800 border-gray-300"
-                />
+          </Card>
+        </div>
+
+        {/* Main Content (3 columns) */}
+        <div className="lg:col-span-3 space-y-4">
+          {/* Personal Information */}
+          <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
+            {isEditing ? (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-gray-600">Full Name</Label>
+                  <Input
+                    value={profile.full_name || ''}
+                    onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                    className="border-gray-200 focus:border-teal-500 rounded-md"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div>
+                  <Label className="text-gray-600">Email</Label>
+                  <Input
+                    value={profile.email || ''}
+                    disabled
+                    className="bg-gray-100 border-gray-200 rounded-md"
+                  />
+                </div>
+                <div>
+                  <Label className="text-gray-600">Phone Number</Label>
+                  <Input
+                    value={profile.phone_number || ''}
+                    onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                    className="border-gray-200 focus:border-teal-500 rounded-md"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-gray-600 font-medium">Full Name</Label>
+                  <p className="text-gray-800">{profile.full_name || 'Not set'}</p>
+                </div>
+                <div>
+                  <Label className="text-gray-600 font-medium">Email</Label>
+                  <p className="text-gray-800">{profile.email}</p>
+                </div>
+                <div>
+                  <Label className="text-gray-600 font-medium">Phone Number</Label>
+                  <p className="text-gray-800">{profile.phone_number || 'Not set'}</p>
+                </div>
               </div>
             )}
-            <h2 className="text-xl font-semibold text-gray-800 mb-1">
-              {profile.full_name || profile.email.split('@')[0]}
-            </h2>
-            <p className="text-gray-600 mb-4">{profile.email}</p>
-            <div className="flex justify-center gap-6">
-              <div>
-                <p className="text-lg font-semibold text-teal-500">{calculateProfileCompletion()}%</p>
-                <p className="text-sm text-gray-500">Profile Complete</p>
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-teal-500">{savedColleges}</p>
-                <p className="text-sm text-gray-500">Saved Colleges</p>
-              </div>
-            </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Personal Information */}
-        <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
-          {isEditing ? (
-            <div className="space-y-4">
-              <div>
-                <Label className="text-gray-600">Full Name</Label>
-                <Input
-                  value={profile.full_name || ''}
-                  onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                  className="border-gray-200 focus:border-teal-500 rounded-md"
-                  placeholder="Enter your full name"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-600">Email</Label>
-                <Input
-                  value={profile.email || ''}
-                  disabled
-                  className="bg-gray-100 border-gray-200 rounded-md"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-600">Phone Number</Label>
-                <Input
-                  value={profile.phone_number || ''}
-                  onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
-                  className="border-gray-200 focus:border-teal-500 rounded-md"
-                  placeholder="Enter your phone number"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <Label className="text-gray-600 font-medium">Full Name</Label>
-                <p className="text-gray-800">{profile.full_name || 'Not set'}</p>
-              </div>
-              <div>
-                <Label className="text-gray-600 font-medium">Email</Label>
-                <p className="text-gray-800">{profile.email}</p>
-              </div>
-              <div>
-                <Label className="text-gray-600 font-medium">Phone Number</Label>
-                <p className="text-gray-800">{profile.phone_number || 'Not set'}</p>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Academic Information */}
-        <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Academic Information</h3>
-          {isEditing ? (
-            <div className="space-y-4">
-              <div>
-                <Label className="text-gray-600">Current Education Level</Label>
-                <Select
-                  value={profile.academic_field || ''}
-                  onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
-                >
-                  <SelectTrigger className="border-gray-200 focus:border-teal-500 rounded-md">
-                    <SelectValue placeholder="Select your education level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="12th Grade">12th Grade</SelectItem>
-                    <SelectItem value="engineering">Engineering</SelectItem>
-                    <SelectItem value="medical">Medical</SelectItem>
-                    <SelectItem value="commerce">Commerce</SelectItem>
-                    <SelectItem value="arts">Arts</SelectItem>
-                    <SelectItem value="science">Science</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-gray-600">Preferred Course</Label>
-                <Select
-                  value={profile.preferred_course || ''}
-                  onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
-                >
-                  <SelectTrigger className="border-gray-200 focus:border-teal-500 rounded-md">
-                    <SelectValue placeholder="Select your preferred course" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="B.Tech">B.Tech</SelectItem>
-                    <SelectItem value="MBBS">MBBS</SelectItem>
-                    <SelectItem value="B.Com">B.Com</SelectItem>
-                    <SelectItem value="BBA">BBA</SelectItem>
-                    <SelectItem value="B.Sc">B.Sc</SelectItem>
-                    <SelectItem value="B.A">B.A</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <Label className="text-gray-600 font-medium">Current Education Level</Label>
-                <p className="text-gray-800">{profile.academic_field || 'Not set'}</p>
-              </div>
-              <div>
-                <Label className="text-gray-600 font-medium">Preferred Course</Label>
-                <p className="text-gray-800">{profile.preferred_course || 'Not set'}</p>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Preferences */}
-        <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Preferences</h3>
-          {isEditing ? (
-            <div className="space-y-6">
-              <div>
-                <Label className="text-gray-600 mb-2 block">Preferred Branches</Label>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {profile.preferred_branches?.map((branch, idx) => (
-                    <Badge 
-                      key={idx} 
-                      className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default rounded-full"
-                    >
-                      {branch}
-                      <button 
-                        onClick={() => removeBranch(branch)}
-                        className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={branchInput}
-                    onChange={(e) => setBranchInput(e.target.value)}
-                    placeholder="Add branch"
-                    className="border-gray-200 focus:border-teal-500 rounded-md"
-                  />
-                  <Button 
-                    onClick={addBranch} 
-                    size="sm" 
-                    className="bg-teal-500 hover:bg-teal-600 text-white rounded-md"
+          {/* Academic Information */}
+          <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Academic Information</h3>
+            {isEditing ? (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-gray-600">Current Education Level</Label>
+                  <Select
+                    value={profile.academic_field || ''}
+                    onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
                   >
-                    Add
-                  </Button>
+                    <SelectTrigger className="border-gray-200 focus:border-teal-500 rounded-md">
+                      <SelectValue placeholder="Select your education level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="12th Grade">12th Grade</SelectItem>
+                      <SelectItem value="engineering">Engineering</SelectItem>
+                      <SelectItem value="medical">Medical</SelectItem>
+                      <SelectItem value="commerce">Commerce</SelectItem>
+                      <SelectItem value="arts">Arts</SelectItem>
+                      <SelectItem value="science">Science</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-              <div>
-                <Label className="text-gray-600 mb-2 block">Preferred Locations</Label>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {profile.preferred_locations?.map((location, idx) => (
-                    <Badge 
-                      key={idx} 
-                      className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default rounded-full"
-                    >
-                      {location}
-                      <button 
-                        onClick={() => removeLocation(location)}
-                        className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                    placeholder="Add location"
-                    className="border-gray-200 focus:border-teal-500 rounded-md"
-                  />
-                  <Button 
-                    onClick={addLocation} 
-                    size="sm" 
-                    className="bg-teal-500 hover:bg-teal-600 text-white rounded-md"
+                <div>
+                  <Label className="text-gray-600">Preferred Course</Label>
+                  <Select
+                    value={profile.preferred_course || ''}
+                    onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
                   >
-                    Add
-                  </Button>
+                    <SelectTrigger className="border-gray-200 focus:border-teal-500 rounded-md">
+                      <SelectValue placeholder="Select your preferred course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="B.Tech">B.Tech</SelectItem>
+                      <SelectItem value="MBBS">MBBS</SelectItem>
+                      <SelectItem value="B.Com">B.Com</SelectItem>
+                      <SelectItem value="BBA">BBA</SelectItem>
+                      <SelectItem value="B.Sc">B.Sc</SelectItem>
+                      <SelectItem value="B.A">B.A</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+            ) : (
+              <div className="space-y-1">
                 <div>
-                  <Label className="text-gray-600">Budget Min (₹)</Label>
-                  <Input
-                    type="number"
-                    value={profile.budget_min || ''}
-                    onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || null })}
-                    className="border-gray-200 focus:border-teal-500 rounded-md"
-                    placeholder="Minimum budget"
+                  <Label className="text-gray-600 font-medium">Current Education Level</Label>
+                  <p className="text-gray-800">{profile.academic_field || 'Not set'}</p>
+                </div>
+                <div>
+                  <Label className="text-gray-600 font-medium">Preferred Course</Label>
+                  <p className="text-gray-800">{profile.preferred_course || 'Not set'}</p>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Preferences */}
+          <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Preferences</h3>
+            {isEditing ? (
+              <div className="space-y-6">
+                <div>
+                  <Label className="text-gray-600 mb-2 block">Preferred Branches</Label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {profile.preferred_branches?.map((branch, idx) => (
+                      <Badge 
+                        key={idx} 
+                        className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default rounded-full"
+                      >
+                        {branch}
+                        <button 
+                          onClick={() => removeBranch(branch)}
+                          className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={branchInput}
+                      onChange={(e) => setBranchInput(e.target.value)}
+                      placeholder="Add branch"
+                      className="border-gray-200 focus:border-teal-500 rounded-md"
+                    />
+                    <Button 
+                      onClick={addBranch} 
+                      size="sm" 
+                      className="bg-teal-500 hover:bg-teal-600 text-white rounded-md"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-gray-600 mb-2 block">Preferred Locations</Label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {profile.preferred_locations?.map((location, idx) => (
+                      <Badge 
+                        key={idx} 
+                        className="bg-teal-100 text-teal-800 hover:bg-teal-200 gap-1.5 pl-3 cursor-default rounded-full"
+                      >
+                        {location}
+                        <button 
+                          onClick={() => removeLocation(location)}
+                          className="ml-1 text-teal-600 hover:text-teal-800 focus:outline-none"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      placeholder="Add location"
+                      className="border-gray-200 focus:border-teal-500 rounded-md"
+                    />
+                    <Button 
+                      onClick={addLocation} 
+                      size="sm" 
+                      className="bg-teal-500 hover:bg-teal-600 text-white rounded-md"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-600">Budget Min (₹)</Label>
+                    <Input
+                      type="number"
+                      value={profile.budget_min || ''}
+                      onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || null })}
+                      className="border-gray-200 focus:border-teal-500 rounded-md"
+                      placeholder="Minimum budget"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-600">Budget Max (₹)</Label>
+                    <Input
+                      type="number"
+                      value={profile.budget_max || ''}
+                      onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || null })}
+                      className="border-gray-200 focus:border-teal-500 rounded-md"
+                      placeholder="Maximum budget"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-gray-600 font-medium">Preferred Branches</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.preferred_branches?.length ? (
+                      profile.preferred_branches.map((branch, idx) => (
+                        <Badge key={idx} className="bg-teal-100 text-teal-800 rounded-full">{branch}</Badge>
+                      ))
+                    ) : (
+                      <p className="text-gray-800">None</p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-gray-600 font-medium">Preferred Locations</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.preferred_locations?.length ? (
+                      profile.preferred_locations.map((location, idx) => (
+                        <Badge key={idx} className="bg-teal-100 text-teal-800 rounded-full">{location}</Badge>
+                      ))
+                    ) : (
+                      <p className="text-gray-800">None</p>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-600 font-medium">Budget Min (₹)</Label>
+                    <p className="text-gray-800">{profile.budget_min || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600 font-medium">Budget Max (₹)</Label>
+                    <p className="text-gray-800">{profile.budget_max || 'Not set'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Notification Preferences */}
+          <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Notification Preferences</h3>
+            {isEditing ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-gray-600">Scholarship Updates</Label>
+                    <p className="text-sm text-gray-500">Get notified about new scholarships</p>
+                  </div>
+                  <Switch
+                    checked={notificationPrefs?.scholarships ?? true}
+                    onCheckedChange={(checked) => updateNotificationPreference('scholarships', checked)}
+                    disabled={!isEditing}
+                    className="data-[state=checked]:bg-teal-500"
                   />
                 </div>
-                <div>
-                  <Label className="text-gray-600">Budget Max (₹)</Label>
-                  <Input
-                    type="number"
-                    value={profile.budget_max || ''}
-                    onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || null })}
-                    className="border-gray-200 focus:border-teal-500 rounded-md"
-                    placeholder="Maximum budget"
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-gray-600">Admission Updates</Label>
+                    <p className="text-sm text-gray-500">Get notified about admission deadlines</p>
+                  </div>
+                  <Switch
+                    checked={notificationPrefs?.admissions ?? true}
+                    onCheckedChange={(checked) => updateNotificationPreference('admissions', checked)}
+                    disabled={!isEditing}
+                    className="data-[state=checked]:bg-teal-500"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-gray-600">Event Updates</Label>
+                    <p className="text-sm text-gray-500">Get notified about educational events</p>
+                  </div>
+                  <Switch
+                    checked={notificationPrefs?.events ?? true}
+                    onCheckedChange={(checked) => updateNotificationPreference('events', checked)}
+                    disabled={!isEditing}
+                    className="data-[state=checked]:bg-teal-500"
                   />
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <Label className="text-gray-600 font-medium">Preferred Branches</Label>
-                <div className="flex flex-wrap gap-2">
-                  {profile.preferred_branches?.length ? (
-                    profile.preferred_branches.map((branch, idx) => (
-                      <Badge key={idx} className="bg-teal-100 text-teal-800 rounded-full">{branch}</Badge>
-                    ))
-                  ) : (
-                    <p className="text-gray-800">None</p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label className="text-gray-600 font-medium">Preferred Locations</Label>
-                <div className="flex flex-wrap gap-2">
-                  {profile.preferred_locations?.length ? (
-                    profile.preferred_locations.map((location, idx) => (
-                      <Badge key={idx} className="bg-teal-100 text-teal-800 rounded-full">{location}</Badge>
-                    ))
-                  ) : (
-                    <p className="text-gray-800">None</p>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            ) : (
+              <div className="space-y-3">
                 <div>
-                  <Label className="text-gray-600 font-medium">Budget Min (₹)</Label>
-                  <p className="text-gray-800">{profile.budget_min || 'Not set'}</p>
+                  <Label className="text-gray-600 font-medium">Scholarship Updates</Label>
+                  <p className="text-gray-800">{notificationPrefs?.scholarships ? 'On' : 'Off'}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-600 font-medium">Budget Max (₹)</Label>
-                  <p className="text-gray-800">{profile.budget_max || 'Not set'}</p>
+                  <Label className="text-gray-600 font-medium">Admission Updates</Label>
+                  <p className="text-gray-800">{notificationPrefs?.admissions ? 'On' : 'Off'}</p>
                 </div>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Notification Preferences */}
-        <Card className="p-5 bg-white shadow-sm border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Notification Preferences</h3>
-          {isEditing ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-gray-600">Scholarship Updates</Label>
-                  <p className="text-sm text-gray-500">Get notified about new scholarships</p>
+                  <Label className="text-gray-600 font-medium">Event Updates</Label>
+                  <p className="text-gray-800">{notificationPrefs?.events ? 'On' : 'Off'}</p>
                 </div>
-                <Switch
-                  checked={notificationPrefs?.scholarships ?? true}
-                  onCheckedChange={(checked) => updateNotificationPreference('scholarships', checked)}
-                  disabled={!isEditing}
-                  className="data-[state=checked]:bg-teal-500"
-                />
               </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-gray-600">Admission Updates</Label>
-                  <p className="text-sm text-gray-500">Get notified about admission deadlines</p>
-                </div>
-                <Switch
-                  checked={notificationPrefs?.admissions ?? true}
-                  onCheckedChange={(checked) => updateNotificationPreference('admissions', checked)}
-                  disabled={!isEditing}
-                  className="data-[state=checked]:bg-teal-500"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-gray-600">Event Updates</Label>
-                  <p className="text-sm text-gray-500">Get notified about educational events</p>
-                </div>
-                <Switch
-                  checked={notificationPrefs?.events ?? true}
-                  onCheckedChange={(checked) => updateNotificationPreference('events', checked)}
-                  disabled={!isEditing}
-                  className="data-[state=checked]:bg-teal-500"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <Label className="text-gray-600 font-medium">Scholarship Updates</Label>
-                <p className="text-gray-800">{notificationPrefs?.scholarships ? 'On' : 'Off'}</p>
-              </div>
-              <div>
-                <Label className="text-gray-600 font-medium">Admission Updates</Label>
-                <p className="text-gray-800">{notificationPrefs?.admissions ? 'On' : 'Off'}</p>
-              </div>
-              <div>
-                <Label className="text-gray-600 font-medium">Event Updates</Label>
-                <p className="text-gray-800">{notificationPrefs?.events ? 'On' : 'Off'}</p>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Action Buttons */}
-        {!isEditing && (
-          <div className="space-y-3 mt-6">
-            <Button 
-              onClick={handleLogout}
-              variant="outline"
-              className="w-full text-red-500 border-gray-300 hover:bg-gray-100 rounded-full flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
-          </div>
-        )}
+            )}
+          </Card>
+        </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+      {/* Bottom Navigation (Mobile Only) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-evenly gap-2 py-3">
             <Button
