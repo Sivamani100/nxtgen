@@ -40,7 +40,6 @@ const Search = () => {
   const collegeTypes = [
     { value: 'all', label: 'All Types' },
     { value: 'engineering', label: 'Engineering' },
-    { value: 'medical', label: 'Medical' },
     { value: 'management', label: 'Management' },
     { value: 'arts', label: 'Arts' },
     { value: 'science', label: 'Science' }
@@ -69,13 +68,27 @@ const Search = () => {
     setHasSearched(true);
 
     try {
-      const { data, error } = await supabase
+      console.log('Searching for:', searchQuery);
+      
+      let query = supabase
         .from('colleges')
         .select('*')
-        .or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
-        .limit(50);
+        .not('type', 'ilike', '%polytechnic%')
+        .not('type', 'ilike', '%medical%');
 
-      if (error) throw error;
+      // Add search conditions
+      if (searchQuery.trim()) {
+        query = query.or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
+
+      const { data, error } = await query.limit(50);
+
+      if (error) {
+        console.error('Search error:', error);
+        throw error;
+      }
+
+      console.log('Search results:', data?.length || 0);
       setColleges(data || []);
     } catch (error) {
       console.error('Error searching colleges:', error);
@@ -237,7 +250,7 @@ const Search = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <Star className="w-3 h-3 lg:w-4 lg:h-4 text-yellow-500 mr-1" />
-                          <span className="font-semibold text-gray-900 text-xs lg:text-sm">{college.rating}</span>
+                          <span className="font-semibold text-gray-900 text-xs lg:text-sm">{college.rating || 'N/A'}</span>
                         </div>
                         <span className="text-xs lg:text-sm font-medium text-green-600">
                           ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L/year

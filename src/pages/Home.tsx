@@ -1,27 +1,23 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { 
-  Search, 
-  BookOpen, 
-  TrendingUp, 
-  Calendar, 
-  Users, 
+import { Badge } from "@/components/ui/badge";
+import {
   Newspaper,
-  GraduationCap,
-  Target,
-  Award,
-  Clock,
+  Calendar,
+  ExternalLink,
   MapPin,
   Star,
-  ExternalLink,
-  GitCompare
+  GraduationCap,
+  Search,
+  Filter,
+  BookOpen,
+  Clock,
+  TrendingUp,
+  ArrowRight
 } from "lucide-react";
-import { toast } from "sonner";
 
 interface College {
   id: number;
@@ -46,45 +42,20 @@ interface NewsItem {
 }
 
 const Home = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<College[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [popularColleges, setPopularColleges] = useState<College[]>([]);
-  const [latestNews, setLatestNews] = useState<NewsItem[]>([]);
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const searchColleges = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('colleges')
-        .select('*')
-        .or(`name.ilike.%${query}%,location.ilike.%${query}%,type.ilike.%${query}%`)
-        .not('type', 'ilike', '%polytechnic%')
-        .not('type', 'ilike', '%medical%')
-        .limit(10);
-
-      if (error) throw error;
-      
-      setSearchResults(data || []);
-      setShowResults(true);
-    } catch (error) {
-      console.error('Error searching colleges:', error);
-      toast.error('Failed to search colleges');
-    } finally {
+  useEffect(() => {
+    Promise.all([fetchPopularColleges(), fetchLatestNews()]).finally(() => {
       setLoading(false);
-    }
-  };
+    });
+  }, []);
 
   const fetchPopularColleges = async () => {
     try {
+      console.log('Fetching popular colleges...');
       const { data, error } = await supabase
         .from('colleges')
         .select('id, name, location, type, rating, total_fees_min, placement_percentage, image_url')
@@ -95,311 +66,329 @@ const Home = () => {
 
       if (error) throw error;
       console.log('Popular colleges fetched:', data?.length || 0);
-      setPopularColleges(data || []);
+      setColleges(data || []);
     } catch (error) {
-      console.error('Error fetching popular colleges:', error);
+      console.error('Error fetching colleges:', error);
     }
   };
 
   const fetchLatestNews = async () => {
     try {
       console.log('Fetching latest news...');
-      const { data, error } = await supabase
+      
+      let { data, error } = await supabase
         .from('resources')
         .select('id, title, description, category, date, image_url, external_link, created_at')
         .eq('category', 'news')
         .order('created_at', { ascending: false })
         .limit(2);
 
-      if (error) {
-        console.error('Supabase error fetching news:', error);
-        throw error;
-      }
+      if (error) throw error;
       
       console.log('Latest news fetched:', data?.length || 0, data);
-      setLatestNews(data || []);
-    } catch (error) {
-      console.error('Error fetching latest news:', error);
-      // Try to fetch from a different approach if the first fails
-      try {
-        const { data: fallbackData, error: fallbackError } = await supabase
+      
+      // If no news found, create sample news
+      if (!data || data.length === 0) {
+        console.log('No news found, creating sample news...');
+        await createSampleNews();
+        
+        // Fetch again after creating samples
+        const { data: newData } = await supabase
           .from('resources')
-          .select('*')
+          .select('id, title, description, category, date, image_url, external_link, created_at')
+          .eq('category', 'news')
+          .order('created_at', { ascending: false })
           .limit(2);
         
-        if (!fallbackError && fallbackData) {
-          console.log('Fallback news data:', fallbackData);
-          setLatestNews(fallbackData.slice(0, 2));
-        }
-      } catch (fallbackErr) {
-        console.error('Fallback news fetch failed:', fallbackErr);
+        setNews(newData || []);
+      } else {
+        setNews(data);
       }
+    } catch (error) {
+      console.error('Error fetching news:', error);
     }
   };
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      searchColleges(searchQuery);
-    }, 300);
+  const createSampleNews = async () => {
+    const sampleNews = [
+      {
+        title: 'JEE Main 2024 Registration Opens',
+        description: 'National Testing Agency (NTA) has opened the registration for JEE Main 2024. Students can apply online through the official website.',
+        category: 'news',
+        date: '2024-01-15',
+        external_link: 'https://jeemain.nta.nic.in'
+      },
+      {
+        title: 'NEET 2024 Exam Date Announced',
+        description: 'The National Eligibility cum Entrance Test (NEET) 2024 will be conducted on May 5, 2024. Registration starts from February 9, 2024.',
+        category: 'news',
+        date: '2024-01-10',
+        external_link: 'https://neet.nta.nic.in'
+      }
+    ];
 
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    fetchPopularColleges();
-    fetchLatestNews();
-  }, []);
-
-  const quickActions = [
-    {
-      title: "College Finder",
-      description: "Browse and compare colleges",
-      icon: GraduationCap,
-      path: "/colleges",
-      gradient: "from-blue-500 to-blue-600",
-      bgGradient: "from-blue-50 to-blue-100"
-    },
-    {
-      title: "Rank Predictor",
-      description: "Predict your entrance exam rank",
-      icon: Target,
-      path: "/predictor",
-      gradient: "from-green-500 to-green-600",
-      bgGradient: "from-green-50 to-green-100"
-    },
-    {
-      title: "Latest News",
-      description: "Stay updated with announcements",
-      icon: Newspaper,
-      path: "/news",
-      gradient: "from-purple-500 to-purple-600",
-      bgGradient: "from-purple-50 to-purple-100"
-    },
-    {
-      title: "Compare Colleges",
-      description: "Compare multiple colleges",
-      icon: GitCompare,
-      path: "/compare",
-      gradient: "from-pink-500 to-pink-600",
-      bgGradient: "from-pink-50 to-pink-100"
+    try {
+      for (const newsItem of sampleNews) {
+        await supabase.from('resources').insert([newsItem]);
+      }
+    } catch (error) {
+      console.error('Error creating sample news:', error);
     }
-  ];
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'exam': return 'bg-blue-100 text-blue-800';
+      case 'admission': return 'bg-green-100 text-green-800';
+      case 'scholarship': return 'bg-purple-100 text-purple-800';
+      case 'result': return 'bg-orange-100 text-orange-800';
+      case 'notification': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
       {/* Hero Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-6 lg:py-8">
-          <div className="text-center space-y-4 lg:space-y-6">
-            <div className="space-y-2 lg:space-y-3">
-              <h1 className="text-2xl lg:text-4xl font-bold text-gray-900">
-                Find Your Perfect College
+      <section className="bg-gradient-to-br from-green-50 to-blue-50 py-12 lg:py-20">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
+            <div className="text-center lg:text-left">
+              <h1 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4">
+                Your Future Starts Here
               </h1>
-              <p className="text-base lg:text-lg text-gray-600 max-w-2xl mx-auto">
-                Discover, compare, and get admitted to the best colleges for your future
+              <p className="text-lg lg:text-xl text-gray-700 mb-8">
+                Explore colleges, courses, and career opportunities.
               </p>
-            </div>
-
-            {/* Search Section */}
-            <div className="max-w-2xl mx-auto space-y-4">
-              <div className="relative">
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search colleges by name, location, or type..."
-                  className="h-12 lg:h-14 text-base lg:text-lg pl-12 pr-4 border-2 border-gray-200 focus:border-green-500 bg-white shadow-sm rounded-lg"
-                />
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                {loading && (
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
-                  </div>
-                )}
+              <div className="space-x-3">
+                <Button size="lg" onClick={() => navigate('/colleges')}>
+                  Explore Colleges
+                </Button>
+                <Button variant="outline" size="lg" onClick={() => navigate('/predictor')}>
+                  Predict Your Rank
+                </Button>
               </div>
-
-              {/* Search Results */}
-              {showResults && (
-                <Card className="max-h-80 overflow-y-auto bg-white shadow-lg border border-gray-200 rounded-lg">
-                  {searchResults.length > 0 ? (
-                    <div className="p-2">
-                      {searchResults.map((college) => (
-                        <div
-                          key={college.id}
-                          className="p-3 lg:p-4 hover:bg-gray-50 rounded-lg cursor-pointer transition-all duration-200 border-b border-gray-100 last:border-b-0"
-                          onClick={() => navigate(`/college-details/${college.id}`)}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-900 mb-1 text-sm lg:text-base">{college.name}</h3>
-                              <div className="flex items-center space-x-4 text-xs lg:text-sm text-gray-600">
-                                <div className="flex items-center">
-                                  <MapPin className="w-3 h-3 lg:w-4 lg:h-4 mr-1 text-green-500" />
-                                  {college.location}
-                                </div>
-                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                                  {college.type}
-                                </span>
-                              </div>
-                            </div>
-                            <GraduationCap className="w-5 h-5 lg:w-6 lg:h-6 text-blue-500" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-6 lg:p-8 text-center text-gray-500">
-                      <Search className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-3 text-gray-400" />
-                      <p className="text-sm lg:text-base">No colleges found matching your search.</p>
-                    </div>
-                  )}
-                </Card>
-              )}
+            </div>
+            <div className="relative">
+              <img
+                src="/hero-image.svg"
+                alt="College Students"
+                className="rounded-lg shadow-lg"
+              />
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Popular Colleges Section */}
-      <div className="bg-gray-50 border-y border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-8 lg:py-12">
+      <section className="py-8 lg:py-12 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between mb-6 lg:mb-8">
             <div>
-              <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Popular Colleges</h2>
-              <p className="text-sm lg:text-base text-gray-600">Top-rated colleges based on student reviews</p>
+              <h2 className="text-xl lg:text-3xl font-bold text-gray-900 mb-2">Popular Colleges</h2>
+              <p className="text-sm lg:text-base text-gray-600">Discover top-rated institutions</p>
             </div>
             <Button 
               variant="outline" 
               onClick={() => navigate('/colleges')}
-              className="border-green-500 text-green-600 hover:bg-green-50 text-sm lg:text-base"
+              className="text-sm lg:text-base hover:bg-green-50 hover:border-green-300"
             >
-              View All
+              View All <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            {popularColleges.map((college) => (
-              <Card
-                key={college.id}
-                className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 bg-white border border-gray-200"
-                onClick={() => navigate(`/college-details/${college.id}`)}
-              >
-                {college.image_url && (
-                  <img 
-                    src={college.image_url} 
-                    alt={college.name}
-                    className="w-full h-32 lg:h-40 object-cover rounded-t-lg"
-                  />
-                )}
-                <div className="p-3 lg:p-4">
-                  <h3 className="font-bold text-gray-900 mb-2 text-sm lg:text-base">{college.name}</h3>
-                  <p className="text-gray-600 text-xs lg:text-sm mb-3 flex items-center">
-                    <MapPin className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-                    {college.location}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Star className="w-3 h-3 lg:w-4 lg:h-4 text-yellow-500 mr-1" />
-                      <span className="font-semibold text-gray-900 text-sm lg:text-base">{college.rating}</span>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="p-4 animate-pulse">
+                  <div className="aspect-video bg-gray-200 rounded mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded"></div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+              {colleges.map((college) => (
+                <Card 
+                  key={college.id} 
+                  className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                  onClick={() => navigate(`/college-details/${college.id}`)}
+                >
+                  {college.image_url && (
+                    <div className="aspect-video overflow-hidden rounded-t-lg">
+                      <img 
+                        src={college.image_url} 
+                        alt={college.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
                     </div>
-                    <span className="text-xs lg:text-sm font-medium text-green-600">
-                      ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L/year
-                    </span>
+                  )}
+                  
+                  <div className="p-4 lg:p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <Badge className="bg-blue-100 text-blue-800 text-xs font-medium">
+                        {college.type}
+                      </Badge>
+                      <div className="flex items-center">
+                        <Star className="w-3 h-3 lg:w-4 lg:h-4 text-yellow-500 mr-1" />
+                        <span className="font-semibold text-gray-900 text-xs lg:text-sm">{college.rating}</span>
+                      </div>
+                    </div>
+
+                    <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
+                      {college.name}
+                    </h3>
+                    
+                    <div className="flex items-center text-xs lg:text-sm text-gray-600 mb-3">
+                      <MapPin className="w-3 h-3 lg:w-4 lg:h-4 mr-1 text-green-500" />
+                      {college.location}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs lg:text-sm font-medium text-green-600">
+                        ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L/year
+                      </span>
+                      {college.placement_percentage && (
+                        <span className="text-xs lg:text-sm font-medium text-blue-600">
+                          {college.placement_percentage}% Placed
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+      </section>
 
       {/* Latest News Section */}
-      <div className="max-w-6xl mx-auto px-4 py-8 lg:py-12">
-        <div className="flex items-center justify-between mb-6 lg:mb-8">
-          <div>
-            <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Latest News</h2>
-            <p className="text-sm lg:text-base text-gray-600">Stay updated with the latest educational news</p>
+      <section className="py-8 lg:py-12 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-6 lg:mb-8">
+            <div>
+              <h2 className="text-xl lg:text-3xl font-bold text-gray-900 mb-2">Latest News</h2>
+              <p className="text-sm lg:text-base text-gray-600">Stay updated with announcements</p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/news')}
+              className="text-sm lg:text-base hover:bg-blue-50 hover:border-blue-300"
+            >
+              View All <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/news')}
-            className="border-blue-500 text-blue-600 hover:bg-blue-50 text-sm lg:text-base"
-          >
-            View All
-          </Button>
-        </div>
 
-        {latestNews.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-            {latestNews.map((news) => (
-              <Card
-                key={news.id}
-                className="cursor-pointer transition-all duration-300 hover:shadow-lg bg-white border border-gray-200"
-                onClick={() => news.external_link ? window.open(news.external_link, '_blank') : null}
-              >
-                <div className="p-4 lg:p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <span className="px-2 lg:px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                      {news.category}
-                    </span>
-                    {news.external_link && (
-                      <ExternalLink className="w-4 h-4 text-gray-400" />
+          {news.length === 0 ? (
+            <div className="text-center py-8">
+              <Newspaper className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No news available at the moment</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+              {news.map((item) => (
+                <Card 
+                  key={item.id} 
+                  className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                  onClick={() => item.external_link && window.open(item.external_link, '_blank')}
+                >
+                  <div className="p-4 lg:p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <Badge className={`text-xs font-medium ${getCategoryColor(item.category)}`}>
+                        News
+                      </Badge>
+                      <div className="flex items-center text-xs text-gray-500">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {formatDate(item.date || item.created_at)}
+                      </div>
+                    </div>
+
+                    <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-700 transition-colors">
+                      {item.title}
+                    </h3>
+                    
+                    <p className="text-sm lg:text-base text-gray-600 mb-4 line-clamp-2">
+                      {item.description}
+                    </p>
+
+                    {item.external_link && (
+                      <div className="flex items-center text-sm text-blue-600 font-medium group-hover:text-blue-700">
+                        <span>Read More</span>
+                        <ExternalLink className="w-4 h-4 ml-1" />
+                      </div>
                     )}
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm lg:text-base">{news.title}</h3>
-                  <p className="text-gray-600 text-xs lg:text-sm mb-3 line-clamp-3">{news.description}</p>
-                  <div className="flex items-center text-xs text-gray-500">
-                    <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-                    {new Date(news.date || news.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Newspaper className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No news available at the moment.</p>
-          </div>
-        )}
-      </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Quick Actions Section */}
-      <div className="bg-gradient-to-br from-blue-50 to-green-50 border-y border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-8 lg:py-12">
-          <div className="text-center mb-6 lg:mb-8">
-            <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
-              Quick Actions
-            </h2>
-            <p className="text-sm lg:text-base text-gray-600">
-              Everything you need for your educational journey
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
-            {quickActions.map((action, index) => (
-              <Card
-                key={index}
-                className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border border-gray-200 hover:border-green-300 bg-white p-3 lg:p-6"
-                onClick={() => navigate(action.path)}
-              >
-                <div className="text-center space-y-2 lg:space-y-4">
-                  <div className={`w-12 h-12 lg:w-16 lg:h-16 mx-auto rounded-full bg-gradient-to-r ${action.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md`}>
-                    <action.icon className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
-                  </div>
-                  <div className="space-y-1 lg:space-y-2">
-                    <h3 className="text-sm lg:text-lg font-bold text-gray-900 group-hover:text-green-700 transition-colors">
-                      {action.title}
-                    </h3>
-                    <p className="text-gray-600 text-xs lg:text-sm">
-                      {action.description}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))}
+      <section className="py-8 lg:py-12 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-xl lg:text-3xl font-bold text-gray-900 mb-6 lg:mb-8 text-center">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <Card className="p-4 lg:p-5 bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => navigate('/colleges')}>
+              <div className="text-center">
+                <GraduationCap className="w-8 h-8 text-green-600 mx-auto mb-3" />
+                <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-1">
+                  Explore Colleges
+                </h3>
+                <p className="text-xs lg:text-sm text-gray-600">
+                  Find the right college for you
+                </p>
+              </div>
+            </Card>
+            <Card className="p-4 lg:p-5 bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => navigate('/predictor')}>
+              <div className="text-center">
+                <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-3" />
+                <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-1">
+                  Predict Your Rank
+                </h3>
+                <p className="text-xs lg:text-sm text-gray-600">
+                  Know your potential rank
+                </p>
+              </div>
+            </Card>
+            <Card className="p-4 lg:p-5 bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => navigate('/search')}>
+              <div className="text-center">
+                <Search className="w-8 h-8 text-purple-600 mx-auto mb-3" />
+                <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-1">
+                  Search Colleges
+                </h3>
+                <p className="text-xs lg:text-sm text-gray-600">
+                  Find colleges by name or location
+                </p>
+              </div>
+            </Card>
+            <Card className="p-4 lg:p-5 bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => navigate('/news')}>
+              <div className="text-center">
+                <Newspaper className="w-8 h-8 text-orange-600 mx-auto mb-3" />
+                <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-1">
+                  Latest News
+                </h3>
+                <p className="text-xs lg:text-sm text-gray-600">
+                  Stay updated with the latest news
+                </p>
+              </div>
+            </Card>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

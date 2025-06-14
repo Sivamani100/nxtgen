@@ -1,97 +1,115 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { ProfileHeader } from "@/components/ProfileHeader";
-import { ProfileStats } from "@/components/ProfileStats";
-import { 
-  LogOut,
-  PenLine,
-  Check,
-  User
+  User, 
+  Mail, 
+  Phone, 
+  GraduationCap, 
+  MapPin, 
+  DollarSign, 
+  Bell,
+  Edit,
+  Save,
+  X,
+  Camera,
+  Settings,
+  LogOut
 } from "lucide-react";
 import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
-import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
+interface Profile {
+  id: string;
+  full_name: string;
+  email: string;
+  phone_number: string;
+  academic_field: string;
+  preferred_course: string;
+  preferred_branches: string[];
+  preferred_locations: string[];
+  budget_min: number;
+  budget_max: number;
+  profile_picture_url: string;
+  profile_completion_percentage: number;
+  notification_preferences: {
+    events: boolean;
+    admissions: boolean;
+    scholarships: boolean;
+  };
+}
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
-  const [savedColleges, setSavedColleges] = useState<number>(0);
-  const [branchInput, setBranchInput] = useState("");
-  const [locationInput, setLocationInput] = useState("");
   const navigate = useNavigate();
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setProfilePhoto(e.target.files[0]);
-    }
-  };
+  const academicFields = [
+    'Engineering',
+    'Medical',
+    'Management',
+    'Arts',
+    'Science',
+    'Commerce',
+    'Law',
+    'Other'
+  ];
 
-  const uploadProfilePhoto = async (file: File) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+  const courses = [
+    'B.Tech',
+    'B.E',
+    'MBBS',
+    'BDS',
+    'MBA',
+    'MCA',
+    'B.Sc',
+    'B.Com',
+    'BA',
+    'LLB',
+    'Other'
+  ];
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}.${fileExt}`;
-      const filePath = `profile-photos/${fileName}`;
+  const branches = [
+    'Computer Science Engineering',
+    'Electronics and Communication',
+    'Mechanical Engineering',
+    'Civil Engineering',
+    'Electrical Engineering',
+    'Information Technology',
+    'Chemical Engineering',
+    'Biotechnology',
+    'Aerospace Engineering',
+    'Automobile Engineering'
+  ];
 
-      const { error: uploadError } = await supabase.storage
-        .from('profile-photos')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('profile-photos')
-        .getPublicUrl(filePath);
-
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      toast.error('Failed to upload photo');
-      return null;
-    }
-  };
+  const locations = [
+    'Andhra Pradesh',
+    'Telangana',
+    'Karnataka',
+    'Tamil Nadu',
+    'Kerala',
+    'Maharashtra',
+    'Delhi',
+    'Mumbai',
+    'Bangalore',
+    'Hyderabad',
+    'Chennai',
+    'Pune',
+    'Other'
+  ];
 
   useEffect(() => {
     fetchProfile();
-    fetchSavedColleges();
   }, []);
-
-  const fetchSavedColleges = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { count, error } = await supabase
-        .from('user_college_favorites')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setSavedColleges(count || 0);
-    } catch (error) {
-      console.error('Error fetching saved colleges count:', error);
-    }
-  };
 
   const fetchProfile = async () => {
     try {
@@ -117,34 +135,20 @@ const ProfilePage = () => {
     }
   };
 
-  const handleSave = async () => {
+  const updateProfile = async () => {
     if (!profile) return;
-    
+
     setSaving(true);
     try {
-      let photoUrl = profile.profile_picture_url;
-
-      if (profilePhoto) {
-        photoUrl = await uploadProfilePhoto(profilePhoto);
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { error } = await supabase
         .from('profiles')
-        .update({
-          ...profile,
-          profile_picture_url: photoUrl
-        })
-        .eq('id', user.id);
+        .update(profile)
+        .eq('id', profile.id);
 
       if (error) throw error;
 
-      await fetchProfile();
-      setIsEditing(false);
-      setProfilePhoto(null);
-      toast.success('Profile updated successfully!');
+      toast.success('Profile updated successfully');
+      setEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -153,51 +157,7 @@ const ProfilePage = () => {
     }
   };
 
-  const addBranch = () => {
-    if (!branchInput.trim() || !profile) return;
-    
-    const branches = profile.preferred_branches || [];
-    if (!branches.includes(branchInput.trim())) {
-      setProfile({
-        ...profile,
-        preferred_branches: [...branches, branchInput.trim()]
-      });
-    }
-    setBranchInput("");
-  };
-
-  const removeBranch = (branch: string) => {
-    if (!profile || !profile.preferred_branches) return;
-    
-    setProfile({
-      ...profile,
-      preferred_branches: profile.preferred_branches.filter(b => b !== branch)
-    });
-  };
-
-  const addLocation = () => {
-    if (!locationInput.trim() || !profile) return;
-    
-    const locations = profile.preferred_locations || [];
-    if (!locations.includes(locationInput.trim())) {
-      setProfile({
-        ...profile,
-        preferred_locations: [...locations, locationInput.trim()]
-      });
-    }
-    setLocationInput("");
-  };
-
-  const removeLocation = (location: string) => {
-    if (!profile || !profile.preferred_locations) return;
-    
-    setProfile({
-      ...profile,
-      preferred_locations: profile.preferred_locations.filter(l => l !== location)
-    });
-  };
-
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/login');
   };
@@ -205,444 +165,290 @@ const ProfilePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-2">Profile not found</h2>
-          <Button onClick={() => navigate('/home')} className="bg-teal-600 hover:bg-teal-700">
-            Go to Home
-          </Button>
+          <p className="text-gray-600 mb-4">Profile not found</p>
+          <Button onClick={() => navigate('/home')}>Go to Home</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pb-16 lg:pb-0">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <User className="w-6 h-6 text-teal-600" />
-            <h1 className="text-xl font-bold text-gray-900">Profile</h1>
+      <div className="lg:hidden bg-white shadow-sm border-b">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center">
+            <User className="w-6 h-6 text-green-600 mr-2" />
+            <h1 className="text-lg font-bold text-gray-900">Profile</h1>
           </div>
-          {!isEditing ? (
-            <Button 
-              onClick={() => setIsEditing(true)}
-              size="sm"
-              className="bg-teal-500 hover:bg-teal-600 text-white"
-            >
-              <PenLine size={16} />
-            </Button>
-          ) : (
-            <Button 
-              onClick={handleSave}
-              disabled={saving}
-              size="sm"
-              className="bg-teal-500 hover:bg-teal-600 text-white"
-            >
-              <Check size={16} />
-            </Button>
-          )}
+          <div className="flex items-center space-x-2">
+            {editing ? (
+              <>
+                <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+                <Button size="sm" onClick={updateProfile} disabled={saving}>
+                  <Save className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Desktop Header */}
       <div className="hidden lg:block bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto p-6 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-          {!isEditing ? (
-            <Button 
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white"
-            >
-              <PenLine size={18} />
-              Edit Profile
-            </Button>
-          ) : (
-            <Button 
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white"
-            >
-              <Check size={18} />
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          )}
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center mb-2">
+                <User className="w-8 h-8 text-green-600 mr-3" />
+                <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
+              </div>
+              <p className="text-gray-600">Manage your account settings and preferences</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              {editing ? (
+                <>
+                  <Button variant="outline" onClick={() => setEditing(false)}>
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button onClick={updateProfile} disabled={saving}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => setEditing(true)}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-6xl mx-auto p-4 lg:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* Profile Header - Mobile Full Width, Desktop Left Column */}
+          {/* Profile Summary Card */}
           <div className="lg:col-span-1">
-            <ProfileHeader 
-              profile={profile} 
-              isEditing={isEditing} 
-              onPhotoChange={handlePhotoChange}
-              savedCollegesCount={savedColleges}
-            />
-            
-            {/* Stats for Mobile */}
-            <div className="lg:hidden mt-4">
-              <ProfileStats profile={profile} />
-            </div>
-
-            {/* Logout Button */}
-            {!isEditing && (
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full mt-4 lg:mt-6 flex items-center justify-center gap-2 text-red-500 border-red-200 hover:bg-red-50 hover:border-red-300"
-              >
-                <LogOut size={18} />
-                Logout
-              </Button>
-            )}
-          </div>
-
-          {/* Right Column Content */}
-          <div className="lg:col-span-2">
-            {isEditing ? (
-              <EditProfileForm 
-                profile={profile} 
-                setProfile={setProfile} 
-                branchInput={branchInput}
-                setBranchInput={setBranchInput}
-                addBranch={addBranch}
-                removeBranch={removeBranch}
-                locationInput={locationInput}
-                setLocationInput={setLocationInput}
-                addLocation={addLocation}
-                removeLocation={removeLocation}
-              />
-            ) : (
-              <>
-                {/* Desktop Stats */}
-                <div className="hidden lg:block mb-6">
-                  <ProfileStats profile={profile} />
+            <Card className="p-4 lg:p-6 bg-white shadow-lg">
+              <div className="text-center">
+                <div className="relative inline-block mb-4">
+                  <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-2xl lg:text-3xl font-bold">
+                    {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  {editing && (
+                    <button className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border">
+                      <Camera className="w-4 h-4 text-gray-600" />
+                    </button>
+                  )}
+                </div>
+                
+                <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">
+                  {profile.full_name || 'Complete Your Profile'}
+                </h2>
+                <p className="text-sm lg:text-base text-gray-600 mb-4">{profile.email}</p>
+                
+                <div className="mb-4">
+                  <div className="flex justify-between text-xs lg:text-sm text-gray-600 mb-1">
+                    <span>Profile Completion</span>
+                    <span>{profile.profile_completion_percentage || 0}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${profile.profile_completion_percentage || 0}%` }}
+                    ></div>
+                  </div>
                 </div>
 
-                {/* Account Overview */}
-                <Card className="p-4 lg:p-6 bg-white shadow-sm border border-gray-100">
-                  <h3 className="text-lg lg:text-xl font-semibold text-gray-800 mb-4 lg:mb-6">Account Overview</h3>
-                  
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                    <div className="space-y-3 lg:space-y-4">
-                      <div>
-                        <Label className="text-gray-600 text-xs lg:text-sm">Email Address</Label>
-                        <p className="text-gray-900 font-medium text-sm lg:text-base">{profile.email}</p>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-gray-600 text-xs lg:text-sm">Phone Number</Label>
-                        <p className="text-gray-900 font-medium text-sm lg:text-base">{profile.phone_number || 'Not provided'}</p>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-gray-600 text-xs lg:text-sm">Academic Field</Label>
-                        <p className="text-gray-900 font-medium text-sm lg:text-base">{profile.academic_field || 'Not specified'}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3 lg:space-y-4">
-                      <div>
-                        <Label className="text-gray-600 text-xs lg:text-sm">Preferred Course</Label>
-                        <p className="text-gray-900 font-medium text-sm lg:text-base">{profile.preferred_course || 'Not specified'}</p>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-gray-600 text-xs lg:text-sm">Budget Range</Label>
-                        <p className="text-gray-900 font-medium text-sm lg:text-base">
-                          {profile.budget_min && profile.budget_max 
-                            ? `₹${(profile.budget_min / 100000).toFixed(1)}L - ₹${(profile.budget_max / 100000).toFixed(1)}L`
-                            : 'Not specified'
-                          }
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-gray-600 text-xs lg:text-sm">Profile Completion</Label>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-teal-500 h-2 rounded-full transition-all duration-300" 
-                              style={{ width: `${profile.profile_completion_percentage || 0}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-xs lg:text-sm font-medium text-gray-700">
-                            {profile.profile_completion_percentage || 0}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            </Card>
+          </div>
 
-                  {/* Preferences Section */}
-                  <div className="mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-gray-200">
-                    <h4 className="text-base lg:text-lg font-semibold text-gray-800 mb-3 lg:mb-4">Preferences</h4>
+          {/* Profile Details */}
+          <div className="lg:col-span-2">
+            <Card className="p-4 lg:p-6 bg-white shadow-lg">
+              <div className="space-y-6">
+                {/* Personal Information */}
+                <div>
+                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <User className="w-5 h-5 mr-2 text-blue-600" />
+                    Personal Information
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-900">Full Name</Label>
+                      {editing ? (
+                        <Input
+                          value={profile.full_name || ''}
+                          onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                          placeholder="Enter your full name"
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
+                          {profile.full_name || 'Not provided'}
+                        </p>
+                      )}
+                    </div>
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                      <div>
-                        <Label className="text-gray-600 text-xs lg:text-sm mb-2 block">Preferred Branches</Label>
-                        <div className="flex flex-wrap gap-1 lg:gap-2">
-                          {profile.preferred_branches && profile.preferred_branches.length > 0 ? (
-                            profile.preferred_branches.map((branch, idx) => (
-                              <Badge key={idx} className="bg-blue-100 text-blue-800 text-xs">
-                                {branch}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-gray-500 text-xs lg:text-sm">No preferences set</span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-gray-600 text-xs lg:text-sm mb-2 block">Preferred Locations</Label>
-                        <div className="flex flex-wrap gap-1 lg:gap-2">
-                          {profile.preferred_locations && profile.preferred_locations.length > 0 ? (
-                            profile.preferred_locations.map((location, idx) => (
-                              <Badge key={idx} className="bg-green-100 text-green-800 text-xs">
-                                {location}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-gray-500 text-xs lg:text-sm">No preferences set</span>
-                          )}
-                        </div>
-                      </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-900">Email</Label>
+                      <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
+                        {profile.email}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm font-medium text-gray-900">Phone Number</Label>
+                      {editing ? (
+                        <Input
+                          value={profile.phone_number || ''}
+                          onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+                          placeholder="Enter your phone number"
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
+                          {profile.phone_number || 'Not provided'}
+                        </p>
+                      )}
                     </div>
                   </div>
-                </Card>
-              </>
-            )}
+                </div>
+
+                <Separator />
+
+                {/* Academic Information */}
+                <div>
+                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <GraduationCap className="w-5 h-5 mr-2 text-green-600" />
+                    Academic Information
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-900">Academic Field</Label>
+                      {editing ? (
+                        <Select 
+                          value={profile.academic_field || ''} 
+                          onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select academic field" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {academicFields.map((field) => (
+                              <SelectItem key={field} value={field}>{field}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
+                          {profile.academic_field || 'Not selected'}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm font-medium text-gray-900">Preferred Course</Label>
+                      {editing ? (
+                        <Select 
+                          value={profile.preferred_course || ''} 
+                          onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select preferred course" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {courses.map((course) => (
+                              <SelectItem key={course} value={course}>{course}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
+                          {profile.preferred_course || 'Not selected'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Budget Information */}
+                <div>
+                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <DollarSign className="w-5 h-5 mr-2 text-purple-600" />
+                    Budget Range
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-900">Minimum Budget (₹)</Label>
+                      {editing ? (
+                        <Input
+                          type="number"
+                          value={profile.budget_min || ''}
+                          onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || 0 })}
+                          placeholder="Enter minimum budget"
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
+                          ₹{profile.budget_min?.toLocaleString() || 'Not set'}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm font-medium text-gray-900">Maximum Budget (₹)</Label>
+                      {editing ? (
+                        <Input
+                          type="number"
+                          value={profile.budget_max || ''}
+                          onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || 0 })}
+                          placeholder="Enter maximum budget"
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
+                          ₹{profile.budget_max?.toLocaleString() || 'Not set'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-interface EditProfileFormProps {
-  profile: Profile;
-  setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
-  branchInput: string;
-  setBranchInput: React.Dispatch<React.SetStateAction<string>>;
-  addBranch: () => void;
-  removeBranch: (branch: string) => void;
-  locationInput: string;
-  setLocationInput: React.Dispatch<React.SetStateAction<string>>;
-  addLocation: () => void;
-  removeLocation: (location: string) => void;
-}
-
-const EditProfileForm = ({
-  profile,
-  setProfile,
-  branchInput,
-  setBranchInput,
-  addBranch,
-  removeBranch,
-  locationInput,
-  setLocationInput,
-  addLocation,
-  removeLocation
-}: EditProfileFormProps) => {
-  return (
-    <div className="space-y-4">
-      {/* Personal Information */}
-      <Card className="p-4 lg:p-5 bg-white shadow-sm border border-gray-100">
-        <h3 className="text-base lg:text-lg font-semibold text-gray-800 mb-3 lg:mb-4">Personal Information</h3>
-        
-        <div className="space-y-3 lg:space-y-4">
-          <div>
-            <Label className="text-gray-600 text-sm lg:text-base">Full Name</Label>
-            <Input
-              value={profile.full_name || ''}
-              onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-              className="border-gray-200 focus:border-teal-500 h-10 lg:h-12 text-sm lg:text-base"
-              placeholder="Enter your full name"
-            />
-          </div>
-          
-          <div>
-            <Label className="text-gray-600 text-sm lg:text-base">Email</Label>
-            <Input
-              value={profile.email || ''}
-              disabled
-              className="bg-gray-50 border-gray-200 h-10 lg:h-12 text-sm lg:text-base"
-            />
-          </div>
-          
-          <div>
-            <Label className="text-gray-600 text-sm lg:text-base">Phone Number</Label>
-            <Input
-              value={profile.phone_number || ''}
-              onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
-              className="border-gray-200 focus:border-teal-500 h-10 lg:h-12 text-sm lg:text-base"
-              placeholder="Enter your phone number"
-            />
-          </div>
-        </div>
-      </Card>
-      
-      {/* Academic Information */}
-      <Card className="p-4 lg:p-5 bg-white shadow-sm border border-gray-100">
-        <h3 className="text-base lg:text-lg font-semibold text-gray-800 mb-3 lg:mb-4">Academic Information</h3>
-        
-        <div className="space-y-3 lg:space-y-4">
-          <div>
-            <Label className="text-gray-600 text-sm lg:text-base">Current Education Level</Label>
-            <Select
-              value={profile.academic_field || ''}
-              onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
-            >
-              <SelectTrigger className="border-gray-200 focus:border-teal-500 h-10 lg:h-12">
-                <SelectValue placeholder="Select your education level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="12th Grade">12th Grade</SelectItem>
-                <SelectItem value="engineering">Engineering</SelectItem>
-                <SelectItem value="medical">Medical</SelectItem>
-                <SelectItem value="commerce">Commerce</SelectItem>
-                <SelectItem value="arts">Arts</SelectItem>
-                <SelectItem value="science">Science</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label className="text-gray-600 text-sm lg:text-base">Preferred Course</Label>
-            <Select
-              value={profile.preferred_course || ''}
-              onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
-            >
-              <SelectTrigger className="border-gray-200 focus:border-teal-500 h-10 lg:h-12">
-                <SelectValue placeholder="Select your preferred course" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="B.Tech">B.Tech</SelectItem>
-                <SelectItem value="MBBS">MBBS</SelectItem>
-                <SelectItem value="B.Com">B.Com</SelectItem>
-                <SelectItem value="BBA">BBA</SelectItem>
-                <SelectItem value="B.Sc">B.Sc</SelectItem>
-                <SelectItem value="B.A">B.A</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </Card>
-      
-      {/* Preferences */}
-      <Card className="p-4 lg:p-5 bg-white shadow-sm border border-gray-100">
-        <h3 className="text-base lg:text-lg font-semibold text-gray-800 mb-3 lg:mb-4">Preferences</h3>
-        
-        <div className="space-y-4 lg:space-y-6">
-          {/* Preferred Branches */}
-          <div>
-            <Label className="text-gray-600 text-sm lg:text-base mb-2 block">Preferred Branches</Label>
-            <div className="flex flex-wrap gap-1 lg:gap-2 mb-3">
-              {profile.preferred_branches?.map((branch, idx) => (
-                <Badge 
-                  key={idx} 
-                  className="bg-blue-100 text-blue-800 hover:bg-blue-200 gap-1.5 pl-2 lg:pl-3 cursor-default text-xs"
-                >
-                  {branch}
-                  <button 
-                    onClick={() => removeBranch(branch)}
-                    className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={branchInput}
-                onChange={(e) => setBranchInput(e.target.value)}
-                placeholder="Add branch"
-                className="border-gray-200 focus:border-teal-500 h-9 lg:h-10 text-sm lg:text-base"
-              />
-              <Button 
-                onClick={addBranch} 
-                size="sm" 
-                className="bg-blue-500 hover:bg-blue-600 h-9 lg:h-10 text-xs lg:text-sm"
-              >
-                Add
-              </Button>
-            </div>
-          </div>
-          
-          {/* Preferred Locations */}
-          <div>
-            <Label className="text-gray-600 text-sm lg:text-base mb-2 block">Preferred Locations</Label>
-            <div className="flex flex-wrap gap-1 lg:gap-2 mb-3">
-              {profile.preferred_locations?.map((location, idx) => (
-                <Badge 
-                  key={idx} 
-                  className="bg-green-100 text-green-800 hover:bg-green-200 gap-1.5 pl-2 lg:pl-3 cursor-default text-xs"
-                >
-                  {location}
-                  <button 
-                    onClick={() => removeLocation(location)}
-                    className="ml-1 text-green-600 hover:text-green-800 focus:outline-none"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={locationInput}
-                onChange={(e) => setLocationInput(e.target.value)}
-                placeholder="Add location"
-                className="border-gray-200 focus:border-teal-500 h-9 lg:h-10 text-sm lg:text-base"
-              />
-              <Button 
-                onClick={addLocation} 
-                size="sm" 
-                className="bg-green-500 hover:bg-green-600 h-9 lg:h-10 text-xs lg:text-sm"
-              >
-                Add
-              </Button>
-            </div>
-          </div>
-          
-          {/* Budget */}
-          <div className="grid grid-cols-2 gap-3 lg:gap-4">
-            <div>
-              <Label className="text-gray-600 text-sm lg:text-base">Budget Min (₹)</Label>
-              <Input
-                type="number"
-                value={profile.budget_min || ''}
-                onChange={(e) => setProfile({ ...profile, budget_min: parseInt(e.target.value) || null })}
-                className="border-gray-200 focus:border-teal-500 h-9 lg:h-10 text-sm lg:text-base"
-                placeholder="Minimum budget"
-              />
-            </div>
-            <div>
-              <Label className="text-gray-600 text-sm lg:text-base">Budget Max (₹)</Label>
-              <Input
-                type="number"
-                value={profile.budget_max || ''}
-                onChange={(e) => setProfile({ ...profile, budget_max: parseInt(e.target.value) || null })}
-                className="border-gray-200 focus:border-teal-500 h-9 lg:h-10 text-sm lg:text-base"
-                placeholder="Maximum budget"
-              />
-            </div>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 };
