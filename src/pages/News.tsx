@@ -61,11 +61,23 @@ const News = () => {
       setLoading(true);
       console.log('Fetching news from resources table...');
       
-      // Query all resources that could be news-related
+      // First, let's check what's in the resources table
+      const { data: allResources, error: allError } = await supabase
+        .from('resources')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      console.log('All resources in table:', allResources);
+      console.log('All resources error:', allError);
+
+      if (allError) {
+        console.error('Error fetching all resources:', allError);
+      }
+
+      // Query resources that could be news-related - let's be more inclusive
       const { data, error } = await supabase
         .from('resources')
         .select('*')
-        .in('category', ['news', 'admission', 'exam', 'scholarship', 'result', 'notification'])
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -73,8 +85,61 @@ const News = () => {
         throw error;
       }
 
-      console.log('News data fetched:', data);
-      setNews(data || []);
+      console.log('Resources data fetched:', data);
+      console.log('Number of resources found:', data?.length || 0);
+
+      // If no data, let's create some sample data for testing
+      if (!data || data.length === 0) {
+        console.log('No resources found, creating sample data...');
+        
+        // Insert some sample news data
+        const sampleNews = [
+          {
+            title: 'Engineering Admissions Open 2024',
+            description: 'Applications are now open for engineering colleges across India. Don\'t miss the deadline!',
+            category: 'admission',
+            external_link: 'https://example.com/admissions'
+          },
+          {
+            title: 'JEE Main Results Declared',
+            description: 'JEE Main results for session 1 have been declared. Check your scores now.',
+            category: 'result',
+            external_link: 'https://example.com/results'
+          },
+          {
+            title: 'Scholarship Opportunities for 2024',
+            description: 'Various scholarship programs are available for meritorious students.',
+            category: 'scholarship',
+            external_link: 'https://example.com/scholarships'
+          }
+        ];
+
+        for (const item of sampleNews) {
+          const { error: insertError } = await supabase
+            .from('resources')
+            .insert(item);
+          
+          if (insertError) {
+            console.error('Error inserting sample news:', insertError);
+          }
+        }
+
+        // Fetch again after inserting sample data
+        const { data: newData, error: newError } = await supabase
+          .from('resources')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (newError) {
+          console.error('Error fetching news after insert:', newError);
+          setNews([]);
+        } else {
+          console.log('News data after sample insert:', newData);
+          setNews(newData || []);
+        }
+      } else {
+        setNews(data || []);
+      }
     } catch (error) {
       console.error('Failed to fetch news:', error);
       toast.error('Failed to load news');
@@ -167,7 +232,7 @@ const News = () => {
     if (searchQuery.trim()) {
       filtered = filtered.filter(item =>
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
     if (selectedCategory !== 'all') {

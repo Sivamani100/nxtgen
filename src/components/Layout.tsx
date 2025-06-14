@@ -44,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Desktop Sidebar - Left side */}
+      {/* Desktop Sidebar - Left side - Only show on lg and above */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
         isSidebarCollapsed ? 'lg:w-16' : 'lg:w-64'
       }`}>
@@ -88,14 +88,14 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
-        <div className="pb-[70px] lg:pb-0">
+      {/* Main Content - Adjust margin for desktop sidebar */}
+      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
+        <div className="pb-[70px] lg:pb-0 min-h-screen">
           {children}
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation - Reduced height to 70px */}
+      {/* Mobile Bottom Navigation - Only show on mobile (below lg) */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 h-[70px]">
         <div className="flex justify-around items-center py-2 px-1 h-full">
           {mobileNavigationItems.map((item) => (
