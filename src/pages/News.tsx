@@ -13,9 +13,12 @@ import {
   Filter,
   BookOpen,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Bookmark,
+  Bell
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface NewsItem {
   id: number;
@@ -34,9 +37,10 @@ const News = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const navigate = useNavigate();
 
   const categories = [
-    { value: 'all', label: 'All News' },
+    { value: 'all', label: 'All Categories' },
     { value: 'admission', label: 'Admissions' },
     { value: 'exam', label: 'Exams' },
     { value: 'scholarship', label: 'Scholarships' },
@@ -86,25 +90,60 @@ const News = () => {
   const createSampleNews = async () => {
     const sampleNews = [
       {
+        title: 'TS EAMCET 2025 Results Declared',
+        description: 'The Telangana State Engineering, Agriculture, and Pharmacy Common Entrance Test (TS EAMCET) 2025 results have been announced.',
+        category: 'news',
+        date: '2024-01-15',
+        external_link: 'https://tseamcet.nic.in'
+      },
+      {
+        title: 'AP EAPCET 2025 Admit Cards Released',
+        description: 'The admit cards for the Andhra Pradesh Engineering, Agriculture, and Pharmacy Common Entrance Test (AP EAPCET) 2025 have been released.',
+        category: 'news',
+        date: '2024-01-10',
+        external_link: 'https://sche.ap.gov.in'
+      },
+      {
         title: 'JEE Main 2024 Registration Opens',
         description: 'National Testing Agency (NTA) has opened the registration for JEE Main 2024. Students can apply online through the official website.',
-        category: 'exam',
-        date: '2024-01-15',
+        category: 'news',
+        date: '2024-01-08',
         external_link: 'https://jeemain.nta.nic.in'
       },
       {
         title: 'NEET 2024 Exam Date Announced',
         description: 'The National Eligibility cum Entrance Test (NEET) 2024 will be conducted on May 5, 2024. Registration starts from February 9, 2024.',
-        category: 'exam',
-        date: '2024-01-10',
+        category: 'news',
+        date: '2024-01-05',
         external_link: 'https://neet.nta.nic.in'
       },
       {
-        title: 'AP EAMCET Results 2024 Declared',
-        description: 'Andhra Pradesh State Council of Higher Education has declared the results for AP EAMCET 2024. Students can check their results online.',
-        category: 'result',
-        date: '2024-01-08',
-        external_link: 'https://sche.ap.gov.in'
+        title: 'BITSAT 2024 Application Process Begins',
+        description: 'BITS Pilani has announced the opening of applications for BITSAT 2024. The online application process has begun.',
+        category: 'news',
+        date: '2024-01-03',
+        external_link: 'https://www.bitsadmission.com'
+      },
+      {
+        title: 'GATE 2024 Results Published',
+        description: 'The Graduate Aptitude Test in Engineering (GATE) 2024 results have been published. Candidates can check their scores online.',
+        category: 'news',
+        date: '2024-01-01',
+        external_link: 'https://gate.iitm.ac.in'
+      },
+      {
+        title: 'CAT 2024 Registration Deadline Extended',
+        description: 'The Common Admission Test (CAT) 2024 registration deadline has been extended to provide more time for aspiring candidates.',
+        category: 'news',
+        date: '2023-12-28',
+        external_link: 'https://iimcat.ac.in'
+      },
+      {
+        title: 'VITEEE 2024 Slot Booking Starts',
+        description: 'VIT Engineering Entrance Examination (VITEEE) 2024 slot booking has commenced. Students can book their preferred exam slots.',
+        category: 'news',
+        date: '2023-12-25',
+        external_link: 'https://viteee.vit.ac.in'
       }
     ];
 
@@ -177,14 +216,21 @@ const News = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b">
-        <div className="flex items-center p-4">
-          <Newspaper className="w-6 h-6 text-green-600 mr-2" />
+      <div className="lg:hidden bg-white shadow-sm border-b sticky top-0 z-50">
+        <div className="flex items-center justify-between p-4">
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Latest News</h1>
-            <p className="text-xs text-gray-600">Stay updated with announcements</p>
+            <h1 className="text-xl font-bold text-gray-900">Latest Updates</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="p-2"
+            >
+              <Bookmark className="w-5 h-5 text-gray-600" />
+            </Button>
           </div>
         </div>
       </div>
@@ -205,33 +251,46 @@ const News = () => {
         <div className="mb-6 space-y-4">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-orange-400" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search news..."
-              className="pl-10 lg:pl-12 h-10 lg:h-12 text-sm lg:text-base border-gray-200 focus:border-green-500"
+              placeholder="Search news and updates..."
+              className="pl-10 lg:pl-12 h-12 lg:h-12 text-sm lg:text-base border-2 border-orange-200 focus:border-orange-400 rounded-xl"
             />
           </div>
 
           {/* Category Filters */}
           <div className="flex items-center space-x-2 overflow-x-auto pb-2">
-            <Filter className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
-            {categories.map((category) => (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-600 whitespace-nowrap">All Categories</span>
+              <Filter className="w-4 h-4 text-gray-400" />
+            </div>
+            {categories.slice(1).map((category) => (
               <Button
                 key={category.value}
                 variant={selectedCategory === category.value ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(category.value)}
-                className={`flex-shrink-0 text-xs lg:text-sm ${
+                className={`flex-shrink-0 text-xs lg:text-sm rounded-full ${
                   selectedCategory === category.value
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'border-gray-200 hover:bg-gray-50'
+                    ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                    : 'border-orange-200 hover:bg-orange-50 text-orange-700'
                 }`}
               >
                 {category.label}
               </Button>
             ))}
+          </div>
+
+          {/* Latest First Filter */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-600">
+              {filteredNews.length} updates found
+            </p>
+            <Button variant="outline" size="sm" className="text-xs border-orange-200 text-orange-700 hover:bg-orange-50">
+              Latest First
+            </Button>
           </div>
         </div>
 
@@ -249,39 +308,39 @@ const News = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="space-y-4">
             {filteredNews.map((item) => (
               <Card 
                 key={item.id} 
-                className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                className="bg-white border-2 border-orange-200 hover:shadow-lg hover:border-orange-300 transition-all duration-300 cursor-pointer group overflow-hidden"
                 onClick={() => item.external_link && window.open(item.external_link, '_blank')}
               >
-                <div className="p-4 lg:p-5">
+                <div className="p-4 lg:p-6">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
-                    <Badge className={`text-xs font-medium ${getCategoryColor(item.category)}`}>
-                      {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
+                    <Badge className="bg-orange-100 text-orange-800 text-xs font-medium">
+                      Admission
                     </Badge>
                     <div className="flex items-center text-xs text-gray-500">
-                      <Clock className="w-3 h-3 mr-1" />
+                      <Calendar className="w-3 h-3 mr-1" />
                       {formatDate(item.date || item.created_at)}
                     </div>
                   </div>
 
                   {/* Content */}
-                  <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
+                  <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-orange-700 transition-colors">
                     {item.title}
                   </h3>
                   
-                  <p className="text-xs lg:text-sm text-gray-600 mb-4 line-clamp-3">
+                  <p className="text-sm lg:text-base text-gray-600 mb-4 line-clamp-2">
                     {item.description}
                   </p>
 
                   {/* Footer */}
                   {item.external_link && (
-                    <div className="flex items-center text-xs lg:text-sm text-green-600 font-medium group-hover:text-green-700">
+                    <div className="flex items-center text-sm text-orange-600 font-medium group-hover:text-orange-700">
                       <span>Read More</span>
-                      <ExternalLink className="w-3 h-3 lg:w-4 lg:h-4 ml-1" />
+                      <ExternalLink className="w-4 h-4 ml-1" />
                     </div>
                   )}
                 </div>
