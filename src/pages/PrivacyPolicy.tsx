@@ -1,4 +1,3 @@
-
 import React from "react";
 
 const sections = [
@@ -197,7 +196,7 @@ const PrivacyPolicy = () => {
         </ul>
         <div className="mt-8 text-gray-500 text-xs">(For regulatory compliance, all annexes, change histories, and supporting documentation are available to users and authorities. Please contact our DPO at nxtgen116@gmail.com for access.)</div>
         <div className="mt-8 text-xs text-gray-400 italic">
-          (This page simulates a >25-page full-length privacy policy for NXTGEN App, as would be typical of a robust legal PDF. To verify, please refer to our provided PDF upon request.)
+          (This page simulates a &gt;25-page full-length privacy policy for NXTGEN App, as would be typical of a robust legal PDF. To verify, please refer to our provided PDF upon request.)
         </div>
       </section>
     </div>
