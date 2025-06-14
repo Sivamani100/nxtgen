@@ -48,24 +48,14 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen bg-white">
       {/* Desktop Sidebar - Left side - Only show on lg and above */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
-        isSidebarCollapsed ? 'lg:w-14' : 'lg:w-64'
+        isSidebarCollapsed ? 'lg:w-[61px]' : 'lg:w-64'
       }`}>
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
           <div className="flex items-center justify-between h-16 px-2 border-b border-gray-200">
-            {/* If sidebar is collapsed, don't show text, just space for the icon */}
             <div className="flex items-center justify-center w-full">
-              <img
-                src="/lovable-uploads/b8a2ef09-3f96-4f67-930c-656bd4135ddb.png"
-                alt="NXTGEN Logo"
-                className={`transition-all ${isSidebarCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-full`}
-                style={{ objectFit: 'contain' }}
-              />
-              {!isSidebarCollapsed && (
-                <span className="ml-2 text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                  NXTGEN
-                </span>
-              )}
+              {/* Logo removed as per user request */}
+              {/* No image, no text */}
             </div>
             <Button
               variant="ghost"
@@ -106,7 +96,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
 
       {/* Main Content - Adjust margin for desktop sidebar */}
-      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-14' : 'lg:pl-64'}`}>
+      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-[61px]' : 'lg:pl-64'}`}>
         <div className="pb-[70px] lg:pb-0 min-h-screen">
           {children}
         </div>
