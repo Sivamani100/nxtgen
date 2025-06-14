@@ -201,11 +201,11 @@ const Colleges = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      {/* Header */}
+      {/* Header - Responsive */}
       <div className="bg-white shadow-lg p-4 border-b-2 border-blue-100">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-gray-900">Browse Colleges</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Browse Colleges</h1>
             <Button
               variant="ghost"
               size="sm"
@@ -213,88 +213,96 @@ const Colleges = () => {
               className="text-pink-600 hover:text-pink-700 hover:bg-pink-50"
             >
               <HeartHandshake className="w-5 h-5 mr-2" />
-              Saved
+              <span className="hidden sm:inline">Saved</span>
             </Button>
           </div>
           
-          {/* Search Bar */}
+          {/* Search Bar - Full width on desktop */}
           <div className="relative mb-4">
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search colleges..."
-              className="pl-10 text-base border-2 border-blue-200 focus:border-blue-400"
+              className="pl-10 text-base border-2 border-blue-200 focus:border-blue-400 w-full md:max-w-2xl"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-blue-400" />
           </div>
 
-          {/* Filters */}
-          <div className="grid grid-cols-3 gap-2">
-            <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
-              <SelectTrigger className="border-2 border-purple-200 focus:border-purple-400">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="government">Government</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
-                <SelectItem value="university">University</SelectItem>
-                <SelectItem value="engineering">Engineering</SelectItem>
-                <SelectItem value="medical">Medical</SelectItem>
-                <SelectItem value="polytechnic">Polytechnic</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Filters - Better spacing on desktop */}
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-4">
+            <div className="md:col-span-2">
+              <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
+                <SelectTrigger className="border-2 border-purple-200 focus:border-purple-400">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="government">Government</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                  <SelectItem value="university">University</SelectItem>
+                  <SelectItem value="engineering">Engineering</SelectItem>
+                  <SelectItem value="medical">Medical</SelectItem>
+                  <SelectItem value="polytechnic">Polytechnic</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={filters.state} onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}>
-              <SelectTrigger className="border-2 border-green-200 focus:border-green-400">
-                <SelectValue placeholder="State" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All States</SelectItem>
-                {getUniqueStates().map((state) => (
-                  <SelectItem key={state} value={state}>{state}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="md:col-span-2">
+              <Select value={filters.state} onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}>
+                <SelectTrigger className="border-2 border-green-200 focus:border-green-400">
+                  <SelectValue placeholder="State" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All States</SelectItem>
+                  {getUniqueStates().map((state) => (
+                    <SelectItem key={state} value={state}>{state}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-              <SelectTrigger className="border-2 border-orange-200 focus:border-orange-400">
-                <SelectValue placeholder="Sort" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rating">Rating</SelectItem>
-                <SelectItem value="fees_low">Fees (Low)</SelectItem>
-                <SelectItem value="fees_high">Fees (High)</SelectItem>
-                <SelectItem value="placement">Placement</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="md:col-span-2">
+              <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
+                <SelectTrigger className="border-2 border-orange-200 focus:border-orange-400">
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rating">Rating</SelectItem>
+                  <SelectItem value="fees_low">Fees (Low)</SelectItem>
+                  <SelectItem value="fees_high">Fees (High)</SelectItem>
+                  <SelectItem value="placement">Placement</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Results */}
-      <div className="max-w-md mx-auto p-4 pb-24">
+      {/* Results - Responsive Layout */}
+      <div className="max-w-7xl mx-auto p-4 pb-24">
         <div className="text-sm font-medium text-gray-700 mb-4 bg-white rounded-lg p-3 shadow-md border-l-4 border-blue-400">
           {filteredColleges.length} colleges found
         </div>
         
-        <div className="space-y-4">
+        {/* College Grid - Responsive */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {filteredColleges.map((college) => (
-            <Card key={college.id} className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300 bg-white"
+            <Card key={college.id} 
+                  className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300 bg-white h-full flex flex-col"
                   onClick={() => navigate(`/college-details/${college.id}`)}>
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h3>
-                  <div className="flex items-center text-base text-gray-600 mb-1">
-                    <MapPin className="w-4 h-4 mr-1 text-red-500" />
-                    {college.location}, {college.state}
+              <div className="flex items-start justify-between mb-3 flex-1">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{college.name}</h3>
+                  <div className="flex items-center text-sm text-gray-600 mb-2">
+                    <MapPin className="w-4 h-4 mr-1 text-red-500 flex-shrink-0" />
+                    <span className="truncate">{college.location}, {college.state}</span>
                   </div>
-                  <div className="flex items-center space-x-3 text-sm mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 text-sm mb-3">
                     <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
                       <Star className="w-4 h-4 text-yellow-500 mr-1" />
                       <span className="font-bold text-gray-900">{college.rating}/5.0</span>
                     </div>
-                    <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                    <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs">
                       ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
                     </span>
                   </div>
@@ -302,7 +310,7 @@ const Colleges = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="p-1"
+                  className="p-1 ml-2 flex-shrink-0"
                   onClick={(e) => handleSaveCollege(college.id, e)}
                 >
                   <Heart 
@@ -315,8 +323,8 @@ const Colleges = () => {
                 </Button>
               </div>
               
-              <div className="flex items-center justify-between">
-                <span className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full font-medium border border-blue-200">
+              <div className="flex items-center justify-between mt-auto">
+                <span className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full font-medium border border-blue-200 truncate max-w-[60%]">
                   {college.type}
                 </span>
                 <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
@@ -328,7 +336,7 @@ const Colleges = () => {
         </div>
 
         {filteredColleges.length === 0 && (
-          <div className="text-center py-8 bg-white rounded-lg shadow-md">
+          <div className="text-center py-12 bg-white rounded-lg shadow-md">
             <div className="text-lg font-medium text-gray-600 mb-2">No colleges found</div>
             <div className="text-sm text-gray-500">
               Try adjusting your search criteria
@@ -337,8 +345,8 @@ const Colleges = () => {
         )}
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+      {/* Bottom Navigation - Mobile only */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg md:hidden">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-evenly gap-2 py-3">
             <Button
@@ -384,6 +392,58 @@ const Colleges = () => {
             >
               <User className="w-7 h-7" />
               <span className="text-xs">Profile</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Navigation Bar - Desktop only */}
+      <div className="hidden md:block fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-b border-gray-200 shadow-sm z-40">
+        <div className="max-w-7xl mx-auto px-4 py-2">
+          <div className="flex items-center justify-center space-x-8">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600"
+              onClick={() => navigate('/home')}
+            >
+              <HomeIcon className="w-5 h-5" />
+              <span>Home</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center space-x-2 text-blue-600 bg-blue-50"
+            >
+              <Users className="w-5 h-5" />
+              <span>Colleges</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center space-x-2 text-gray-600 hover:text-green-600"
+              onClick={() => navigate('/predictor')}
+            >
+              <BookOpen className="w-5 h-5" />
+              <span>Predictor</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center space-x-2 text-gray-600 hover:text-purple-600"
+              onClick={() => navigate('/news')}
+            >
+              <Newspaper className="w-5 h-5" />
+              <span>News</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600"
+              onClick={() => navigate('/profile')}
+            >
+              <User className="w-5 h-5" />
+              <span>Profile</span>
             </Button>
           </div>
         </div>
