@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -48,74 +47,39 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-white">
       {/* Desktop Sidebar - Left side - Only show on lg and above */}
-      <div
-        className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
-          isSidebarCollapsed ? "lg:w-16" : "lg:w-64"
-        }`}
-      >
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
+        isSidebarCollapsed ? 'lg:w-16' : 'lg:w-64'
+      }`}>
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
-          <div className="flex items-center justify-between h-20 px-4 border-b border-gray-200">
-            {/* Brand logo and text responsive */}
-            <div
-              className={`flex items-center w-full transition-all duration-200 ${
-                isSidebarCollapsed ? "justify-center" : ""
-              }`}
-            >
-              {/* Collapsed: only show logo, small size. Expanded: large logo and full text */}
-              <img
-                src="/lovable-uploads/b8a2ef09-3f96-4f67-930c-656bd4135ddb.png"
-                alt="NXTGEN Logo"
-                className={`object-contain transition-all duration-200 ${
-                  isSidebarCollapsed
-                    ? "w-10 h-10" // Collapsed: show ~40px icon (matches reference)
-                    : "w-20 h-20" // Expanded: larger
-                }`}
-                style={{
-                  minWidth: isSidebarCollapsed ? 40 : 80,
-                  minHeight: isSidebarCollapsed ? 40 : 80,
-                  margin: isSidebarCollapsed ? "auto" : "",
-                }}
-              />
-              {/* Expanded: show NXTGEN text next to logo */}
-              {!isSidebarCollapsed && (
-                <span className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent ml-2 select-none tracking-wide">
-                  NXTGEN
-                </span>
-              )}
-            </div>
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+            {!isSidebarCollapsed && (
+              <h1 className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                NXTGEN
+              </h1>
+            )}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-2 hover:bg-green-50 ml-2"
-              aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="p-2 hover:bg-green-50"
             >
-              {isSidebarCollapsed ? (
-                <ChevronRight className="w-5 h-5" />
-              ) : (
-                <ChevronLeft className="w-5 h-5" />
-              )}
+              {isSidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
             </Button>
           </div>
 
           {/* Navigation Links */}
           <nav className="flex-1 px-2 py-6 space-y-2">
             {navigationItems.map((item) => {
-              if (
-                item.desktopOnly &&
-                typeof window !== "undefined" &&
-                window.innerWidth < 1024
-              ) {
+              if (item.desktopOnly && typeof window !== "undefined" && window.innerWidth < 1024) {
                 return null;
               }
+              // Hide separator from mini sidebar for the last 2 items
               return (
                 <Button
                   key={item.path}
                   variant={isActive(item.path) ? "default" : "ghost"}
-                  className={`w-full ${
-                    isSidebarCollapsed ? "justify-center px-2" : "justify-start"
-                  } text-left h-12 transition-all duration-200 ${
+                  className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'} text-left h-12 transition-all duration-200 ${
                     isActive(item.path)
                       ? "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 shadow-md"
                       : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 hover:text-green-700"
@@ -123,11 +87,7 @@ const Layout = ({ children }: LayoutProps) => {
                   onClick={() => navigate(item.path)}
                   title={isSidebarCollapsed ? item.label : undefined}
                 >
-                  {item.icon && (
-                    <item.icon
-                      className={`w-5 h-5 ${isSidebarCollapsed ? "" : "mr-3"}`}
-                    />
-                  )}
+                  {item.icon && <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />}
                   {!isSidebarCollapsed && item.label}
                 </Button>
               );
@@ -137,12 +97,10 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
 
       {/* Main Content - Adjust margin for desktop sidebar */}
-      <div
-        className={`lg:transition-all lg:duration-300 ${
-          isSidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
-        }`}
-      >
-        <div className="pb-[70px] lg:pb-0 min-h-screen">{children}</div>
+      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
+        <div className="pb-[70px] lg:pb-0 min-h-screen">
+          {children}
+        </div>
       </div>
 
       {/* Mobile Bottom Navigation - Only show on mobile (below lg) */}
@@ -154,22 +112,18 @@ const Layout = ({ children }: LayoutProps) => {
               className={`flex flex-col items-center justify-center p-1 min-w-0 flex-1 transition-all duration-200 h-full`}
               onClick={() => navigate(item.path)}
             >
-              <div
-                className={`p-2 rounded-full transition-all duration-200 ${
-                  isActive(item.path)
-                    ? "bg-green-500 text-white"
-                    : "text-gray-600"
-                }`}
-              >
+              <div className={`p-2 rounded-full transition-all duration-200 ${
+                isActive(item.path)
+                  ? "bg-green-500 text-white"
+                  : "text-gray-600"
+              }`}>
                 <item.icon className="w-5 h-5" />
               </div>
-              <span
-                className={`text-xs mt-1 font-medium transition-colors duration-200 ${
-                  isActive(item.path)
-                    ? "text-green-500"
-                    : "text-gray-600"
-                }`}
-              >
+              <span className={`text-xs mt-1 font-medium transition-colors duration-200 ${
+                isActive(item.path)
+                  ? "text-green-500"
+                  : "text-gray-600"
+              }`}>
                 {item.label}
               </span>
             </button>
