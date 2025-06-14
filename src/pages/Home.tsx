@@ -1,416 +1,158 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Bell, Search, Star, MapPin, TrendingUp, Award, Heart, Home as HomeIcon, Users, BookOpen, Newspaper, User } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Search, Star, MapPin, TrendingUp, Users, BookOpen, Award, Bell } from "lucide-react";
 import { toast } from "sonner";
-import EamcetResultsPopup from "@/components/EamcetResultsPopup";
+import { Database } from "@/integrations/supabase/types";
 
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  rating: number;
-  type: string;
-  total_fees_min: number;
-  total_fees_max: number;
-  placement_percentage: number;
-}
-
-interface NewsItem {
-  id: number;
-  title: string;
-  description: string;
-  category: string;
-  created_at: string;
-  external_link?: string;
-}
+type College = Database['public']['Tables']['colleges']['Row'];
 
 const Home = () => {
-  const [colleges, setColleges] = useState<College[]>([]);
-  const [searchResults, setSearchResults] = useState<College[]>([]);
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [showEamcetPopup, setShowEamcetPopup] = useState(false);
+  const [searchResults, setSearchResults] = useState<College[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUserProfile();
-    fetchColleges();
-    fetchNews();
-    fetchNotificationCount();
-    showEamcetPopupAfterDelay();
+    checkUser();
   }, []);
 
   useEffect(() => {
-    if (userProfile) {
-      fetchFilteredColleges();
+    if (searchQuery.length >= 2) {
+      searchColleges();
+    } else {
+      setSearchResults([]);
     }
-  }, [userProfile]);
+  }, [searchQuery]);
 
-  const showEamcetPopupAfterDelay = () => {
-    // Show popup after 1 second every time the app opens
-    setTimeout(() => {
-      setShowEamcetPopup(true);
-    }, 1000);
-  };
-
-  const handleCloseEamcetPopup = () => {
-    setShowEamcetPopup(false);
-  };
-
-  const fetchUserProfile = async () => {
+  const checkUser = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-      setUserProfile(data);
+      setUser(user);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Error checking user:', error);
     }
   };
 
-  const fetchFilteredColleges = async () => {
-    try {
-      let query = supabase
-        .from('colleges')
-        .select('*')
-        .order('rating', { ascending: false })
-        .limit(10);
-
-      if (userProfile?.preferred_locations && userProfile.preferred_locations.length > 0) {
-        query = query.in('city', userProfile.preferred_locations);
-      }
-
-      if (userProfile?.budget_min && userProfile?.budget_max) {
-        query = query
-          .gte('total_fees_min', userProfile.budget_min)
-          .lte('total_fees_max', userProfile.budget_max);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setColleges(data || []);
-    } catch (error) {
-      console.error('Error fetching filtered colleges:', error);
-      fetchColleges();
-    }
-  };
-
-  const fetchColleges = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('colleges')
-        .select('*')
-        .order('rating', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setColleges(data || []);
-    } catch (error) {
-      console.error('Error fetching colleges:', error);
-      toast.error('Failed to load colleges');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchNews = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('resources')
-        .select('*')
-        .in('category', ['News', 'Event'])
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-      setNews(data || []);
-    } catch (error) {
-      console.error('Error fetching news:', error);
-    }
-  };
-
-  const fetchNotificationCount = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { count, error } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('read', false);
-
-      if (error) throw error;
-      setUnreadNotifications(count || 0);
-    } catch (error) {
-      console.error('Error fetching notification count:', error);
-    }
-  };
-
-  const handleSearch = async () => {
+  const searchColleges = async () => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
       return;
     }
 
-    setSearching(true);
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('colleges')
         .select('*')
         .or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%`)
         .order('rating', { ascending: false })
-        .limit(10);
+        .limit(8);
 
       if (error) throw error;
       setSearchResults(data || []);
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('Error searching colleges:', error);
       toast.error('Failed to search colleges');
     } finally {
-      setSearching(false);
+      setLoading(false);
     }
   };
 
-  const clearSearch = () => {
-    setSearchQuery('');
-    setSearchResults([]);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  const quickActions = [
+    {
+      icon: Users,
+      title: "Browse Colleges",
+      description: "Explore thousands of colleges",
+      path: "/colleges",
+      color: "bg-blue-500"
+    },
+    {
+      icon: BookOpen,
+      title: "College Predictor",
+      description: "Find colleges based on your rank",
+      path: "/predictor",
+      color: "bg-green-500"
+    },
+    {
+      icon: TrendingUp,
+      title: "Latest News",
+      description: "Stay updated with education news",
+      path: "/news",
+      color: "bg-purple-500"
+    },
+    {
+      icon: Bell,
+      title: "Notifications",
+      description: "Check your latest updates",
+      path: "/notifications",
+      color: "bg-orange-500"
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      {/* EAMCET Results Popup */}
-      <EamcetResultsPopup 
-        open={showEamcetPopup} 
-        onClose={handleCloseEamcetPopup} 
-      />
-
-      {/* Header */}
-      <div className="bg-white shadow-lg p-4 border-b-2 border-blue-100">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Welcome Back!</h1>
-              <p className="text-base text-gray-600">Find your perfect college</p>
-            </div>
-            <div className="relative">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-2 hover:bg-blue-50"
-                onClick={() => navigate('/notifications')}
-              >
-                <Bell className="w-6 h-6 text-blue-600" />
-                {unreadNotifications > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {unreadNotifications}
-                  </span>
-                )}
-              </Button>
-            </div>
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-blue-600 to-purple-700 text-white">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-12 lg:py-16">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl lg:text-5xl font-bold mb-4">
+              Welcome to NXTGEN
+            </h1>
+            <p className="text-lg lg:text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+              Your ultimate platform for college admissions, predictions, and educational guidance
+            </p>
           </div>
-          
+
           {/* Search Bar */}
-          <div className="relative">
+          <div className="max-w-2xl mx-auto relative">
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search colleges, courses, news..."
-              className="pl-10 text-base border-2 border-blue-200 focus:border-blue-400"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Search for colleges, courses, or locations..."
+              className="h-14 pl-14 pr-4 text-base bg-white/90 backdrop-blur border-0 rounded-xl shadow-lg focus:bg-white focus:shadow-xl transition-all"
             />
-            <Search 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-blue-400 cursor-pointer"
-              onClick={handleSearch}
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                onClick={clearSearch}
-              >
-                ×
-              </Button>
+            <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+            {loading && (
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-md mx-auto p-4 pb-24">
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-8">
         {/* Search Results */}
-        {searchQuery && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Search Results</h2>
-              {searching && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-              )}
-            </div>
-            
-            {searchResults.length > 0 ? (
-              <div className="space-y-4">
-                {searchResults.map((college) => (
-                  <Card key={college.id} className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300 bg-white"
-                        onClick={() => navigate(`/college-details/${college.id}`)}>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h3>
-                        <div className="flex items-center text-base text-gray-600 mb-1">
-                          <MapPin className="w-4 h-4 mr-1 text-red-500" />
-                          {college.location}
-                        </div>
-                        <div className="flex items-center space-x-3 text-sm">
-                          <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                            <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                            <span className="font-bold text-gray-900">{college.rating}/5.0</span>
-                          </div>
-                          <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                            ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
-                          </span>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" className="p-1 hover:bg-red-50">
-                        <Heart className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                      </Button>
+        {searchResults.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Search Results</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {searchResults.map((college) => (
+                <Card 
+                  key={college.id} 
+                  className="bg-white hover:shadow-lg transition-all duration-300 cursor-pointer border hover:border-blue-300"
+                  onClick={() => navigate(`/college-details/${college.id}`)}
+                >
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{college.name}</h3>
+                    <div className="flex items-center text-sm text-gray-600 mb-3">
+                      <MapPin className="w-4 h-4 mr-1 text-red-500" />
+                      <span className="truncate">{college.location}, {college.state}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full font-medium border border-blue-200">{college.type}</span>
-                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{college.placement_percentage}% placement</span>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : !searching && searchQuery ? (
-              <div className="text-center py-4 text-gray-500">
-                No colleges found for "{searchQuery}"
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {/* Quick Actions - only show when not searching */}
-        {!searchQuery && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <Button
-              variant="outline"
-              className="h-24 flex-col space-y-3 border-3 border-green-200 hover:border-green-400 hover:bg-green-50 bg-white shadow-lg"
-              onClick={() => navigate('/predictor')}
-            >
-              <TrendingUp className="w-8 h-8 text-green-600" />
-              <span className="text-base font-bold text-green-700">Rank Predictor</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-24 flex-col space-y-3 border-3 border-blue-200 hover:border-blue-400 hover:bg-blue-50 bg-white shadow-lg"
-              onClick={() => navigate('/colleges')}
-            >
-              <Award className="w-8 h-8 text-blue-600" />
-              <span className="text-base font-bold text-blue-700">Browse Colleges</span>
-            </Button>
-          </div>
-        )}
-
-        {/* Recommended Colleges - only show when not searching */}
-        {!searchQuery && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                {userProfile?.preferred_locations?.length > 0 || userProfile?.budget_min ? 
-                  'Recommended For You' : 'Top Colleges'}
-              </h2>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/colleges')} className="text-green-600 font-medium hover:bg-green-50">
-                View all
-              </Button>
-            </div>
-            <div className="space-y-4">
-              {colleges.map((college) => (
-                <Card key={college.id} className="p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300 bg-white"
-                      onClick={() => navigate(`/college-details/${college.id}`)}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-1">{college.name}</h3>
-                      <div className="flex items-center text-base text-gray-600 mb-1">
-                        <MapPin className="w-4 h-4 mr-1 text-red-500" />
-                        {college.location}
+                      <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
+                        <Star className="w-3 h-3 text-yellow-500 mr-1" />
+                        <span className="font-bold text-xs">{college.rating}/5.0</span>
                       </div>
-                      <div className="flex items-center space-x-3 text-sm">
-                        <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-                          <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                          <span className="font-bold text-gray-900">{college.rating}/5.0</span>
-                        </div>
-                        <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                          ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
-                        </span>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="p-1 hover:bg-red-50">
-                      <Heart className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full font-medium border border-blue-200">{college.type}</span>
-                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{college.placement_percentage}% placement</span>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Latest News Section - only show when not searching */}
-        {!searchQuery && news.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Latest Updates</h2>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/news')} className="text-purple-600 font-medium hover:bg-purple-50">
-                View all
-              </Button>
-            </div>
-            <div className="space-y-4">
-              {news.slice(0, 2).map((item) => (
-                <Card key={item.id} className="p-4 hover:shadow-xl transition-all duration-300 border-2 hover:border-purple-300 bg-white">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <h4 className="text-base font-bold text-gray-900 mb-1">{item.title}</h4>
-                      <p className="text-sm text-gray-600 mb-2">{item.description}</p>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 px-3 py-1 rounded-full font-medium border border-purple-200">
-                          {item.category}
-                        </span>
-                        <span className="text-xs text-gray-500 font-medium">
-                          {new Date(item.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
+                      <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L
+                      </span>
                     </div>
                   </div>
                 </Card>
@@ -419,80 +161,66 @@ const Home = () => {
           </div>
         )}
 
-        {/* User Preferences Info - only show when not searching */}
-        {!searchQuery && userProfile && (userProfile.preferred_locations?.length > 0 || userProfile.budget_min) && (
-          <Card className="p-4 mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 shadow-lg">
-            <h3 className="text-lg font-bold text-green-900 mb-2">Your Preferences</h3>
-            <div className="space-y-1 text-sm text-green-800">
-              {userProfile.preferred_locations?.length > 0 && (
-                <p className="font-medium">📍 Locations: {userProfile.preferred_locations.join(', ')}</p>
-              )}
-              {userProfile.budget_min && userProfile.budget_max && (
-                <p className="font-medium">💰 Budget: ₹{(userProfile.budget_min / 100000).toFixed(1)}L - ₹{(userProfile.budget_max / 100000).toFixed(1)}L</p>
-              )}
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-green-700 p-0 h-auto mt-2 font-medium hover:bg-green-100"
-                onClick={() => navigate('/profile')}
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {quickActions.map((action, index) => (
+              <Card 
+                key={index}
+                className="bg-white hover:shadow-lg transition-all duration-300 cursor-pointer border hover:border-gray-300 group"
+                onClick={() => navigate(action.path)}
               >
-                Update preferences →
-              </Button>
+                <div className="p-6">
+                  <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <action.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-2">{action.title}</h3>
+                  <p className="text-sm text-gray-600">{action.description}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <div className="p-6 text-center">
+              <Users className="w-8 h-8 mx-auto mb-3" />
+              <h3 className="text-2xl font-bold mb-1">5000+</h3>
+              <p className="text-blue-100">Colleges Listed</p>
+            </div>
+          </Card>
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <div className="p-6 text-center">
+              <Award className="w-8 h-8 mx-auto mb-3" />
+              <h3 className="text-2xl font-bold mb-1">95%</h3>
+              <p className="text-green-100">Prediction Accuracy</p>
+            </div>
+          </Card>
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <div className="p-6 text-center">
+              <TrendingUp className="w-8 h-8 mx-auto mb-3" />
+              <h3 className="text-2xl font-bold mb-1">50K+</h3>
+              <p className="text-purple-100">Students Helped</p>
+            </div>
+          </Card>
+        </div>
+
+        {/* Welcome Message */}
+        {user && (
+          <Card className="bg-white border-l-4 border-blue-500">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Welcome back, {user.email}!
+              </h3>
+              <p className="text-gray-600">
+                Ready to explore colleges and plan your future? Use our tools to find the perfect college for you.
+              </p>
             </div>
           </Card>
         )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-evenly gap-2 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-blue-600 bg-blue-50"
-            >
-              <HomeIcon className="w-7 h-7" />
-              <span className="text-xs">Home</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-purple-600"
-              onClick={() => navigate('/colleges')}
-            >
-              <Users className="w-7 h-7" />
-              <span className="text-xs">Colleges</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
-              onClick={() => navigate('/predictor')}
-            >
-              <BookOpen className="w-7 h-7" />
-              <span className="text-xs">Predictor</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-orange-600"
-              onClick={() => navigate('/news')}
-            >
-              <Newspaper className="w-7 h-7" />
-              <span className="text-xs">News</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-indigo-600"
-              onClick={() => navigate('/profile')}
-            >
-              <User className="w-7 h-7" />
-              <span className="text-xs">Profile</span>
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -31,23 +32,26 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Auth pages without layout */}
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/colleges" element={<Colleges />} />
-          <Route path="/college-details/:id" element={<CollegeDetails />} />
-          <Route path="/predictor" element={<Predictor />} />
-          <Route path="/college-predictor" element={<CollegePredictor />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile-page" element={<ProfilePage />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/notifications" element={<Notifications />} />
           <Route path="/processing" element={<Processing />} />
-          <Route path="*" element={<NotFound />} />
+          
+          {/* Pages with layout */}
+          <Route path="/home" element={<Layout><Home /></Layout>} />
+          <Route path="/colleges" element={<Layout><Colleges /></Layout>} />
+          <Route path="/college-details/:id" element={<Layout><CollegeDetails /></Layout>} />
+          <Route path="/predictor" element={<Layout><Predictor /></Layout>} />
+          <Route path="/college-predictor" element={<Layout><CollegePredictor /></Layout>} />
+          <Route path="/news" element={<Layout><News /></Layout>} />
+          <Route path="/profile" element={<Layout><Profile /></Layout>} />
+          <Route path="/profile-page" element={<Layout><ProfilePage /></Layout>} />
+          <Route path="/search" element={<Layout><Search /></Layout>} />
+          <Route path="/favorites" element={<Layout><Favorites /></Layout>} />
+          <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
+          <Route path="*" element={<Layout><NotFound /></Layout>} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
