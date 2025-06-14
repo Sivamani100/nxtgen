@@ -78,6 +78,35 @@ const ProfilePage = () => {
     'Other'
   ];
 
+  const branches = [
+    'Computer Science Engineering',
+    'Electronics and Communication',
+    'Mechanical Engineering',
+    'Civil Engineering',
+    'Electrical Engineering',
+    'Information Technology',
+    'Chemical Engineering',
+    'Biotechnology',
+    'Aerospace Engineering',
+    'Automobile Engineering'
+  ];
+
+  const locations = [
+    'Andhra Pradesh',
+    'Telangana',
+    'Karnataka',
+    'Tamil Nadu',
+    'Kerala',
+    'Maharashtra',
+    'Delhi',
+    'Mumbai',
+    'Bangalore',
+    'Hyderabad',
+    'Chennai',
+    'Pune',
+    'Other'
+  ];
+
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -97,16 +126,7 @@ const ProfilePage = () => {
         .single();
 
       if (error) throw error;
-      
-      // Transform the data to match our Profile interface
-      const transformedProfile: Profile = {
-        ...data,
-        notification_preferences: typeof data.notification_preferences === 'object' && data.notification_preferences !== null
-          ? data.notification_preferences as { events: boolean; admissions: boolean; scholarships: boolean; }
-          : { events: true, admissions: true, scholarships: true }
-      };
-      
-      setProfile(transformedProfile);
+      setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');
@@ -162,12 +182,13 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pb-16 lg:pb-0">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b sticky top-0 z-50">
+      <div className="lg:hidden bg-white shadow-sm border-b">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900">Profile</h1>
+            <User className="w-6 h-6 text-green-600 mr-2" />
+            <h1 className="text-lg font-bold text-gray-900">Profile</h1>
           </div>
           <div className="flex items-center space-x-2">
             {editing ? (
@@ -175,13 +196,13 @@ const ProfilePage = () => {
                 <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
                   <X className="w-4 h-4" />
                 </Button>
-                <Button size="sm" onClick={updateProfile} disabled={saving} className="bg-green-600 hover:bg-green-700">
+                <Button size="sm" onClick={updateProfile} disabled={saving}>
                   <Save className="w-4 h-4" />
                 </Button>
               </>
             ) : (
-              <Button size="sm" onClick={() => setEditing(true)} className="bg-green-600 hover:bg-green-700 text-white">
-                Edit
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <Edit className="w-4 h-4" />
               </Button>
             )}
           </div>
@@ -223,147 +244,13 @@ const ProfilePage = () => {
       </div>
 
       <div className="max-w-6xl mx-auto p-4 lg:p-6">
-        {/* Mobile Layout */}
-        <div className="lg:hidden space-y-4">
-          {/* Profile Summary Card - Mobile */}
-          <Card className="p-6 bg-white shadow-lg">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 mx-auto">
-                {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
-              </div>
-              
-              <h2 className="text-xl font-bold text-gray-900 mb-1">
-                {profile.full_name || 'Complete Your Profile'}
-              </h2>
-              <p className="text-gray-600 mb-4">{profile.email}</p>
-              
-              <div className="flex justify-between items-center mb-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{profile.profile_completion_percentage || 0}%</div>
-                  <div className="text-xs text-gray-500">Profile Complete</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">1</div>
-                  <div className="text-xs text-gray-500">Saved Colleges</div>
-                </div>
-              </div>
-
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSignOut}
-                className="w-full text-red-600 border-red-200 hover:bg-red-50"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
-          </Card>
-
-          {/* Personal Information - Mobile */}
-          <Card className="p-4 bg-white shadow-lg">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h3>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Full Name</Label>
-                {editing ? (
-                  <Input
-                    value={profile.full_name || ''}
-                    onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                    placeholder="Enter your full name"
-                    className="mt-1"
-                  />
-                ) : (
-                  <p className="mt-1 text-sm text-gray-600">
-                    {profile.full_name || 'Not provided'}
-                  </p>
-                )}
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Email</Label>
-                <p className="mt-1 text-sm text-gray-600">{profile.email}</p>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Phone Number</Label>
-                {editing ? (
-                  <Input
-                    value={profile.phone_number || ''}
-                    onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
-                    placeholder="Enter your phone number"
-                    className="mt-1"
-                  />
-                ) : (
-                  <p className="mt-1 text-sm text-gray-600">
-                    {profile.phone_number || 'Not provided'}
-                  </p>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Academic Information - Mobile */}
-          <Card className="p-4 bg-white shadow-lg">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Academic Information</h3>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Academic Field</Label>
-                {editing ? (
-                  <Select 
-                    value={profile.academic_field || ''} 
-                    onValueChange={(value) => setProfile({ ...profile, academic_field: value })}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select academic field" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {academicFields.map((field) => (
-                        <SelectItem key={field} value={field}>{field}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="mt-1 text-sm text-gray-600">
-                    {profile.academic_field || 'Not selected'}
-                  </p>
-                )}
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Preferred Course</Label>
-                {editing ? (
-                  <Select 
-                    value={profile.preferred_course || ''} 
-                    onValueChange={(value) => setProfile({ ...profile, preferred_course: value })}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select preferred course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {courses.map((course) => (
-                        <SelectItem key={course} value={course}>{course}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="mt-1 text-sm text-gray-600">
-                    {profile.preferred_course || 'Not selected'}
-                  </p>
-                )}
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Desktop Layout */}
-        <div className="hidden lg:grid lg:grid-cols-3 gap-6">
-          {/* Profile Summary Card - Desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          {/* Profile Summary Card */}
           <div className="lg:col-span-1">
-            <Card className="p-6 bg-white shadow-lg">
+            <Card className="p-4 lg:p-6 bg-white shadow-lg">
               <div className="text-center">
                 <div className="relative inline-block mb-4">
-                  <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                  <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-2xl lg:text-3xl font-bold">
                     {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
                   </div>
                   {editing && (
@@ -373,13 +260,13 @@ const ProfilePage = () => {
                   )}
                 </div>
                 
-                <h2 className="text-xl font-bold text-gray-900 mb-1">
+                <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">
                   {profile.full_name || 'Complete Your Profile'}
                 </h2>
-                <p className="text-base text-gray-600 mb-4">{profile.email}</p>
+                <p className="text-sm lg:text-base text-gray-600 mb-4">{profile.email}</p>
                 
                 <div className="mb-4">
-                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <div className="flex justify-between text-xs lg:text-sm text-gray-600 mb-1">
                     <span>Profile Completion</span>
                     <span>{profile.profile_completion_percentage || 0}%</span>
                   </div>
@@ -404,17 +291,17 @@ const ProfilePage = () => {
             </Card>
           </div>
 
-          {/* Profile Details - Desktop */}
+          {/* Profile Details */}
           <div className="lg:col-span-2">
-            <Card className="p-6 bg-white shadow-lg">
+            <Card className="p-4 lg:p-6 bg-white shadow-lg">
               <div className="space-y-6">
                 {/* Personal Information */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <User className="w-5 h-5 mr-2 text-blue-600" />
                     Personal Information
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-900">Full Name</Label>
                       {editing ? (
@@ -425,7 +312,7 @@ const ProfilePage = () => {
                           className="mt-1"
                         />
                       ) : (
-                        <p className="mt-1 text-base text-gray-700 bg-gray-50 p-3 rounded">
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
                           {profile.full_name || 'Not provided'}
                         </p>
                       )}
@@ -433,7 +320,7 @@ const ProfilePage = () => {
                     
                     <div>
                       <Label className="text-sm font-medium text-gray-900">Email</Label>
-                      <p className="mt-1 text-base text-gray-700 bg-gray-50 p-3 rounded">
+                      <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
                         {profile.email}
                       </p>
                     </div>
@@ -448,7 +335,7 @@ const ProfilePage = () => {
                           className="mt-1"
                         />
                       ) : (
-                        <p className="mt-1 text-base text-gray-700 bg-gray-50 p-3 rounded">
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
                           {profile.phone_number || 'Not provided'}
                         </p>
                       )}
@@ -460,11 +347,11 @@ const ProfilePage = () => {
 
                 {/* Academic Information */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <GraduationCap className="w-5 h-5 mr-2 text-green-600" />
                     Academic Information
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-900">Academic Field</Label>
                       {editing ? (
@@ -482,7 +369,7 @@ const ProfilePage = () => {
                           </SelectContent>
                         </Select>
                       ) : (
-                        <p className="mt-1 text-base text-gray-700 bg-gray-50 p-3 rounded">
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
                           {profile.academic_field || 'Not selected'}
                         </p>
                       )}
@@ -505,7 +392,7 @@ const ProfilePage = () => {
                           </SelectContent>
                         </Select>
                       ) : (
-                        <p className="mt-1 text-base text-gray-700 bg-gray-50 p-3 rounded">
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
                           {profile.preferred_course || 'Not selected'}
                         </p>
                       )}
@@ -517,11 +404,11 @@ const ProfilePage = () => {
 
                 {/* Budget Information */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <DollarSign className="w-5 h-5 mr-2 text-purple-600" />
                     Budget Range
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-900">Minimum Budget (₹)</Label>
                       {editing ? (
@@ -533,7 +420,7 @@ const ProfilePage = () => {
                           className="mt-1"
                         />
                       ) : (
-                        <p className="mt-1 text-base text-gray-700 bg-gray-50 p-3 rounded">
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
                           ₹{profile.budget_min?.toLocaleString() || 'Not set'}
                         </p>
                       )}
@@ -550,7 +437,7 @@ const ProfilePage = () => {
                           className="mt-1"
                         />
                       ) : (
-                        <p className="mt-1 text-base text-gray-700 bg-gray-50 p-3 rounded">
+                        <p className="mt-1 text-sm lg:text-base text-gray-700 bg-gray-50 p-3 rounded">
                           ₹{profile.budget_max?.toLocaleString() || 'Not set'}
                         </p>
                       )}

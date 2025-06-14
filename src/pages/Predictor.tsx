@@ -171,28 +171,18 @@ const Predictor = () => {
   const isEAMCET = exam === 'ap-eamcet' || exam === 'ts-eamcet';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="flex items-center p-4">
-          <h1 className="text-xl font-bold text-gray-900">College & Rank Predictor</h1>
-        </div>
-      </div>
-
-      {/* Desktop Header */}
-      <div className="hidden lg:block bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto p-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 pb-20 lg:pb-0">
+      <div className="max-w-4xl mx-auto p-4 lg:p-6">
+        <div className="mb-4 lg:mb-6">
+          <h1 className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
             College & Rank Predictor
           </h1>
-          <p className="text-base text-gray-600">Predict your rank and find suitable colleges based on your exam scores</p>
+          <p className="text-sm lg:text-base text-gray-600">Predict your rank and find suitable colleges based on your exam scores</p>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto p-4 lg:p-6">
         {/* Tab Navigation */}
-        <div className="mb-6 lg:mb-8">
-          <div className="grid grid-cols-2 gap-3 lg:gap-6">
+        <div className="mb-4 lg:mb-8">
+          <div className="grid grid-cols-2 gap-2 lg:gap-6">
             <Card 
               className={`p-4 lg:p-6 cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:scale-105 ${
                 activeTab === 'college-predictor' 
@@ -203,7 +193,7 @@ const Predictor = () => {
             >
               <div className="text-center space-y-2 lg:space-y-3">
                 <GraduationCap className="w-8 h-8 lg:w-12 lg:h-12 text-blue-600 mx-auto" />
-                <h3 className="text-sm lg:text-xl font-bold text-blue-700">College Predictor</h3>
+                <h3 className="text-base lg:text-xl font-bold text-blue-700">College Predictor</h3>
                 <p className="text-xs lg:text-sm text-gray-600">Find colleges based on your rank</p>
               </div>
             </Card>
@@ -217,7 +207,7 @@ const Predictor = () => {
             >
               <div className="text-center space-y-2 lg:space-y-3">
                 <TrendingUp className="w-8 h-8 lg:w-12 lg:h-12 text-green-600 mx-auto" />
-                <h3 className="text-sm lg:text-xl font-bold text-green-700">Rank Predictor</h3>
+                <h3 className="text-base lg:text-xl font-bold text-green-700">Rank Predictor</h3>
                 <p className="text-xs lg:text-sm text-gray-600">Predict your rank based on marks</p>
               </div>
             </Card>
@@ -384,42 +374,56 @@ const Predictor = () => {
                     <p className="bg-white p-2 rounded">• 75% weightage for EAMCET marks</p>
                     <p className="bg-white p-2 rounded">• 25% weightage for IPE Group marks</p>
                   </div>
-                  <p className="bg-white p-2 rounded">• IPE marks are converted from 1000 to 600 scale</p>
+                  <p className="bg-white p-2 rounded">• IPE marks are converted from 1000 to 600 scale (PCM)</p>
                 </div>
               </Card>
             )}
 
             {/* Results */}
             {result && (
-              <Card className="p-4 lg:p-6 bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200 shadow-xl">
-                <div className="flex items-center mb-4 lg:mb-6">
-                  <TrendingUp className="w-6 h-6 lg:w-8 lg:h-8 text-green-600 mr-3" />
-                  <h3 className="text-lg lg:text-2xl font-bold text-gray-900">Prediction Results</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  {result.finalScore && (
-                    <div className="bg-white p-3 lg:p-4 rounded-lg shadow">
-                      <p className="text-sm lg:text-base text-gray-600">Final Score</p>
-                      <p className="text-xl lg:text-2xl font-bold text-blue-600">{result.finalScore.toFixed(2)}</p>
-                    </div>
-                  )}
-                  
-                  <div className="bg-white p-3 lg:p-4 rounded-lg shadow">
-                    <p className="text-sm lg:text-base text-gray-600">Predicted Rank Range</p>
-                    <p className="text-xl lg:text-2xl font-bold text-green-600">{result.rank}</p>
+              <div className="space-y-4 lg:space-y-6">
+                <Card className="p-4 lg:p-6 bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-300 shadow-xl">
+                  <div className="flex items-center mb-4 lg:mb-6">
+                    <TrendingUp className="w-6 h-6 lg:w-8 lg:h-8 text-green-600 mr-3" />
+                    <h3 className="text-lg lg:text-2xl font-bold text-gray-900">Prediction Results</h3>
                   </div>
                   
-                  <div className="bg-white p-3 lg:p-4 rounded-lg shadow">
-                    <p className="text-sm lg:text-base text-gray-600 mb-2">Possible Colleges</p>
-                    <div className="space-y-1">
-                      {result.colleges.map((college, index) => (
-                        <p key={index} className="text-sm lg:text-base text-gray-800">• {college}</p>
-                      ))}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                    {result.finalScore && (
+                      <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 lg:p-6 rounded-lg border-2 border-green-300">
+                        <div className="text-xs lg:text-sm font-medium text-green-700 mb-2">Final Weighted Score</div>
+                        <div className="text-2xl lg:text-4xl font-bold text-green-800">
+                          {result.finalScore.toFixed(2)}/100
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="bg-gradient-to-r from-blue-100 to-indigo-100 p-4 lg:p-6 rounded-lg border-2 border-blue-300">
+                      <div className="text-xs lg:text-sm font-medium text-blue-700 mb-2">Expected Rank Range</div>
+                      <div className="text-xl lg:text-3xl font-bold text-blue-800">{result.rank}</div>
                     </div>
                   </div>
-                </div>
-              </Card>
+                  
+                  <div className="mt-4 lg:mt-6 p-3 lg:p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border-2 border-orange-200">
+                    <p className="text-orange-800 text-xs lg:text-sm"><strong>Disclaimer:</strong> This is an estimated prediction based on previous year data. 
+                    Actual ranks may vary based on exam difficulty, number of candidates, and other factors.</p>
+                  </div>
+                </Card>
+
+                <Card className="p-4 lg:p-6 bg-white shadow-xl border-2 border-gray-200">
+                  <h4 className="text-lg lg:text-xl font-bold text-gray-900 mb-4">General College Categories:</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-3">
+                    {result.colleges.map((college, index) => (
+                      <div key={index} className="bg-gradient-to-r from-gray-100 to-blue-100 p-3 lg:p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                        <span className="text-xs lg:text-base font-medium text-gray-800">{college}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 lg:mt-6 p-3 lg:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-blue-800 font-medium text-xs lg:text-sm">💡 For detailed college predictions with branch-wise cutoffs, use our College Predictor above!</p>
+                  </div>
+                </Card>
+              </div>
             )}
           </>
         )}
