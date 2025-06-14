@@ -81,12 +81,12 @@ const News = () => {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('user_news_favorites')
-        .select('news_id')
+        .from('saved_news')
+        .select('resource_id')
         .eq('user_id', user.id);
 
       if (error) throw error;
-      setSavedNews(data?.map(item => item.news_id) || []);
+      setSavedNews(data?.map(item => item.resource_id) || []);
     } catch (error) {
       console.error('Error fetching saved news:', error);
     }
@@ -107,10 +107,10 @@ const News = () => {
       if (isAlreadySaved) {
         // Remove from saved
         const { error } = await supabase
-          .from('user_news_favorites')
+          .from('saved_news')
           .delete()
           .eq('user_id', user.id)
-          .eq('news_id', newsId);
+          .eq('resource_id', newsId);
 
         if (error) throw error;
         setSavedNews(prev => prev.filter(id => id !== newsId));
@@ -118,18 +118,15 @@ const News = () => {
       } else {
         // Add to saved
         const { error } = await supabase
-          .from('user_news_favorites')
+          .from('saved_news')
           .insert({
             user_id: user.id,
-            news_id: newsId
+            resource_id: newsId
           });
 
         if (error) {
-          if (error.code === '23505') {
-            toast.error('News already saved');
-          } else {
-            throw error;
-          }
+          // no need for code 23505 check; ignore duplicate insert for now
+          toast.error('Failed to save news');
           return;
         }
 
