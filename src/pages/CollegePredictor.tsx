@@ -270,7 +270,7 @@ const CollegePredictor = () => {
                   <SelectValue placeholder="Choose branch (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Branches</SelectItem>
+                  <SelectItem value="all-branches">All Branches</SelectItem>
                   {branches.map((branch) => (
                     <SelectItem key={branch} value={branch}>
                       {branch}
