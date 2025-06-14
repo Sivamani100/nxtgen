@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Newspaper,
   Calendar,
@@ -16,7 +17,8 @@ import {
   BookOpen,
   Clock,
   TrendingUp,
-  ArrowRight
+  ArrowRight,
+  Bell
 } from "lucide-react";
 
 interface College {
@@ -45,6 +47,7 @@ const Home = () => {
   const [colleges, setColleges] = useState<College[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,24 +75,24 @@ const Home = () => {
     }
   };
 
-const fetchLatestNews = async () => {
-  try {
-    // Always pull from resources where category === 'news'
-    let { data, error } = await supabase
-      .from('resources')
-      .select('id, title, description, category, date, image_url, external_link, created_at')
-      .eq('category', 'news')
-      .order('created_at', { ascending: false })
-      .limit(2);
+  const fetchLatestNews = async () => {
+    try {
+      // Always pull from resources where category === 'news'
+      let { data, error } = await supabase
+        .from('resources')
+        .select('id, title, description, category, date, image_url, external_link, created_at')
+        .eq('category', 'news')
+        .order('created_at', { ascending: false })
+        .limit(2);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    setNews(data || []);
-  } catch (error) {
-    console.error('Error fetching news:', error);
-    setNews([]); // fallback to empty, don't crash
-  }
-};
+      setNews(data || []);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      setNews([]); // fallback to empty, don't crash
+    }
+  };
 
   const createSampleNews = async () => {
     const sampleNews = [
@@ -138,8 +141,50 @@ const fetchLatestNews = async () => {
     }
   };
 
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
+      {/* Welcome Header with Search */}
+      <section className="bg-white border-b border-gray-100 py-4 lg:py-6">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Welcome Back!</h1>
+              <p className="text-sm lg:text-base text-gray-600">Find your perfect college</p>
+            </div>
+            <div className="relative">
+              <Bell className="w-6 h-6 text-gray-600" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                1
+              </span>
+            </div>
+          </div>
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Search colleges, courses, news..."
+              className="pl-10 h-12 text-base border-gray-200 focus:border-green-500 rounded-lg"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section - removed hero image */}
       <section className="bg-gradient-to-br from-green-50 to-blue-50 py-12 lg:py-20">
         <div className="max-w-6xl mx-auto px-4">
