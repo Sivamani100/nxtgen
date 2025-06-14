@@ -1,321 +1,239 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Calendar, ExternalLink, Heart, Bookmark } from "lucide-react";
-import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
 
-type Resource = Database['public']['Tables']['resources']['Row'];
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Search, 
+  Calendar, 
+  ExternalLink, 
+  Newspaper,
+  Filter,
+  Clock,
+  BookOpen
+} from "lucide-react";
+import { toast } from "sonner";
+
+interface NewsItem {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  image_url?: string;
+  external_link?: string;
+  source?: string;
+}
 
 const News = () => {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [filteredNews, setFilteredNews] = useState<NewsItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [savedNews, setSavedNews] = useState<number[]>([]);
-  const [showSavedOnly, setShowSavedOnly] = useState(false);
-  const [filters, setFilters] = useState({
-    category: 'all',
-    sortBy: 'date'
-  });
-  const navigate = useNavigate();
+
+  const categories = [
+    { value: 'all', label: 'All News' },
+    { value: 'admissions', label: 'Admissions' },
+    { value: 'exams', label: 'Exams' },
+    { value: 'scholarships', label: 'Scholarships' },
+    { value: 'events', label: 'Events' },
+    { value: 'announcements', label: 'Announcements' }
+  ];
 
   useEffect(() => {
-    fetchResources();
-    fetchSavedNews();
+    fetchNews();
   }, []);
 
   useEffect(() => {
-    filterResources();
-  }, [searchQuery, filters, resources, showSavedOnly]);
+    filterNews();
+  }, [news, searchQuery, selectedCategory]);
 
-  const fetchResources = async () => {
+  const fetchNews = async () => {
     try {
       const { data, error } = await supabase
         .from('resources')
         .select('*')
+        .eq('category', 'news')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setResources(data || []);
+      setNews(data || []);
     } catch (error) {
-      console.error('Error fetching resources:', error);
+      console.error('Error fetching news:', error);
       toast.error('Failed to load news');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchSavedNews = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('saved_news')
-        .select('resource_id')
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setSavedNews(data?.map(item => item.resource_id) || []);
-    } catch (error) {
-      console.error('Error fetching saved news:', error);
-    }
-  };
-
-  const filterResources = () => {
-    let filtered = [...resources];
-
-    if (showSavedOnly) {
-      filtered = filtered.filter(resource => savedNews.includes(resource.id));
-    }
+  const filterNews = () => {
+    let filtered = news;
 
     if (searchQuery) {
-      filtered = filtered.filter(resource =>
-        resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        resource.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        resource.category.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    if (filters.category !== 'all') {
-      filtered = filtered.filter(resource => resource.category === filters.category);
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(item => 
+        item.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
     }
 
-    filtered.sort((a, b) => {
-      switch (filters.sortBy) {
-        case 'date':
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        case 'title':
-          return a.title.localeCompare(b.title);
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredResources(filtered);
-  };
-
-  const handleSaveNews = async (resourceId: number, event: React.MouseEvent) => {
-    event.stopPropagation();
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Please login to save news');
-        return;
-      }
-
-      const isAlreadySaved = savedNews.includes(resourceId);
-      
-      if (isAlreadySaved) {
-        const { error } = await supabase
-          .from('saved_news')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('resource_id', resourceId);
-
-        if (error) throw error;
-        setSavedNews(prev => prev.filter(id => id !== resourceId));
-        toast.success('News removed from saved');
-      } else {
-        const { error } = await supabase
-          .from('saved_news')
-          .insert({
-            user_id: user.id,
-            resource_id: resourceId
-          });
-
-        if (error) {
-          if (error.code === '23505') {
-            toast.error('News already saved');
-          } else {
-            throw error;
-          }
-          return;
-        }
-
-        setSavedNews(prev => [...prev, resourceId]);
-        toast.success('News saved successfully');
-      }
-    } catch (error) {
-      console.error('Error saving news:', error);
-      toast.error('Failed to save news');
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'events': return '🎉';
-      case 'admissions': return '🎓';
-      case 'scholarships': return '💰';
-      case 'results': return '📊';
-      case 'notifications': return '📢';
-      default: return '📰';
-    }
+    setFilteredNews(filtered);
   };
 
   const getCategoryColor = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'events': return 'from-purple-100 to-pink-100 border-purple-300 text-purple-800';
-      case 'admissions': return 'from-blue-100 to-indigo-100 border-blue-300 text-blue-800';
-      case 'scholarships': return 'from-green-100 to-emerald-100 border-green-300 text-green-800';
-      case 'results': return 'from-orange-100 to-red-100 border-orange-300 text-orange-800';
-      case 'notifications': return 'from-yellow-100 to-amber-100 border-yellow-300 text-yellow-800';
-      default: return 'from-gray-100 to-slate-100 border-gray-300 text-gray-800';
-    }
-  };
-
-  const getUniqueCategories = () => {
-    const categories = [...new Set(resources.map(resource => resource.category))];
-    return categories.sort();
+    const colors: Record<string, string> = {
+      admissions: 'bg-blue-100 text-blue-800',
+      exams: 'bg-green-100 text-green-800',
+      scholarships: 'bg-purple-100 text-purple-800',
+      events: 'bg-orange-100 text-orange-800',
+      announcements: 'bg-red-100 text-red-800',
+      default: 'bg-gray-100 text-gray-800'
+    };
+    return colors[category.toLowerCase()] || colors.default;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-green-100">
-      {/* Header */}
-      <div className="bg-white shadow-lg border-b-2 border-green-100">
-        <div className="max-w-6xl mx-auto p-4 lg:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                Latest Updates
-              </h1>
-              <p className="text-gray-600 mt-1">Stay updated with the latest news and announcements</p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSavedOnly(!showSavedOnly)}
-              className={`${showSavedOnly ? 'text-green-600 bg-green-50' : 'text-gray-600 hover:text-green-600 hover:bg-green-50'} transition-colors`}
-            >
-              <Bookmark className="w-5 h-5 mr-2" />
-              {showSavedOnly ? 'Show All' : 'Saved Only'}
-            </Button>
-          </div>
-          
-          {/* Search and Filters */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-1">
-              <div className="relative">
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search news and updates..."
-                  className="pl-10 h-12 border-2 border-green-200 focus:border-green-400"
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-400" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 lg:col-span-2">
-              <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
-                <SelectTrigger className="h-12 border-2 border-blue-200 focus:border-blue-400">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {getUniqueCategories().map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {getCategoryIcon(category)} {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-                <SelectTrigger className="h-12 border-2 border-green-200 focus:border-green-400">
-                  <SelectValue placeholder="Sort" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Latest First</SelectItem>
-                  <SelectItem value="title">Title A-Z</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm border-b p-4">
+        <div className="flex items-center space-x-3">
+          <Newspaper className="w-6 h-6 text-blue-600" />
+          <h1 className="text-xl font-bold text-gray-900">Latest News</h1>
         </div>
       </div>
 
-      {/* Results */}
-      <div className="max-w-6xl mx-auto p-4 lg:p-6">
-        <div className="mb-6 p-4 bg-white rounded-lg shadow-md border-l-4 border-green-400">
-          <p className="text-gray-700 font-medium">
-            {filteredResources.length} {showSavedOnly ? 'saved' : ''} updates found
-          </p>
+      {/* Desktop Header */}
+      <div className="hidden lg:block bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="flex items-center space-x-3 mb-2">
+            <Newspaper className="w-8 h-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Latest News</h1>
+          </div>
+          <p className="text-gray-600">Stay updated with the latest educational news and announcements</p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredResources.map((resource) => (
-            <Card key={resource.id} className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-green-300 bg-white transform hover:scale-105 overflow-hidden"
-                  onClick={() => resource.external_link && window.open(resource.external_link, '_blank')}>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className={`text-xs px-3 py-1 rounded-full font-medium border-2 bg-gradient-to-r ${getCategoryColor(resource.category)}`}>
-                    {getCategoryIcon(resource.category)} {resource.category}
-                  </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => handleSaveNews(resource.id, e)}
-                  >
-                    <Heart 
-                      className={`w-5 h-5 ${
-                        savedNews.includes(resource.id) 
-                          ? 'text-red-500 fill-red-500' 
-                          : 'text-gray-400 hover:text-red-500'
-                      }`} 
-                    />
-                  </Button>
-                </div>
-                
-                <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-green-700 transition-colors">
-                  {resource.title}
-                </h3>
-                
-                {resource.description && (
-                  <p className="text-gray-600 mb-4 line-clamp-3 text-sm leading-relaxed">
-                    {resource.description}
-                  </p>
-                )}
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Calendar className="w-4 h-4 mr-2 text-blue-500" />
-                    {resource.date ? new Date(resource.date).toLocaleDateString() : 
-                     new Date(resource.created_at).toLocaleDateString()}
-                  </div>
-                  {resource.external_link && (
-                    <div className="flex items-center text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200 group-hover:bg-green-100 transition-colors">
-                      <ExternalLink className="w-4 h-4 mr-1" />
-                      Read More
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
+      </div>
+
+      {/* Content */}
+      <div className="max-w-6xl mx-auto p-4 lg:p-6">
+        {/* Search and Filters */}
+        <div className="mb-6 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-gray-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search news..."
+              className="pl-10 lg:pl-12 h-10 lg:h-12 text-sm lg:text-base border-gray-200 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Category Filters */}
+          <div className="flex items-center space-x-2 overflow-x-auto pb-2">
+            <Filter className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
+            {categories.map((category) => (
+              <Button
+                key={category.value}
+                variant={selectedCategory === category.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category.value)}
+                className={`flex-shrink-0 text-xs lg:text-sm ${
+                  selectedCategory === category.value
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                {category.label}
+              </Button>
+            ))}
+          </div>
         </div>
 
-        {filteredResources.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg shadow-md">
-            <div className="text-xl font-medium text-gray-600 mb-2">
-              {showSavedOnly ? 'No saved news found' : 'No updates found'}
-            </div>
-            <div className="text-gray-500">
-              {showSavedOnly ? 'Save some news to see them here' : 'Try adjusting your search criteria'}
-            </div>
+        {/* News List */}
+        {filteredNews.length === 0 ? (
+          <div className="text-center py-12">
+            <BookOpen className="w-12 h-12 lg:w-16 lg:h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-2">No news found</h3>
+            <p className="text-sm lg:text-base text-gray-600">
+              {searchQuery || selectedCategory !== 'all' 
+                ? 'Try adjusting your search or filters.' 
+                : 'Check back later for updates.'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+            {filteredNews.map((item) => (
+              <Card
+                key={item.id}
+                className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                onClick={() => item.external_link ? window.open(item.external_link, '_blank') : null}
+              >
+                {item.image_url && (
+                  <div className="aspect-video overflow-hidden rounded-t-lg">
+                    <img 
+                      src={item.image_url} 
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                )}
+                
+                <div className="p-4 lg:p-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <Badge className={`${getCategoryColor(item.category)} text-xs font-medium`}>
+                      {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
+                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      {item.external_link && (
+                        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-sm lg:text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-700 transition-colors">
+                    {item.title}
+                  </h3>
+                  
+                  <p className="text-xs lg:text-sm text-gray-600 mb-4 line-clamp-3">
+                    {item.description}
+                  </p>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center">
+                        <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                        {new Date(item.date).toLocaleDateString()}
+                      </div>
+                      {item.source && (
+                        <div className="flex items-center">
+                          <Clock className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                          {item.source}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         )}
       </div>

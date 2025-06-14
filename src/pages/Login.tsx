@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ const Login = () => {
       }
 
       if (data.user) {
-        toast.success("Welcome back!");
+        toast.success("Login successful!");
         navigate('/home');
       }
     } catch (error) {
@@ -50,89 +51,83 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 shadow-lg">
-        <div className="text-center mb-6">
-          <div className="text-3xl font-bold text-green-600 mb-2">Welcome back!</div>
-          <p className="text-gray-600">Ready to gain previous Experience</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="mt-1"
-            />
+      <div className="w-full max-w-md">
+        <Card className="p-6 lg:p-8 shadow-lg">
+          <div className="text-center mb-6">
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-800 mb-2">Welcome Back</h1>
+            <p className="text-sm lg:text-base text-gray-600">Sign in to your NXTGEN account</p>
           </div>
 
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <div className="relative mt-1">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <Label htmlFor="email" className="text-sm lg:text-base">Email</Label>
               <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="mt-1 h-10 lg:h-12 text-sm lg:text-base"
               />
+            </div>
+
+            <div>
+              <Label htmlFor="password" className="text-sm lg:text-base">Password</Label>
+              <div className="relative mt-1">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="h-10 lg:h-12 text-sm lg:text-base pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="text-right">
               <Button
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                onClick={() => setShowPassword(!showPassword)}
+                variant="link"
+                onClick={() => navigate('/forgot-password')}
+                className="text-green-600 hover:underline p-0 h-auto text-xs lg:text-sm"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                Forgot Password?
               </Button>
             </div>
-          </div>
 
-          <div className="text-right">
             <Button
-              variant="link"
-              onClick={() => navigate('/forgot-password')}
-              className="text-green-600 hover:underline p-0 text-sm"
+              type="submit"
+              className="w-full h-10 lg:h-12 bg-green-600 hover:bg-green-700 text-sm lg:text-base font-medium"
+              disabled={loading}
             >
-              Forgotten Password ?
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
+          </form>
+
+          <div className="text-center mt-6">
+            <p className="text-xs lg:text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Button
+                variant="link"
+                onClick={() => navigate('/signup')}
+                className="text-green-600 hover:underline p-0 h-auto text-xs lg:text-sm"
+              >
+                Sign up here!
+              </Button>
+            </p>
           </div>
-
-          <div className="flex items-center space-x-2 text-sm">
-            <input type="checkbox" id="terms" className="rounded" />
-            <Label htmlFor="terms">
-              I Agree App{" "}
-              <a href="/terms" className="text-green-600 hover:underline">Terms</a>
-              {" "}and{" "}
-              <a href="/conditions" className="text-green-600 hover:underline">conditions</a>
-            </Label>
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full h-12 bg-green-600 hover:bg-green-700"
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Login and continue"}
-          </Button>
-        </form>
-
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Button
-              variant="link"
-              onClick={() => navigate('/signup')}
-              className="text-green-600 hover:underline p-0"
-            >
-              sign up !
-            </Button>
-          </p>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

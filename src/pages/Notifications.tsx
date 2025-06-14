@@ -1,9 +1,17 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Bell, Heart, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Bell, 
+  Check, 
+  Trash2, 
+  Calendar,
+  BookOpen,
+  CheckCheck
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface Notification {
@@ -12,95 +20,33 @@ interface Notification {
   category: string;
   read: boolean;
   created_at: string;
-  resource_id: number | null;
-  resource?: {
-    title: string;
-    description: string;
-    external_link?: string;
-    category: string;
-  };
+  resource_id?: number;
 }
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('All');
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchNotifications();
-    
-    // Set up real-time subscription for new notifications
-    const subscription = supabase
-      .channel('notifications_changes')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications'
-      }, (payload) => {
-        console.log('New notification:', payload.new);
-        fetchNotifications();
-        toast.success('New notification received!');
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [activeTab]);
 
   const fetchNotifications = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/login');
-        return;
-      }
+      if (!user) return;
 
-      let query = supabase
+      const { data, error } = await supabase
         .from('notifications')
-        .select(`
-          *,
-          resources (
-            title,
-            description,
-            external_link,
-            category
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (activeTab !== 'All') {
-        query = query.eq('category', activeTab);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching notifications:', error);
-        toast.error("Error loading notifications");
-        return;
-      }
-
-      const formattedData = data?.map(notification => ({
-        ...notification,
-        resource: notification.resources ? {
-          title: notification.resources.title,
-          description: notification.resources.description,
-          external_link: notification.resources.external_link,
-          category: notification.resources.category
-        } : undefined
-      })) || [];
-
-      setNotifications(formattedData);
+      if (error) throw error;
+      setNotifications(data || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      toast.error("An unexpected error occurred");
+      toast.error('Failed to load notifications');
     } finally {
       setLoading(false);
     }
@@ -113,139 +59,210 @@ const Notifications = () => {
         .update({ read: true })
         .eq('id', notificationId);
 
-      if (error) {
-        console.error('Error marking as read:', error);
-        return;
-      }
+      if (error) throw error;
 
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === notificationId 
-            ? { ...notif, read: true }
-            : notif
-        )
-      );
+      setNotifications(prev => prev.map(notif => 
+        notif.id === notificationId ? { ...notif, read: true } : notif
+      ));
     } catch (error) {
-      console.error('Error marking as read:', error);
+      console.error('Error marking notification as read:', error);
+      toast.error('Failed to mark as read');
     }
   };
 
-  const handleReadMore = (notification: Notification) => {
-    markAsRead(notification.id);
-    
-    if (notification.resource?.external_link) {
-      window.open(notification.resource.external_link, '_blank', 'noopener,noreferrer');
-    } else {
-      // Navigate to news page to show the full article
-      navigate('/news');
+  const markAllAsRead = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (error) throw error;
+
+      setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+      toast.success('All notifications marked as read');
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      toast.error('Failed to mark all as read');
     }
   };
 
-  const tabs = ['All', 'News', 'Event', 'Scholarship', 'Admission'];
+  const deleteNotification = async (notificationId: number) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
+      toast.success('Notification deleted');
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      toast.error('Failed to delete notification');
+    }
+  };
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'News':
-        return 'bg-blue-100 text-blue-700';
-      case 'Event':
-        return 'bg-purple-100 text-purple-700';
-      case 'Scholarship':
-        return 'bg-green-100 text-green-700';
-      case 'Admission':
-        return 'bg-orange-100 text-orange-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
+    const colors: Record<string, string> = {
+      admissions: 'bg-blue-100 text-blue-800',
+      exams: 'bg-green-100 text-green-800',
+      scholarships: 'bg-purple-100 text-purple-800',
+      events: 'bg-orange-100 text-orange-800',
+      announcements: 'bg-red-100 text-red-800',
+      news: 'bg-indigo-100 text-indigo-800',
+      default: 'bg-gray-100 text-gray-800'
+    };
+    return colors[category.toLowerCase()] || colors.default;
   };
 
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto p-4 lg:p-6">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Notifications</h1>
-          
-          {/* Tabs */}
-          <div className="flex overflow-x-auto space-x-2 pb-2">
-            {tabs.map((tab) => (
+    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm border-b p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Bell className="w-6 h-6 text-blue-600" />
+            <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
+            {unreadCount > 0 && (
+              <Badge className="bg-red-500 text-white text-xs">
+                {unreadCount}
+              </Badge>
+            )}
+          </div>
+          {unreadCount > 0 && (
+            <Button
+              onClick={markAllAsRead}
+              size="sm"
+              variant="outline"
+              className="text-xs"
+            >
+              <CheckCheck className="w-4 h-4 mr-1" />
+              Mark All
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden lg:block bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Bell className="w-8 h-8 text-blue-600" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+                <p className="text-gray-600">Stay updated with the latest announcements</p>
+              </div>
+              {unreadCount > 0 && (
+                <Badge className="bg-red-500 text-white">
+                  {unreadCount} unread
+                </Badge>
+              )}
+            </div>
+            {unreadCount > 0 && (
               <Button
-                key={tab}
-                variant={activeTab === tab ? 'default' : 'outline'}
-                size="sm"
-                className={`flex-shrink-0 px-4 py-2 ${
-                  activeTab === tab 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-                onClick={() => setActiveTab(tab)}
+                onClick={markAllAsRead}
+                variant="outline"
+                className="text-blue-600 border-blue-200 hover:bg-blue-50"
               >
-                {tab}
+                <CheckCheck className="w-5 h-5 mr-2" />
+                Mark All as Read
               </Button>
-            ))}
+            )}
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-4xl mx-auto p-4 lg:p-6">
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="text-center py-16">
-            <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <div className="text-xl font-medium text-gray-600 mb-2">No notifications found</div>
-            <div className="text-gray-500">
-              You'll see updates here when new content is added
-            </div>
+        {notifications.length === 0 ? (
+          <div className="text-center py-12">
+            <Bell className="w-12 h-12 lg:w-16 lg:h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-2">No notifications yet</h3>
+            <p className="text-sm lg:text-base text-gray-600">
+              We'll notify you when there are important updates
+            </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 lg:space-y-4">
             {notifications.map((notification) => (
-              <Card key={notification.id} className={`bg-white hover:shadow-md transition-shadow ${!notification.read ? 'ring-2 ring-blue-200' : ''}`}>
-                {/* Notification indicator */}
-                {!notification.read && (
-                  <div className="h-1 bg-blue-500 rounded-t-lg"></div>
-                )}
-                
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(notification.category)}`}>
-                      {notification.category}
+              <Card
+                key={notification.id}
+                className={`p-4 lg:p-5 transition-all duration-200 ${
+                  notification.read 
+                    ? 'bg-white border-gray-200' 
+                    : 'bg-blue-50 border-blue-200 shadow-md'
+                } hover:shadow-lg`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    {/* Header */}
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Badge className={`${getCategoryColor(notification.category)} text-xs font-medium`}>
+                        {notification.category.charAt(0).toUpperCase() + notification.category.slice(1)}
+                      </Badge>
+                      {!notification.read && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                      )}
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(notification.created_at).toLocaleDateString()}
+
+                    {/* Message */}
+                    <p className={`text-sm lg:text-base mb-2 ${
+                      notification.read ? 'text-gray-700' : 'text-gray-900 font-medium'
+                    }`}>
+                      {notification.message}
+                    </p>
+
+                    {/* Timestamp */}
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                      {new Date(notification.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
                     </div>
                   </div>
-                  
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    {notification.resource?.title || notification.message}
-                  </h3>
-                  
-                  {notification.resource?.description && (
-                    <p className="text-gray-600 mb-4 leading-relaxed">
-                      {notification.resource.description}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center space-x-3">
-                    <Button 
-                      size="sm" 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => handleReadMore(notification)}
+
+                  {/* Actions */}
+                  <div className="flex items-center space-x-2 ml-4">
+                    {!notification.read && (
+                      <Button
+                        onClick={() => markAsRead(notification.id)}
+                        size="sm"
+                        variant="ghost"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8 p-0"
+                        title="Mark as read"
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => deleteNotification(notification.id)}
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                      title="Delete notification"
                     >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Read more
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => markAsRead(notification.id)}
-                      className="text-gray-600 hover:text-blue-600"
-                    >
-                      <Heart className="w-4 h-4 mr-2" />
-                      Mark Read
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>

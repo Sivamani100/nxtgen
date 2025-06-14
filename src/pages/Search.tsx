@@ -1,250 +1,255 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Search as SearchIcon, Filter, Heart, Share, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Search as SearchIcon, 
+  MapPin, 
+  Star, 
+  GraduationCap,
+  Filter,
+  BookOpen
+} from "lucide-react";
 import { toast } from "sonner";
 
-interface Resource {
+interface College {
   id: number;
-  category: string;
-  title: string;
-  description: string;
-  date: string;
-  details: any;
-  created_at: string;
-  external_link?: string;
+  name: string;
+  location: string;
+  type: string;
+  rating: number;
+  total_fees_min: number;
+  placement_percentage: number;
+  image_url?: string;
+  description?: string;
 }
 
 const Search = () => {
-  const [searchParams] = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get('q') || '');
-  const [results, setResults] = useState<Resource[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [filteredColleges, setFilteredColleges] = useState<College[]>([]);
+  const [selectedType, setSelectedType] = useState('all');
   const [loading, setLoading] = useState(false);
-  const [category, setCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
+  const [hasSearched, setHasSearched] = useState(false);
   const navigate = useNavigate();
 
+  const collegeTypes = [
+    { value: 'all', label: 'All Types' },
+    { value: 'engineering', label: 'Engineering' },
+    { value: 'medical', label: 'Medical' },
+    { value: 'management', label: 'Management' },
+    { value: 'arts', label: 'Arts' },
+    { value: 'science', label: 'Science' }
+  ];
+
   useEffect(() => {
-    if (query) {
-      handleSearch();
+    if (searchQuery.trim()) {
+      const timeoutId = setTimeout(() => {
+        searchColleges();
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setFilteredColleges([]);
+      setHasSearched(false);
     }
-  }, [query, category, sortBy]);
+  }, [searchQuery]);
 
-  const handleSearch = async () => {
+  useEffect(() => {
+    filterByType();
+  }, [colleges, selectedType]);
+
+  const searchColleges = async () => {
+    if (!searchQuery.trim()) return;
+
     setLoading(true);
+    setHasSearched(true);
+
     try {
-      let queryBuilder = supabase
-        .from('resources')
-        .select('*');
+      const { data, error } = await supabase
+        .from('colleges')
+        .select('*')
+        .or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
+        .limit(50);
 
-      if (query) {
-        queryBuilder = queryBuilder.ilike('title', `%${query}%`);
-      }
-
-      if (category !== 'all') {
-        queryBuilder = queryBuilder.eq('category', category);
-      }
-
-      if (sortBy === 'newest') {
-        queryBuilder = queryBuilder.order('created_at', { ascending: false });
-      } else if (sortBy === 'oldest') {
-        queryBuilder = queryBuilder.order('created_at', { ascending: true });
-      }
-
-      const { data, error } = await queryBuilder.limit(20);
-
-      if (error) {
-        toast.error("Error searching resources");
-        console.error('Search error:', error);
-        return;
-      }
-
-      setResults(data || []);
+      if (error) throw error;
+      setColleges(data || []);
     } catch (error) {
-      console.error('Search error:', error);
-      toast.error("An unexpected error occurred");
+      console.error('Error searching colleges:', error);
+      toast.error('Failed to search colleges');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSaveResource = async (resourceId: number) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please login to save resources");
-        return;
-      }
-
-      const { error } = await supabase
-        .from('favorites')
-        .insert({
-          user_id: user.id,
-          resource_id: resourceId
-        });
-
-      if (error) {
-        if (error.code === '23505') {
-          toast.error("Resource already saved");
-        } else {
-          toast.error("Error saving resource");
-        }
-        return;
-      }
-
-      toast.success("Resource saved to favorites");
-    } catch (error) {
-      console.error('Save error:', error);
-      toast.error("An unexpected error occurred");
-    }
-  };
-
-  const handleShare = (resource: Resource) => {
-    const shareUrl = `${window.location.origin}/search?q=${encodeURIComponent(resource.title)}`;
-    const shareText = `${resource.title} - ${resource.description}`;
-
-    if (navigator.share) {
-      navigator.share({
-        title: resource.title,
-        text: shareText,
-        url: shareUrl
-      });
+  const filterByType = () => {
+    if (selectedType === 'all') {
+      setFilteredColleges(colleges);
     } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-      toast.success("Link copied to clipboard");
-    }
-  };
-
-  const handleApply = (resource: Resource) => {
-    if (resource.external_link) {
-      window.open(resource.external_link, '_blank', 'noopener,noreferrer');
-    } else {
-      toast.info('No application link available for this resource');
+      const filtered = colleges.filter(college => 
+        college.type.toLowerCase().includes(selectedType.toLowerCase())
+      );
+      setFilteredColleges(filtered);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm p-4">
-        <div className="flex items-center max-w-md mx-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/home')} className="mr-3">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1 relative">
+    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm border-b p-4">
+        <div className="flex items-center space-x-3">
+          <SearchIcon className="w-6 h-6 text-green-600" />
+          <h1 className="text-xl font-bold text-gray-900">Search Colleges</h1>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden lg:block bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="flex items-center space-x-3 mb-2">
+            <SearchIcon className="w-8 h-8 text-green-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Search Colleges</h1>
+          </div>
+          <p className="text-gray-600">Find the perfect college for your future</p>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-6xl mx-auto p-4 lg:p-6">
+        {/* Search Section */}
+        <div className="mb-6 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-gray-400" />
             <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search anything..."
-              className="pl-10"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by college name, location, or type..."
+              className="pl-10 lg:pl-12 h-12 lg:h-14 text-sm lg:text-base border-gray-200 focus:border-green-500 shadow-sm"
             />
-            <SearchIcon 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer"
-              onClick={handleSearch}
-            />
+            {loading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 lg:h-5 lg:w-5 border-b-2 border-green-500"></div>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
 
-      {/* Filters */}
-      <div className="bg-white border-b p-4">
-        <div className="max-w-md mx-auto">
-          <div className="flex space-x-3">
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="Scholarship">Scholarships</SelectItem>
-                <SelectItem value="Admission">Admissions</SelectItem>
-                <SelectItem value="Event">Events</SelectItem>
-                <SelectItem value="News">News</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="oldest">Oldest</SelectItem>
-                <SelectItem value="relevant">Most Relevant</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Type Filters */}
+          {hasSearched && (
+            <div className="flex items-center space-x-2 overflow-x-auto pb-2">
+              <Filter className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
+              {collegeTypes.map((type) => (
+                <Button
+                  key={type.value}
+                  variant={selectedType === type.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedType(type.value)}
+                  className={`flex-shrink-0 text-xs lg:text-sm ${
+                    selectedType === type.value
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {type.label}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Results */}
-      <div className="max-w-md mx-auto p-4">
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-          </div>
-        ) : results.length > 0 ? (
-          <div className="space-y-4">
-            <div className="text-sm text-gray-600 mb-4">
-              {results.length} results found
+        {/* Results */}
+        <div>
+          {!hasSearched && !loading && (
+            <div className="text-center py-12">
+              <SearchIcon className="w-12 h-12 lg:w-16 lg:h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-2">Search for Colleges</h3>
+              <p className="text-sm lg:text-base text-gray-600">
+                Enter a college name, location, or type to get started
+              </p>
             </div>
-            {results.map((resource) => (
-              <Card key={resource.id} className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded inline-block mb-2">
-                      {resource.category}
-                    </div>
-                    <h3 className="font-medium text-gray-800 mb-1">{resource.title}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
-                    <div className="text-xs text-gray-500">
-                      {new Date(resource.date || resource.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 mt-3">
-                  <Button 
-                    size="sm" 
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => handleApply(resource)}
-                  >
-                    <ExternalLink className="w-3 h-3 mr-1" />
-                    Apply
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleSaveResource(resource.id)}
-                  >
-                    <Heart className="w-3 h-3 mr-1" />
-                    Save
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleShare(resource)}
-                  >
-                    <Share className="w-3 h-3 mr-1" />
-                    Share
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : query ? (
-          <div className="text-center py-8">
-            <div className="text-gray-500 mb-2">No results found</div>
-            <div className="text-sm text-gray-400">
-              Try different keywords or check the spelling
+          )}
+
+          {hasSearched && !loading && filteredColleges.length === 0 && (
+            <div className="text-center py-12">
+              <BookOpen className="w-12 h-12 lg:w-16 lg:h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-2">No colleges found</h3>
+              <p className="text-sm lg:text-base text-gray-600">
+                Try adjusting your search terms or filters
+              </p>
             </div>
-          </div>
-        ) : null}
+          )}
+
+          {hasSearched && filteredColleges.length > 0 && (
+            <>
+              <div className="mb-4 lg:mb-6">
+                <p className="text-sm lg:text-base text-gray-600">
+                  Found {filteredColleges.length} college{filteredColleges.length !== 1 ? 's' : ''} 
+                  {searchQuery && ` for "${searchQuery}"`}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                {filteredColleges.map((college) => (
+                  <Card
+                    key={college.id}
+                    className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                    onClick={() => navigate(`/college-details/${college.id}`)}
+                  >
+                    {college.image_url && (
+                      <div className="aspect-video overflow-hidden rounded-t-lg">
+                        <img 
+                          src={college.image_url} 
+                          alt={college.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="p-4 lg:p-5">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-3">
+                        <Badge className="bg-blue-100 text-blue-800 text-xs font-medium">
+                          {college.type}
+                        </Badge>
+                        <GraduationCap className="w-5 h-5 text-blue-500" />
+                      </div>
+
+                      {/* Content */}
+                      <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
+                        {college.name}
+                      </h3>
+                      
+                      <div className="flex items-center text-xs lg:text-sm text-gray-600 mb-3">
+                        <MapPin className="w-3 h-3 lg:w-4 lg:h-4 mr-1 text-green-500" />
+                        {college.location}
+                      </div>
+
+                      {college.description && (
+                        <p className="text-xs lg:text-sm text-gray-600 mb-3 line-clamp-2">
+                          {college.description}
+                        </p>
+                      )}
+
+                      {/* Stats */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Star className="w-3 h-3 lg:w-4 lg:h-4 text-yellow-500 mr-1" />
+                          <span className="font-semibold text-gray-900 text-xs lg:text-sm">{college.rating}</span>
+                        </div>
+                        <span className="text-xs lg:text-sm font-medium text-green-600">
+                          ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L/year
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
