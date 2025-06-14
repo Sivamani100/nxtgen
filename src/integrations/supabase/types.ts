@@ -235,33 +235,6 @@ export type Database = {
           },
         ]
       }
-      privacy_policies: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          page_number: number
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          page_number: number
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          page_number?: number
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           academic_field: string | null
