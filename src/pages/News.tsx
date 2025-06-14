@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +16,7 @@ import {
   Calendar
 } from "lucide-react";
 import { toast } from "sonner";
+import SaveNewsButton from "@/components/SaveNewsButton";
 
 interface NewsItem {
   id: number;
@@ -35,7 +35,6 @@ const News = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [savedNews, setSavedNews] = useState<number[]>([]);
   const navigate = useNavigate();
 
   const categories = [
@@ -49,7 +48,6 @@ const News = () => {
 
   useEffect(() => {
     fetchNews();
-    fetchSavedNews();
   }, []);
 
   useEffect(() => {
@@ -59,171 +57,18 @@ const News = () => {
   const fetchNews = async () => {
     try {
       setLoading(true);
-      console.log('Fetching news from resources table...');
-      
-      // First, let's check what's in the resources table
-      const { data: allResources, error: allError } = await supabase
+      let { data, error } = await supabase
         .from('resources')
         .select('*')
         .order('created_at', { ascending: false });
-
-      console.log('All resources in table:', allResources);
-      console.log('All resources error:', allError);
-
-      if (allError) {
-        console.error('Error fetching all resources:', allError);
-      }
-
-      // Query resources that could be news-related - let's be more inclusive
-      const { data, error } = await supabase
-        .from('resources')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching news:', error);
-        throw error;
-      }
-
-      console.log('Resources data fetched:', data);
-      console.log('Number of resources found:', data?.length || 0);
-
-      // If no data, let's create some sample data for testing
-      if (!data || data.length === 0) {
-        console.log('No resources found, creating sample data...');
-        
-        // Insert some sample news data
-        const sampleNews = [
-          {
-            title: 'Engineering Admissions Open 2024',
-            description: 'Applications are now open for engineering colleges across India. Don\'t miss the deadline!',
-            category: 'admission',
-            external_link: 'https://example.com/admissions'
-          },
-          {
-            title: 'JEE Main Results Declared',
-            description: 'JEE Main results for session 1 have been declared. Check your scores now.',
-            category: 'result',
-            external_link: 'https://example.com/results'
-          },
-          {
-            title: 'Scholarship Opportunities for 2024',
-            description: 'Various scholarship programs are available for meritorious students.',
-            category: 'scholarship',
-            external_link: 'https://example.com/scholarships'
-          }
-        ];
-
-        for (const item of sampleNews) {
-          const { error: insertError } = await supabase
-            .from('resources')
-            .insert(item);
-          
-          if (insertError) {
-            console.error('Error inserting sample news:', insertError);
-          }
-        }
-
-        // Fetch again after inserting sample data
-        const { data: newData, error: newError } = await supabase
-          .from('resources')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (newError) {
-          console.error('Error fetching news after insert:', newError);
-          setNews([]);
-        } else {
-          console.log('News data after sample insert:', newData);
-          setNews(newData || []);
-        }
-      } else {
-        setNews(data || []);
-      }
+      if (error) throw error;
+      setNews(data || []);
     } catch (error) {
       console.error('Failed to fetch news:', error);
       toast.error('Failed to load news');
       setNews([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchSavedNews = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('saved_news')
-        .select('resource_id')
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setSavedNews(data?.map(item => item.resource_id) || []);
-    } catch (error) {
-      console.error('Error fetching saved news:', error);
-    }
-  };
-
-  const handleSaveNews = async (newsId: number, event: React.MouseEvent) => {
-    event.stopPropagation();
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Please login to save news');
-        navigate('/login');
-        return;
-      }
-
-      const isAlreadySaved = savedNews.includes(newsId);
-      
-      if (isAlreadySaved) {
-        // Remove from saved
-        const { error } = await supabase
-          .from('saved_news')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('resource_id', newsId);
-
-        if (error) throw error;
-        setSavedNews(prev => prev.filter(id => id !== newsId));
-        toast.success('News removed from favorites');
-      } else {
-        // Add to saved
-        const { error } = await supabase
-          .from('saved_news')
-          .insert({
-            user_id: user.id,
-            resource_id: newsId
-          });
-
-        if (error) {
-          toast.error('Failed to save news');
-          return;
-        }
-
-        setSavedNews(prev => [...prev, newsId]);
-        toast.success('News saved to favorites');
-      }
-    } catch (error) {
-      console.error('Error saving news:', error);
-      toast.error('Failed to save news');
-    }
-  };
-
-  const handleSavedClick = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Please login to view saved news');
-        navigate('/login');
-        return;
-      }
-      toast.info('Saved news feature coming soon!');
-    } catch (error) {
-      console.error('Error checking auth:', error);
-      navigate('/login');
     }
   };
 
@@ -283,7 +128,6 @@ const News = () => {
             variant="ghost" 
             size="sm" 
             className="text-pink-500 hover:text-pink-600 hover:bg-pink-50"
-            onClick={handleSavedClick}
           >
             <Heart className="w-5 h-5 mr-1" />
             Saved
@@ -385,7 +229,7 @@ const News = () => {
             {filteredNews.map((item) => (
               <Card 
                 key={item.id} 
-                className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group relative"
                 onClick={() => item.external_link && window.open(item.external_link, '_blank')}
               >
                 <div className="p-4 lg:p-5">
@@ -399,7 +243,6 @@ const News = () => {
                       {formatDate(item.date || item.created_at)}
                     </div>
                   </div>
-                  
                   {/* Content */}
                   <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">
                     {item.title}
@@ -407,7 +250,6 @@ const News = () => {
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                     {item.description}
                   </p>
-                  
                   {/* Footer */}
                   <div className="flex items-center justify-between">
                     {item.external_link && (
@@ -416,20 +258,7 @@ const News = () => {
                         <span>Read More</span>
                       </div>
                     )}
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-gray-400 hover:text-pink-500 hover:bg-pink-50 p-2"
-                      onClick={(e) => handleSaveNews(item.id, e)}
-                    >
-                      <Heart 
-                        className={`w-4 h-4 transition-colors ${
-                          savedNews.includes(item.id) 
-                            ? 'text-pink-500 fill-pink-500' 
-                            : 'text-gray-400 hover:text-pink-500'
-                        }`} 
-                      />
-                    </Button>
+                    <SaveNewsButton newsId={item.id} />
                   </div>
                 </div>
               </Card>

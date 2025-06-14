@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +21,7 @@ import {
   Bell
 } from "lucide-react";
 import { toast } from "sonner";
+import SaveNewsButton from "@/components/SaveNewsButton";
 
 interface College {
   id: number;
@@ -51,11 +51,18 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   useEffect(() => {
-    Promise.all([fetchPopularColleges(), fetchLatestNews()]).finally(() => {
+    Promise.all([
+      fetchPopularColleges(),
+      fetchLatestNews(),
+      fetchUnreadNotificationCount()
+    ]).finally(() => {
       setLoading(false);
     });
+    // Re-fetch unread count when returning to page
+    // Optionally, listen to visibilitychange, omitted for brevity
   }, []);
 
   const fetchPopularColleges = async () => {
@@ -94,6 +101,20 @@ const Home = () => {
       console.error('Error fetching news:', error);
       setNews([]); // fallback to empty, don't crash
     }
+  };
+
+  const fetchUnreadNotificationCount = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setUnreadNotificationCount(0);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("read", false);
+    setUnreadNotificationCount(data?.length || 0);
   };
 
   const createSampleNews = async () => {
@@ -174,9 +195,11 @@ const Home = () => {
               className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Bell className="w-6 h-6 text-gray-600" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                1
-              </span>
+              {unreadNotificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadNotificationCount}
+                </span>
+              )}
             </button>
           </div>
           
@@ -328,7 +351,7 @@ const Home = () => {
               {news.map((item) => (
                 <Card 
                   key={item.id} 
-                  className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                  className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group relative"
                   onClick={() => item.external_link && window.open(item.external_link, '_blank')}
                 >
                   <div className="p-4 lg:p-6">
@@ -345,17 +368,18 @@ const Home = () => {
                     <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-700 transition-colors">
                       {item.title}
                     </h3>
-                    
                     <p className="text-sm lg:text-base text-gray-600 mb-4 line-clamp-2">
                       {item.description}
                     </p>
-
                     {item.external_link && (
                       <div className="flex items-center text-sm text-blue-600 font-medium group-hover:text-blue-700">
                         <span>Read More</span>
                         <ExternalLink className="w-4 h-4 ml-1" />
                       </div>
                     )}
+                    <div className="absolute top-4 right-4">
+                      <SaveNewsButton newsId={item.id} />
+                    </div>
                   </div>
                 </Card>
               ))}
