@@ -374,35 +374,40 @@ const CollegeDetails = () => {
         {branches.length > 0 && (
           <Card className="p-6 border border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Available Branches</h2>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="flex flex-col gap-6">
               {branches.map((branch, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-lg border">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{branch.name}</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Seats:</span>
-                      <span className="font-medium">{branch.seats}</span>
+                <div
+                  key={index}
+                  className="bg-[#FAFAFA] p-5 rounded-2xl border border-gray-200 shadow group hover:shadow-xl transition-all"
+                >
+                  <div className="flex flex-row flex-wrap items-center justify-between mb-2">
+                    <h3 className="text-xl lg:text-2xl font-extrabold text-gray-900">
+                      {branch.name}
+                    </h3>
+                    <div className="flex items-baseline gap-2 flex-wrap lg:flex-nowrap mt-2 lg:mt-0">
+                      <span className="font-semibold text-lg text-green-700 mr-1">₹{(branch.fees_per_year/100000).toFixed(1)}L</span>
+                      <span className="text-gray-500">Fees per year</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Fees per year:</span>
-                      <span className="font-bold text-green-600">
-                        ₹{(branch.fees_per_year / 100000).toFixed(1)}L
-                      </span>
-                    </div>
-                    {branchRankings[branch.name] && (
-                      <div className="mt-3">
-                        <p className="text-xs font-semibold text-blue-700 mb-2">Cutoff Ranks:</p>
-                        <div className="grid grid-cols-2 gap-1 text-xs">
-                          {Object.entries(branchRankings[branch.name]).map(([category, rank]) => (
-                            <div key={category} className="flex justify-between">
-                              <span className="text-gray-600 uppercase">{category}:</span>
-                              <span className="font-semibold">{rank.toLocaleString()}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
+                  <div className="flex items-center gap-5 mb-4 mt-1">
+                    <span className="font-medium text-gray-600">Seats:</span>
+                    <span className="font-bold text-lg text-gray-900">{branch.seats}</span>
+                  </div>
+                  
+                  {branchRankings[branch.name] && (
+                    <div className="mt-3">
+                      <span className="block text-blue-700 text-base font-semibold mb-2 underline">Cutoff Ranks:</span>
+                      {/* Arrange as two-column cutoff table for better readability */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-2 text-sm">
+                        {Object.entries(branchRankings[branch.name]).map(([category, rank]) => (
+                          <div key={category} className="flex gap-1 items-center">
+                            <span className="min-w-[55px] text-gray-700 font-medium uppercase">{category}:</span>
+                            <span className="text-gray-900 font-bold">{rank.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
