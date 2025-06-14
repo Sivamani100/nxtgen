@@ -19,7 +19,7 @@ import {
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "74px"         // 64px + 10px, updated from previous 79px/294px (was +15, now +10)
+const SIDEBAR_WIDTH = "64px"         // 64px + 10px, updated from previous 79px/294px (was +15, now +10)
 const SIDEBAR_WIDTH_MOBILE = "295px"  // from 18rem (288px) + 7px
 const SIDEBAR_WIDTH_ICON = "86px"     // from 71px or `3rem` + 15px
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
