@@ -6,7 +6,7 @@ const founders = [
   {
     name: "Sivamanikanta Mallipurapu",
     title: "Founder & CEO",
-    image: "/Sivamanikanta.jpg", // Optional: Upload this image for a real photo; else initials will display.
+    image: "/Sivamanikanta.jpg",
     linkedin: "https://www.linkedin.com/in/sivamanikanta-mallipurapu/",
     instagram: "https://www.instagram.com/sivamanikanta.mallipurapu/",
     email: "mallipurapusiva@gmail.com",
@@ -25,26 +25,31 @@ const founders = [
   },
 ];
 
+const cardBgColors = [
+  "bg-gradient-to-br from-green-100 to-green-200",
+  "bg-gradient-to-br from-blue-100 to-blue-200"
+];
+
 const Team = () => (
-  <div className="hidden lg:block min-h-screen py-14 px-4" style={{
-    background: "linear-gradient(135deg, #22c55e 0%, #2563eb 100%)"
-  }}>
+  <div className="hidden lg:block min-h-screen py-14 px-4 bg-white">
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-4xl font-extrabold text-center text-white mb-2 tracking-tight animate-fade-in">Meet Our <span className="text-yellow-300">Team</span></h1>
-      <p className="text-lg text-center text-blue-50/80 mb-12 max-w-2xl mx-auto animate-fade-in">
+      <h1 className="text-4xl font-extrabold text-center text-blue-800 mb-2 tracking-tight animate-fade-in">
+        Meet Our <span className="text-green-600">Team</span>
+      </h1>
+      <p className="text-lg text-center text-blue-500/80 mb-12 max-w-2xl mx-auto animate-fade-in">
         NXTGEN is built by passionate students and innovators dedicated to helping you succeed. Connect with us and explore our mission!
       </p>
       <div className="grid md:grid-cols-2 gap-8 justify-center animate-fade-in">
-        {founders.map((member) => (
+        {founders.map((member, idx) => (
           <div
             key={member.name}
-            className="bg-white/90 rounded-3xl shadow-xl flex flex-col items-center p-8 transition-transform hover:scale-105 hover:shadow-2xl hover:bg-white border-2 border-blue-200 relative"
+            className={`rounded-2xl shadow-xl flex flex-col items-center p-8 transition-transform hover:scale-105 hover:shadow-2xl border-2 border-blue-200 relative ${cardBgColors[idx % cardBgColors.length]}`}
           >
-            <div className="w-36 h-36 rounded-b-full -mt-20 bg-gradient-to-b from-blue-400 to-green-400 flex items-center justify-center border-4 border-green-300 overflow-hidden shadow-lg mb-6">
+            <div className="w-36 h-36 rounded-full bg-gradient-to-br from-blue-300 to-green-300 flex items-center justify-center border-4 border-green-300 shadow-lg mb-6 overflow-hidden">
               <img
                 src={member.image}
                 alt={member.name}
-                className="w-36 h-36 rounded-b-full object-cover"
+                className="w-36 h-36 rounded-full object-cover"
                 onError={e => (e.currentTarget.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name) + "&background=2563eb&color=fff")}
               />
             </div>
@@ -73,11 +78,11 @@ const Team = () => (
               </a>
             </div>
             <div className="flex flex-col items-center text-sm">
-              <span className="text-gray-500">
+              <span className="text-gray-500 mb-1">
                 <span className="font-medium">Email:</span>&nbsp;
                 <a href={`mailto:${member.email}`} className="underline text-blue-700">{member.email}</a>
               </span>
-              <span className="text-gray-500">
+              <span className="text-gray-500 mt-1">
                 <span className="font-medium">Phone:</span>&nbsp;
                 <a href={`tel:${member.phone.replace(/\s/g, '')}`} className="underline text-green-700">{member.phone}</a>
               </span>
@@ -85,7 +90,7 @@ const Team = () => (
           </div>
         ))}
       </div>
-      <div className="mt-12 text-center text-blue-50/80 text-xs">
+      <div className="mt-12 text-center text-blue-400/70 text-xs">
         (This team page is only visible on desktop devices)
       </div>
     </div>
