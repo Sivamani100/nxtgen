@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -249,12 +248,14 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-4 lg:p-8">
+      {/* Main Profile Layout */}
+      <div className="max-w-7xl mx-auto p-2 lg:p-8">
+        {/* Use a 4-column responsive grid for desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
-          {/* Left Sidebar - Profile Summary */}
+          {/* Left Sidebar/Profile Summary */}
           <div className="lg:col-span-1">
-            <Card className="p-6 bg-white shadow-lg">
-              <div className="text-center">
+            <Card className="p-6 bg-white shadow-lg flex flex-col items-center">
+              <div className="text-center w-full">
                 <div className="relative inline-block mb-6">
                   <div className="w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl lg:text-4xl font-bold shadow-lg">
                     {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
@@ -265,12 +266,11 @@ const ProfilePage = () => {
                     </button>
                   )}
                 </div>
-                
                 <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
                   {profile.full_name || 'Complete Your Profile'}
                 </h2>
                 <p className="text-gray-600 mb-6">{profile.email}</p>
-                
+
                 <div className="mb-6">
                   <div className="flex justify-between text-sm text-gray-600 mb-2">
                     <span>Profile Completion</span>
@@ -283,7 +283,6 @@ const ProfilePage = () => {
                     ></div>
                   </div>
                 </div>
-
                 <Button 
                   variant="outline" 
                   onClick={handleSignOut}
@@ -296,8 +295,8 @@ const ProfilePage = () => {
             </Card>
           </div>
 
-          {/* Main Content - Profile Details */}
-          <div className="lg:col-span-3">
+          {/* Main Content - Occupy 3/4 on desktop */}
+          <div className="lg:col-span-3 flex flex-col gap-6">
             <div className="space-y-6 lg:space-y-8">
               {/* Personal Information */}
               <Card className="p-6 lg:p-8 bg-white shadow-lg">
