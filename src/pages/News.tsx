@@ -5,13 +5,15 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Newspaper, 
-  Filter,
   BookOpen,
   Clock,
   ExternalLink,
-  Search
+  Search,
+  Heart,
+  Calendar
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,8 +36,8 @@ const News = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const categories = [
-    { value: 'all', label: 'All News' },
-    { value: 'admission', label: 'Admissions' },
+    { value: 'all', label: 'All Categories' },
+    { value: 'admission', label: 'Admission' },
     { value: 'exam', label: 'Exams' },
     { value: 'scholarship', label: 'Scholarships' },
     { value: 'result', label: 'Results' },
@@ -119,15 +121,60 @@ const News = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b">
-        <div className="flex items-center p-4">
-          <Newspaper className="w-6 h-6 text-green-600 mr-2" />
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">Latest News</h1>
-            <p className="text-xs text-gray-600">Stay updated with announcements</p>
-          </div>
+      <div className="lg:hidden bg-white shadow-sm border-b p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold text-gray-900">Latest Updates</h1>
+          <Button variant="ghost" size="sm" className="text-pink-500 hover:text-pink-600 hover:bg-pink-50">
+            <Heart className="w-5 h-5 mr-1" />
+            Saved
+          </Button>
+        </div>
+        
+        {/* Mobile Search */}
+        <div className="relative mb-4">
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search news and updates..."
+            className="pl-10 h-12 text-base border-gray-200 focus:border-green-500 rounded-lg"
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        </div>
+
+        {/* Mobile Filters */}
+        <div className="flex space-x-3">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select defaultValue="latest">
+            <SelectTrigger className="w-32 h-10 border-gray-200 rounded-full">
+              <SelectValue placeholder="Latest First" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="latest">Latest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Results Count */}
+        <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-3">
+          <p className="text-sm font-medium text-orange-800">
+            {filteredNews.length} updates found
+          </p>
         </div>
       </div>
+
       {/* Desktop Header */}
       <div className="hidden lg:block bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto p-6">
@@ -136,40 +183,40 @@ const News = () => {
             <h1 className="text-3xl font-bold text-gray-900">Latest News</h1>
           </div>
           <p className="text-gray-600">Stay updated with the latest announcements and updates</p>
+          
+          {/* Desktop Search and Filter Section */}
+          <div className="mt-6 space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search news..."
+                className="pl-12 h-12 text-base border-gray-200 focus:border-green-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2 overflow-x-auto pb-2">
+              {categories.map((category) => (
+                <Button
+                  key={category.value}
+                  variant={selectedCategory === category.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category.value)}
+                  className={`flex-shrink-0 text-sm ${
+                    selectedCategory === category.value
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {category.label}
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto p-4 lg:p-6">
-        {/* Search and Filter Section */}
-        <div className="mb-6 space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-gray-400" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search news..."
-              className="pl-10 lg:pl-12 h-10 lg:h-12 text-sm lg:text-base border-gray-200 focus:border-green-500"
-            />
-          </div>
-          <div className="flex items-center space-x-2 overflow-x-auto pb-2">
-            <Filter className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
-            {categories.map((category) => (
-              <Button
-                key={category.value}
-                variant={selectedCategory === category.value ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category.value)}
-                className={`flex-shrink-0 text-xs lg:text-sm ${
-                  selectedCategory === category.value
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                {category.label}
-              </Button>
-            ))}
-          </div>
-        </div>
         {/* News Content */}
         {filteredNews.length === 0 ? (
           <div className="text-center py-12">
@@ -184,7 +231,7 @@ const News = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="space-y-4 lg:grid lg:grid-cols-1 lg:gap-6 lg:space-y-0">
             {filteredNews.map((item) => (
               <Card 
                 key={item.id} 
@@ -194,28 +241,35 @@ const News = () => {
                 <div className="p-4 lg:p-5">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
-                    <Badge className={`text-xs font-medium ${getCategoryColor(item.category)}`}>
+                    <Badge className="bg-blue-100 text-blue-800 text-xs font-medium">
                       {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                     </Badge>
                     <div className="flex items-center text-xs text-gray-500">
-                      <Clock className="w-3 h-3 mr-1" />
+                      <Calendar className="w-3 h-3 mr-1" />
                       {formatDate(item.date || item.created_at)}
                     </div>
                   </div>
+                  
                   {/* Content */}
-                  <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">
                     {item.title}
                   </h3>
-                  <p className="text-xs lg:text-sm text-gray-600 mb-4 line-clamp-3">
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                     {item.description}
                   </p>
+                  
                   {/* Footer */}
-                  {item.external_link && (
-                    <div className="flex items-center text-xs lg:text-sm text-green-600 font-medium group-hover:text-green-700">
-                      <span>Read More</span>
-                      <ExternalLink className="w-3 h-3 lg:w-4 lg:h-4 ml-1" />
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between">
+                    {item.external_link && (
+                      <div className="flex items-center text-sm text-orange-600 font-medium group-hover:text-orange-700">
+                        <ExternalLink className="w-4 h-4 mr-1" />
+                        <span>Read More</span>
+                      </div>
+                    )}
+                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-pink-500 hover:bg-pink-50 p-2">
+                      <Heart className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}

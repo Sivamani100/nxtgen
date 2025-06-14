@@ -202,8 +202,72 @@ const Colleges = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm border-b p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold text-gray-900">Browse Colleges</h1>
+          <Button variant="ghost" size="sm" className="text-pink-500 hover:text-pink-600 hover:bg-pink-50">
+            <Heart className="w-5 h-5 mr-1" />
+            Saved
+          </Button>
+        </div>
+        
+        {/* Mobile Search */}
+        <div className="relative mb-4">
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search colleges..."
+            className="pl-10 h-12 text-base border-gray-200 focus:border-blue-400 rounded-lg"
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        </div>
+
+        {/* Mobile Filters */}
+        <div className="flex space-x-2">
+          <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
+            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="government">Government</SelectItem>
+              <SelectItem value="private">Private</SelectItem>
+              <SelectItem value="university">University</SelectItem>
+              <SelectItem value="engineering">Engineering</SelectItem>
+              <SelectItem value="medical">Medical</SelectItem>
+              <SelectItem value="polytechnic">Polytechnic</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={filters.state} onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}>
+            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
+              <SelectValue placeholder="All States" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All States</SelectItem>
+              {getUniqueStates().map((state) => (
+                <SelectItem key={state} value={state}>{state}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
+            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
+              <SelectValue placeholder="Rating" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="rating">Rating</SelectItem>
+              <SelectItem value="fees_low">Fees (Low to High)</SelectItem>
+              <SelectItem value="fees_high">Fees (High to Low)</SelectItem>
+              <SelectItem value="placement">Placement %</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden lg:block bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto p-4 lg:p-6">
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Browse Colleges</h1>
           
