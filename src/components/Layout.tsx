@@ -39,9 +39,9 @@ const Layout = ({ children }: LayoutProps) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // FIX: Avoid type predicate use which caused TS error
+  // Ensure correct type for sidebarNavItems so TS knows 'icon' exists
   const sidebarNavItems = navItems.filter(
-    item =>
+    (item): item is NavItem & { icon: NonNullable<NavItem["icon"]> } =>
       !!item.icon && (!item.desktopOnly || isDesktop)
   );
 
