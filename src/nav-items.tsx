@@ -27,6 +27,7 @@ import ScholarshipFinder from "./pages/ScholarshipFinder";
 import ApplicationTracker from "./pages/ApplicationTracker";
 import Forum from "./pages/Forum";
 import CollegeReviews from "./pages/CollegeReviews";
+import MyColleges from "./pages/MyColleges";
 
 export const navItems = [
   {
@@ -182,6 +183,6 @@ export const navItems = [
     title: "My Colleges",
     to: "/my-colleges",
     icon: <Heart className="h-4 w-4" />,
-    page: require("./pages/MyColleges").default,
+    page: <MyColleges />,
   },
 ];
