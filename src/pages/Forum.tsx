@@ -29,24 +29,35 @@ export default function Forum() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [answerContent, setAnswerContent] = useState<Record<string, string>>({});
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchForum();
+    // eslint-disable-next-line
   }, []);
 
   async function fetchForum() {
     setLoading(true);
-    const { data: qs } = await supabase.from("forum_questions").select("*").order("created_at", { ascending: false });
-    setQuestions(qs || []);
-    // fetch answers per question
-    const { data: as } = await supabase.from("forum_answers").select("*");
-    const answerMap: Record<string, Answer[]> = {};
-    (as || []).forEach(a => {
-      if (!answerMap[a.question_id]) answerMap[a.question_id] = [];
-      answerMap[a.question_id].push(a);
-    });
-    setAnswers(answerMap);
-    setLoading(false);
+    setError(null);
+    try {
+      const { data: qs, error: qErr } = await supabase.from("forum_questions").select("*").order("created_at", { ascending: false });
+      if (qErr) throw qErr;
+      setQuestions(qs || []);
+
+      const { data: as, error: aErr } = await supabase.from("forum_answers").select("*");
+      if (aErr) throw aErr;
+      const answerMap: Record<string, Answer[]> = {};
+      (as || []).forEach(a => {
+        if (!answerMap[a.question_id]) answerMap[a.question_id] = [];
+        answerMap[a.question_id].push(a);
+      });
+      setAnswers(answerMap);
+    } catch (e: any) {
+      console.error("Forum fetch failed:", e);
+      setError("Something went wrong loading the forum.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleAsk() {
@@ -54,17 +65,28 @@ export default function Forum() {
       toast.error("Please include a title and details.");
       return;
     }
-    const user = (await supabase.auth.getUser()).data.user;
-    const { error } = await supabase.from("forum_questions").insert({
-      title,
-      content,
-      user_id: user?.id,
-    });
-    if (error) toast.error("Question post failed.");
-    else {
+    try {
+      const { data: { user }, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !user) {
+        toast.error("You must be logged in to post.");
+        return;
+      }
+      const { error } = await supabase.from("forum_questions").insert({
+        title,
+        content,
+        user_id: user?.id,
+      });
+      if (error) {
+        console.error("Post question error:", error);
+        toast.error("Question post failed.");
+        return;
+      }
       toast.success("Question posted!");
       setTitle(""); setContent("");
       fetchForum();
+    } catch (e) {
+      console.error("Ask error:", e);
+      toast.error("Could not post question.");
     }
   }
 
@@ -73,17 +95,28 @@ export default function Forum() {
       toast.error("Please enter an answer.");
       return;
     }
-    const user = (await supabase.auth.getUser()).data.user;
-    const { error } = await supabase.from("forum_answers").insert({
-      answer: answerContent[qid],
-      question_id: qid,
-      user_id: user?.id,
-    });
-    if (error) toast.error("Answer not posted.");
-    else {
+    try {
+      const { data: { user }, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !user) {
+        toast.error("You must be logged in to answer.");
+        return;
+      }
+      const { error } = await supabase.from("forum_answers").insert({
+        answer: answerContent[qid],
+        question_id: qid,
+        user_id: user?.id,
+      });
+      if (error) {
+        console.error("Answer post error:", error);
+        toast.error("Answer not posted.");
+        return;
+      }
       toast.success("Answer posted!");
       setAnswerContent((ans) => ({ ...ans, [qid]: "" }));
       fetchForum();
+    } catch (e) {
+      console.error("Answer error:", e);
+      toast.error("Could not post answer.");
     }
   }
 
@@ -101,10 +134,19 @@ export default function Forum() {
         </div>
         <Button onClick={handleAsk}>Post Question</Button>
       </Card>
-      {loading ? (
+      {error ? (
+        <div className="text-red-600 my-3">
+          {error}
+        </div>
+      ) : loading ? (
         <div>Loading forum...</div>
       ) : (
         <div className="space-y-5">
+          {questions.length === 0 && (
+            <Card className="p-4">
+              <div className="text-gray-500">No questions yet. Be the first to ask!</div>
+            </Card>
+          )}
           {questions.map(q => (
             <Card key={q.id} className="p-4">
               <div className="font-semibold">{q.title}</div>
