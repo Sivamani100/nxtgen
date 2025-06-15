@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -40,9 +39,9 @@ const Layout = ({ children }: LayoutProps) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Filter only items that have icons and, if desktopOnly, are currently on desktop
-  const sidebarNavItems: NavItem[] = navItems.filter(
-    (item): item is NavItem =>
+  // FIX: Avoid type predicate use which caused TS error
+  const sidebarNavItems = navItems.filter(
+    item =>
       !!item.icon && (!item.desktopOnly || isDesktop)
   );
 
@@ -82,7 +81,6 @@ const Layout = ({ children }: LayoutProps) => {
                 title={isSidebarCollapsed ? item.title : undefined}
               >
                 {item.icon && (
-                  // If icon in navItems is a JSX element, use directly; otherwise, render as component
                   typeof item.icon === "object"
                     ? item.icon
                     : <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? "" : "mr-3"}`} />

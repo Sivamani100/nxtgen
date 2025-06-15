@@ -46,6 +46,9 @@ const App = () => (
                 <Route path="/forum" element={navItems.find(item => item.to === "/forum")?.page} />
                 <Route path="/college-reviews" element={navItems.find(item => item.to === "/college-reviews")?.page} />
 
+                {/* Add My Colleges route */}
+                <Route path="/my-colleges" element={navItems.find(item => item.to === "/my-colleges")?.page} />
+
                 <Route path="*" element={navItems.find(item => item.to === "/404")?.page} />
               </Routes>
             </Layout>
