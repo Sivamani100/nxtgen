@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, Menu, X, ChevronLeft, ChevronRight, GitCompare, HelpCircle, Shield } from "lucide-react";
+import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, Menu, X, ChevronLeft, ChevronRight, GitCompare, HelpCircle, Shield, Calendar, MessageCircle, Star } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,6 +21,11 @@ const navigationItems = [
   { icon: Shield, label: "Privacy Policy", path: "/privacy-policy", desktopOnly: true },  // Now uses Shield icon
   { icon: HelpCircle, label: "Help", path: "/help", desktopOnly: true },                  // Help icon
   { icon: Users, label: "Team", path: "/team", desktopOnly: true },                       // Users icon for Team
+  { icon: BookOpen, label: "College Recommendation Quiz", path: "/college-recommendation-quiz" },
+  { icon: HelpCircle, label: "Scholarship Finder", path: "/scholarships" },
+  { icon: Calendar, label: "Application Tracker", path: "/application-tracker" },
+  { icon: MessageCircle, label: "Forum", path: "/forum" },
+  { icon: Star, label: "College Reviews", path: "/college-reviews" },
 ];
 
 const mobileNavigationItems = [
@@ -30,6 +34,11 @@ const mobileNavigationItems = [
   { icon: BookOpen, label: "Predictor", path: "/predictor" },
   { icon: Newspaper, label: "News", path: "/news" },
   { icon: User, label: "Profile", path: "/profile" },
+  { icon: BookOpen, label: "Quiz", path: "/college-recommendation-quiz" },
+  { icon: HelpCircle, label: "Scholarships", path: "/scholarships" },
+  { icon: Calendar, label: "Tracker", path: "/application-tracker" },
+  { icon: MessageCircle, label: "Forum", path: "/forum" },
+  { icon: Star, label: "Reviews", path: "/college-reviews" },
 ];
 
 const Layout = ({ children }: LayoutProps) => {
