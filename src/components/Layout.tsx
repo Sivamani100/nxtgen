@@ -1,32 +1,24 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, Menu, X, ChevronLeft, ChevronRight, GitCompare, HelpCircle, Shield, Calendar, MessageCircle, Star } from "lucide-react";
+import { navItems } from "@/nav-items"; // <--- ADDED: import navItems
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-// Side bar navigation items (with icons)
-const navigationItems = [
-  { icon: HomeIcon, label: "Home", path: "/home" },
-  { icon: Users, label: "Colleges", path: "/colleges" },
-  { icon: BookOpen, label: "Predictor", path: "/predictor" },
-  { icon: Newspaper, label: "News", path: "/news" },
-  { icon: GitCompare, label: "Compare", path: "/compare" },
-  { icon: Heart, label: "Favorites", path: "/favorites" },
-  { icon: Bell, label: "Notifications", path: "/notifications" },
-  { icon: Search, label: "Search", path: "/search" },
-  { icon: User, label: "Profile", path: "/profile" },
-  { icon: Shield, label: "Privacy Policy", path: "/privacy-policy", desktopOnly: true },  // Now uses Shield icon
-  { icon: HelpCircle, label: "Help", path: "/help", desktopOnly: true },                  // Help icon
-  { icon: Users, label: "Team", path: "/team", desktopOnly: true },                       // Users icon for Team
-  { icon: BookOpen, label: "College Recommendation Quiz", path: "/college-recommendation-quiz" },
-  { icon: HelpCircle, label: "Scholarship Finder", path: "/scholarships" },
-  { icon: Calendar, label: "Application Tracker", path: "/application-tracker" },
-  { icon: MessageCircle, label: "Forum", path: "/forum" },
-  { icon: Star, label: "College Reviews", path: "/college-reviews" },
-];
+// Desktop Sidebar only nav (with icons + desktopOnly check)
+// Use navItems for easier sync and avoid code drift
+const navigationItems = navItems.filter(
+  item => item.icon && (!item.desktopOnly || (typeof window !== "undefined" && window.innerWidth >= 1024))
+).map(item => ({
+  icon: item.icon.type,
+  label: item.title,
+  path: item.to,
+  desktopOnly: item.desktopOnly,
+}));
 
 const mobileNavigationItems = [
   { icon: HomeIcon, label: "Home", path: "/home" },
@@ -41,6 +33,8 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024; // lg breakpoint
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -71,24 +65,26 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
           {/* Navigation */}
           <nav className="flex-1 px-2 py-6 space-y-2">
-            {navigationItems.map((item) => {
-              if (item.desktopOnly && typeof window !== "undefined" && window.innerWidth < 1024) {
-                return null;
-              }
+            {navItems.filter(item => item.icon && (!item.desktopOnly || isDesktop)).map((item) => {
               return (
                 <Button
-                  key={item.path}
-                  variant={isActive(item.path) ? "default" : "ghost"}
+                  key={item.to}
+                  variant={isActive(item.to) ? "default" : "ghost"}
                   className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'} text-left h-12 transition-all duration-200 ${
-                    isActive(item.path)
+                    isActive(item.to)
                       ? "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 shadow-md"
                       : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 hover:text-green-700"
                   }`}
-                  onClick={() => navigate(item.path)}
-                  title={isSidebarCollapsed ? item.label : undefined}
+                  onClick={() => navigate(item.to)}
+                  title={isSidebarCollapsed ? item.title : undefined}
                 >
-                  {item.icon && <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? "" : "mr-3"}`} />}
-                  {!isSidebarCollapsed && item.label}
+                  {item.icon && (
+                    // If icon in navItems is a JSX element, clone with keys
+                    typeof item.icon === "object"
+                      ? item.icon
+                      : <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? "" : "mr-3"}`} />
+                  )}
+                  {!isSidebarCollapsed && item.title}
                 </Button>
               );
             })}

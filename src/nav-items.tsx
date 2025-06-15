@@ -184,5 +184,6 @@ export const navItems = [
     to: "/my-colleges",
     icon: <Star className="h-4 w-4" />,
     page: <MyColleges />,
+    desktopOnly: true,
   },
 ];
