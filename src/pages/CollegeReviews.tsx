@@ -63,38 +63,50 @@ export default function CollegeReviews() {
     setSubmitting(false);
   }
 
+  // Responsive two-pane layout (sidebar + content on desktop, stacked on mobile)
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-xl font-bold mb-5 text-orange-700">College Reviews & Ratings</h1>
-      {!selectedCollege ? (
-        <Card className="p-4">
-          <div>Select a college to view/add reviews:</div>
-          <ul className="mt-2 space-y-1">
+    <div className="flex flex-col md:flex-row gap-6 max-w-6xl mx-auto p-4 min-h-[500px]">
+      {/* College List Sidebar */}
+      <div className="md:min-w-[260px] md:max-w-xs md:w-1/3">
+        <Card className="p-3 sticky top-20">
+          <div className="font-semibold mb-2 text-green-700">Colleges</div>
+          <ul className="space-y-1 max-h-[480px] overflow-auto">
             {colleges.map(college => (
               <li key={college.id}>
                 <Button
-                  variant="secondary"
+                  variant={selectedCollege?.id === college.id ? "default" : "secondary"}
                   size="sm"
+                  className="w-full justify-start"
                   onClick={() => fetchReviews(college.id)}
                 >
-                  {college.name} ({college.city}, {college.state})
+                  <div className="truncate">{college.name} <span className="text-xs text-gray-400">({college.city}, {college.state})</span></div>
                 </Button>
               </li>
             ))}
           </ul>
         </Card>
-      ) : (
-        <Card className="p-4">
-          <Button variant="ghost" onClick={() => setSelectedCollege(null)} className="mb-3">← Back</Button>
-          <h2 className="font-bold text-xl mb-1">{selectedCollege.name}</h2>
-          <div className="mb-3 text-xs text-gray-500">{selectedCollege.city}, {selectedCollege.state}</div>
-          <div>
-            <form onSubmit={handleSubmitReview} className="flex flex-col md:flex-row gap-2 mb-2">
+      </div>
+      {/* Main Content */}
+      <div className="flex-1">
+        {!selectedCollege ? (
+          <Card className="p-6 flex flex-col items-center justify-center h-full min-h-[300px]">
+            <div className="text-lg text-green-800 font-bold mb-2">College Reviews & Ratings</div>
+            <div className="text-gray-500 text-sm">Select a college on the left to view/add reviews.</div>
+          </Card>
+        ) : (
+          <Card className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
+              <h2 className="font-bold text-xl mb-1">{selectedCollege.name}</h2>
+              <Button variant="ghost" onClick={() => setSelectedCollege(null)} size="sm">← Change College</Button>
+            </div>
+            <div className="mb-3 text-xs text-gray-500">{selectedCollege.city}, {selectedCollege.state}</div>
+            <form onSubmit={handleSubmitReview} className="flex flex-col md:flex-row gap-2 mb-5">
               <select
                 className="rounded border px-2 py-1"
                 value={myRating}
                 onChange={e => setMyRating(Number(e.target.value))}
                 required
+                disabled={submitting}
               >
                 <option value={0}>Rate</option>
                 {[1, 2, 3, 4, 5].map(r => (
@@ -109,21 +121,24 @@ export default function CollegeReviews() {
               />
               <Button type="submit" size="sm" disabled={submitting}>Submit</Button>
             </form>
-          </div>
-          <div>
             <div className="font-medium mb-2">Recent Reviews:</div>
-            {reviews.length === 0 && <div className="text-xs text-muted-foreground mb-2">No reviews yet.</div>}
-            <ul className="space-y-2">
-              {reviews.map(rev => (
-                <li key={rev.id} className="bg-orange-50 border rounded p-2">
-                  <span className="font-semibold">{rev.rating} ⭐</span>
-                  <span className="ml-3">{rev.review}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Card>
-      )}
+            <div>
+              {loading && <div className="text-gray-500 py-2">Loading...</div>}
+              {!loading && (
+                <ul className="space-y-2">
+                  {reviews.length === 0 && <div className="text-xs text-muted-foreground mb-2">No reviews yet.</div>}
+                  {reviews.map(rev => (
+                    <li key={rev.id} className="bg-orange-50 border rounded p-2">
+                      <span className="font-semibold">{rev.rating} ⭐</span>
+                      <span className="ml-3">{rev.review}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

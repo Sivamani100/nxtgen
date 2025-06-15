@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Star, MapPin, Phone, Mail, Globe, Heart, ExternalLink, Play, Building, Users, DollarSign, Award, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
+import { CollegeReviewsList } from "@/components/CollegeReviewsList";
 
 type College = Database['public']['Tables']['colleges']['Row'];
 
@@ -595,6 +596,22 @@ const CollegeDetails = () => {
             </Card>
           )}
         </div>
+
+        {/* --- College Reviews Section --- */}
+        {college && (
+          <div className="mt-10">
+            <h3 className="text-lg font-semibold mb-2 text-orange-700">Student Reviews</h3>
+            <CollegeReviewsList collegeId={college.id} limit={5} />
+            <div className="mt-2">
+              <a
+                className="text-green-700 hover:underline text-sm"
+                href="/college-reviews"
+              >
+                View all reviews / Write your review &rarr;
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
