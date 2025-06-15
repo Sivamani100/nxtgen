@@ -178,4 +178,10 @@ export const navItems = [
     icon: <Star className="h-4 w-4" />,
     page: <CollegeReviews />,
   },
+  {
+    title: "My Colleges",
+    to: "/my-colleges",
+    icon: <Heart className="h-4 w-4" />,
+    page: require("./pages/MyColleges").default,
+  },
 ];
