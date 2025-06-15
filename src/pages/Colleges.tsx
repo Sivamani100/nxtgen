@@ -11,6 +11,74 @@ import { Database } from "@/integrations/supabase/types";
 
 type College = Database['public']['Tables']['colleges']['Row'];
 
+const AddToMyCollegesButton = ({ collegeId }: { collegeId: number }) => {
+  const [inList, setInList] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    checkInList();
+  }, []);
+
+  async function checkInList() {
+    // Check if college is in user's selected list
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase
+      .from("user_selected_colleges")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("college_id", collegeId)
+      .maybeSingle();
+    setInList(!!data);
+  }
+
+  const handleClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please login to manage your list.");
+      return;
+    }
+    if (inList) {
+      // remove
+      const { error } = await supabase
+        .from("user_selected_colleges")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("college_id", collegeId);
+      if (!error) {
+        toast.info("Removed from My Colleges.");
+        setInList(false);
+      }
+      else toast.error("Could not remove.");
+    } else {
+      // add
+      const { error } = await supabase
+        .from("user_selected_colleges")
+        .insert({ user_id: user.id, college_id: collegeId });
+      if (!error) {
+        toast.success("Added to My Colleges!");
+        setInList(true);
+      }
+      else toast.error("Could not add.");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant={inList ? "secondary" : "ghost"}
+      onClick={handleClick}
+      disabled={loading}
+      className="ml-2"
+    >
+      {inList ? "In My Colleges" : "+ My Colleges"}
+    </Button>
+  );
+};
+
 const Colleges = () => {
   const [colleges, setColleges] = useState<College[]>([]);
   const [filteredColleges, setFilteredColleges] = useState<College[]>([]);
@@ -409,6 +477,7 @@ const Colleges = () => {
                       }`} 
                     />
                   </Button>
+                  <AddToMyCollegesButton collegeId={college.id} />
                 </div>
                 
                 <div className="space-y-3">
