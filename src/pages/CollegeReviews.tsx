@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -33,7 +32,12 @@ export default function CollegeReviews() {
   async function fetchReviews(cid: number) {
     setLoading(true);
     setSelectedCollege(colleges.find(c => c.id === cid));
-    const { data, error } = await supabase.from("college_reviews").select("*").eq("college_id", cid).order("created_at", { ascending: false });
+    // fetch all reviews for this college
+    const { data, error } = await supabase
+      .from("college_reviews")
+      .select("*")
+      .eq("college_id", cid)
+      .order("created_at", { ascending: false });
     if (!error) setReviews(data || []);
     else toast.error("Error loading reviews");
     setLoading(false);
@@ -43,33 +47,58 @@ export default function CollegeReviews() {
     e.preventDefault();
     setSubmitting(true);
 
-    // Fetch the user
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    const user = userData?.user;
-    if (userError || !user) {
-      toast.error("You must be logged in to submit a review.");
+    // Double check prerequisites
+    if (!selectedCollege || typeof selectedCollege.id !== "number") {
+      toast.error("Invalid college selection.");
       setSubmitting(false);
       return;
     }
-    if (!myRating) {
-      toast.error("Pick a rating!");
+    if (!myRating || myRating < 1 || myRating > 5) {
+      toast.error("Pick a valid rating between 1 and 5!");
       setSubmitting(false);
       return;
     }
 
-    // Try to submit review
-    const { error } = await supabase.from("college_reviews").insert({
+    // Get user
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const user = userData?.user;
+    if (userError || !user || !user.id) {
+      toast.error("You must be logged in to submit a review.");
+      setSubmitting(false);
+      return;
+    }
+    // Additional safety: user.id must be a string UUID!
+    if (typeof user.id !== "string" || user.id.length < 10) {
+      toast.error("User ID is invalid.");
+      setSubmitting(false);
+      return;
+    }
+
+    // Debug logs
+    console.log("Submitting review with", {
       college_id: selectedCollege.id,
       user_id: user.id,
       rating: myRating,
       review: myReview,
     });
 
+    // Insert
+    const { error } = await supabase.from("college_reviews").insert([
+      {
+        college_id: selectedCollege.id,
+        user_id: user.id,
+        rating: myRating,
+        review: myReview,
+      }
+    ]);
     if (error) {
+      console.error("Supabase error details:", error);
       toast.error(
         <>
           <div>Failed to submit review.</div>
-          <div className="text-xs text-red-500">{error.message || JSON.stringify(error)}</div>
+          <div className="text-xs text-red-500">{
+            error.message || JSON.stringify(error)
+          }</div>
         </>
       );
     } else {
