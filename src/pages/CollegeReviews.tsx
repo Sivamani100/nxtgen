@@ -42,28 +42,45 @@ export default function CollegeReviews() {
   async function handleSubmitReview(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
-    const user = (await supabase.auth.getUser()).data.user;
+
+    // Fetch the user
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const user = userData?.user;
+    if (userError || !user) {
+      toast.error("You must be logged in to submit a review.");
+      setSubmitting(false);
+      return;
+    }
     if (!myRating) {
       toast.error("Pick a rating!");
       setSubmitting(false);
       return;
     }
+
+    // Try to submit review
     const { error } = await supabase.from("college_reviews").insert({
       college_id: selectedCollege.id,
       user_id: user.id,
       rating: myRating,
       review: myReview,
     });
-    if (error) toast.error("Failed to submit review.");
-    else {
+
+    if (error) {
+      toast.error(
+        <>
+          <div>Failed to submit review.</div>
+          <div className="text-xs text-red-500">{error.message || JSON.stringify(error)}</div>
+        </>
+      );
+    } else {
       toast.success("Review posted!");
-      setMyRating(0); setMyReview("");
+      setMyRating(0);
+      setMyReview("");
       fetchReviews(selectedCollege.id);
     }
     setSubmitting(false);
   }
 
-  // Responsive two-pane layout (sidebar + content on desktop, stacked on mobile)
   return (
     <div className="flex flex-col md:flex-row gap-6 max-w-6xl mx-auto p-4 min-h-[500px]">
       {/* College List Sidebar */}
