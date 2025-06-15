@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Star, MapPin, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
-import { useUserSelectedColleges } from "@/hooks/useUserSelectedColleges";
 
 type College = Database['public']['Tables']['colleges']['Row'];
 
@@ -24,7 +23,6 @@ const Colleges = () => {
     sortBy: 'rating'
   });
   const navigate = useNavigate();
-  const { selectedCollegeIds, addCollege, removeCollege } = useUserSelectedColleges();
 
   useEffect(() => {
     fetchColleges();
@@ -397,22 +395,20 @@ const Colleges = () => {
                       <span className="truncate">{college.location}, {college.state}</span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="p-2 ml-2 flex-shrink-0 hover:bg-green-50"
-                      onClick={e => { e.stopPropagation(); selectedCollegeIds.includes(college.id) ? removeCollege(college.id) : addCollege(college.id); }}
-                    >
-                      <Heart 
-                        className={`w-5 h-5 transition-colors ${
-                          selectedCollegeIds.includes(college.id) 
-                            ? 'text-green-500 fill-green-500' 
-                            : 'text-gray-400 hover:text-green-500'
-                        }`} 
-                      />
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-2 ml-2 flex-shrink-0 hover:bg-red-50"
+                    onClick={(e) => handleSaveCollege(college.id, e)}
+                  >
+                    <Heart 
+                      className={`w-5 h-5 transition-colors ${
+                        savedColleges.includes(college.id) 
+                          ? 'text-red-500 fill-red-500' 
+                          : 'text-gray-400 hover:text-red-500'
+                      }`} 
+                    />
+                  </Button>
                 </div>
                 
                 <div className="space-y-3">

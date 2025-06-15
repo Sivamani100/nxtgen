@@ -592,42 +592,6 @@ export type Database = {
           },
         ]
       }
-      user_selected_colleges: {
-        Row: {
-          college_id: number
-          created_at: string | null
-          id: string
-          user_id: string
-        }
-        Insert: {
-          college_id: number
-          created_at?: string | null
-          id?: string
-          user_id: string
-        }
-        Update: {
-          college_id?: number
-          created_at?: string | null
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_college"
-            columns: ["college_id"]
-            isOneToOne: false
-            referencedRelation: "colleges"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_user"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
