@@ -39,8 +39,7 @@ const Layout = ({ children }: LayoutProps) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Only ONE predictor in sidebar.
-  // Exclude "College Predictor" from the sidebar.
+  // Filter sidebar items - exclude duplicates and profile page
   const sidebarNavItems = navItems
     .filter(
       (item) =>
@@ -58,66 +57,73 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen bg-white">
       {/* Desktop Sidebar */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
-        isSidebarCollapsed ? 'lg:w-[101px]' : 'lg:w-[294px]'
+        isSidebarCollapsed ? 'lg:w-16' : 'lg:w-64'
       }`}>
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between h-16 px-2 border-b border-gray-200">
-            <div className="flex items-center justify-center w-full">
-              {/* Logo area left blank */}
+          {/* Header with toggle button */}
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+            <div className="flex items-center">
+              {!isSidebarCollapsed && (
+                <h2 className="text-lg font-semibold text-gray-800">Menu</h2>
+              )}
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-2 hover:bg-green-50 ml-auto"
+              className="p-2 hover:bg-gray-100"
             >
-              {isSidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+              {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </Button>
           </div>
+
           {/* Navigation */}
-          <nav className="flex-1 py-8 space-y-0 flex flex-col gap-0 items-center justify-start">
-            {sidebarNavItems.map((item) => (
-              <Button
-                key={item.to}
-                variant={isActive(item.to) ? "default" : "ghost"}
-                className={`
-                  ${isSidebarCollapsed
-                    ? "justify-center !px-0 flex flex-col w-14 h-14 mb-4"
-                    : "justify-start w-[88%] mx-auto flex flex-row items-center h-12 mb-4 px-2"}
-                  transition-all duration-200
-                  ${isActive(item.to)
-                    ? "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 shadow-md"
-                    : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 hover:text-green-700"
-                  }
-                  relative
-                  group
-                  rounded-lg
-                `}
-                onClick={() => navigate(item.to)}
-                title={isSidebarCollapsed ? item.title : undefined}
-                style={{
-                  minWidth: isSidebarCollapsed ? 56 : undefined,
-                  minHeight: isSidebarCollapsed ? 56 : undefined,
-                }}
-              >
-                <span className="flex items-center justify-center w-full">
-                  {item.icon &&
-                    (typeof item.icon === "object"
-                      ? item.icon
-                      : <item.icon className={`w-6 h-6 ${isSidebarCollapsed ? "" : "mr-3"}`} />)}
-                  {!isSidebarCollapsed && <span className="ml-0">{item.title}</span>}
-                </span>
-              </Button>
-            ))}
+          <nav className="flex-1 py-4">
+            <div className="space-y-1">
+              {sidebarNavItems.map((item) => (
+                <Button
+                  key={item.to}
+                  variant={isActive(item.to) ? "default" : "ghost"}
+                  className={`
+                    ${isSidebarCollapsed
+                      ? "w-12 h-12 mx-2 p-0 flex items-center justify-center"
+                      : "w-full mx-2 px-3 py-2 justify-start text-left"
+                    }
+                    transition-all duration-200
+                    ${isActive(item.to)
+                      ? "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    }
+                    rounded-lg
+                  `}
+                  onClick={() => navigate(item.to)}
+                  title={isSidebarCollapsed ? item.title : undefined}
+                >
+                  <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-start'} w-full`}>
+                    <span className="flex-shrink-0">
+                      {item.icon &&
+                        (typeof item.icon === "object"
+                          ? item.icon
+                          : React.createElement(item.icon, { className: "w-5 h-5" }))}
+                    </span>
+                    {!isSidebarCollapsed && (
+                      <span className="ml-3 text-sm font-medium">{item.title}</span>
+                    )}
+                  </div>
+                </Button>
+              ))}
+            </div>
           </nav>
         </div>
       </div>
+
       {/* Main Content */}
-      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-[101px]' : 'lg:pl-[294px]'}`}>
+      <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
         <div className="pb-[70px] lg:pb-0 min-h-screen">
           {children}
         </div>
       </div>
+
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 h-[70px]">
         <div className="flex justify-around items-center py-2 px-1 h-full">
