@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, ChevronLeft, ChevronRight, GitCompare, HelpCircle, Shield, Calendar, MessageCircle, Star } from "lucide-react";
@@ -153,7 +153,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
 
       {/* Custom CSS to hide scrollbar */}
-      <style jsx>{`
+      <style>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
