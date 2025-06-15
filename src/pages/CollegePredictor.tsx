@@ -425,11 +425,20 @@ const CollegePredictor = () => {
                 );
               })}
             </div>
+
+            {/* Disclaimer Note at the Bottom */}
+            <div className="mt-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+              <p className="text-yellow-800 text-sm">
+                <strong>Note:</strong> These predictions are based solely on previous years' data and trends. We cannot guarantee that these colleges or branches will be available to you, as actual results may vary depending on latest cutoffs, seat availability, policies, and other unpredictable factors.
+              </p>
+            </div>
           </Card>
         )}
+
       </div>
     </div>
   );
 };
 
 export default CollegePredictor;
+
