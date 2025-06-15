@@ -33,12 +33,7 @@ const mobileNavigationItems = [
   { icon: Users, label: "Colleges", path: "/colleges" },
   { icon: BookOpen, label: "Predictor", path: "/predictor" },
   { icon: Newspaper, label: "News", path: "/news" },
-  { icon: User, label: "Profile", path: "/profile" },
-  { icon: BookOpen, label: "Quiz", path: "/college-recommendation-quiz" },
-  { icon: HelpCircle, label: "Scholarships", path: "/scholarships" },
-  { icon: Calendar, label: "Tracker", path: "/application-tracker" },
-  { icon: MessageCircle, label: "Forum", path: "/forum" },
-  { icon: Star, label: "Reviews", path: "/college-reviews" },
+  { icon: User, label: "Profile", path: "/profile" }
 ];
 
 const Layout = ({ children }: LayoutProps) => {
