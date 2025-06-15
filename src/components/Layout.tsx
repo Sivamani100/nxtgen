@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react"; // Use lucide-react arrow icon
+import { ArrowLeft } from "lucide-react";
 import { navItems } from "@/nav-items";
 
 interface LayoutProps {
@@ -12,7 +12,7 @@ interface LayoutProps {
 type NavItem = {
   title: string;
   to: string;
-  icon?: React.ElementType;
+  icon?: React.ReactNode; // changed to ReactNode to match navItems
   desktopOnly?: boolean;
 };
 
@@ -58,33 +58,30 @@ const Layout = ({ children }: LayoutProps) => {
           </Button>
         </div>
         <nav className="flex flex-col flex-1 gap-1">
-          {sidebarNavItems.map((item) => {
-            const IconEl = item.icon as React.ElementType;
-            return (
-              <Button
-                key={item.to}
-                variant="ghost"
-                className={`
-                  flex items-center w-full h-12 pl-4 pr-2 rounded-none justify-start
-                  transition-colors duration-150
-                  ${isActive(item.to)
-                    ? "font-medium text-green-700 bg-green-50"
-                    : "text-gray-700 hover:bg-green-50 hover:text-green-700"
-                  }
-                  ${collapsed ? "justify-center px-0" : ""}
-                `}
-                onClick={() => navigate(item.to)}
-                tabIndex={0}
-                aria-label={item.title}
-              >
-                <span className="flex items-center gap-3">
-                  {IconEl && <IconEl className="w-5 h-5" />}
-                  {/* Show text only when expanded */}
-                  {!collapsed && <span>{item.title}</span>}
-                </span>
-              </Button>
-            );
-          })}
+          {sidebarNavItems.map((item) => (
+            <Button
+              key={item.to}
+              variant="ghost"
+              className={`
+                flex items-center w-full h-12 pl-4 pr-2 rounded-none justify-start
+                transition-colors duration-150
+                ${isActive(item.to)
+                  ? "font-medium text-green-700 bg-green-50"
+                  : "text-gray-700 hover:bg-green-50 hover:text-green-700"
+                }
+                ${collapsed ? "justify-center px-0" : ""}
+              `}
+              onClick={() => navigate(item.to)}
+              tabIndex={0}
+              aria-label={item.title}
+            >
+              <span className="flex items-center gap-3">
+                {item.icon}
+                {/* Show text only when expanded */}
+                {!collapsed && <span>{item.title}</span>}
+              </span>
+            </Button>
+          ))}
         </nav>
       </aside>
       {/* Main Content */}
