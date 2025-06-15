@@ -1,14 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, Menu, X, ChevronLeft, ChevronRight, GitCompare, HelpCircle, Shield, Calendar, MessageCircle, Star } from "lucide-react";
+import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, ChevronLeft, ChevronRight, GitCompare, HelpCircle, Shield, Calendar, MessageCircle, Star } from "lucide-react";
 import { navItems } from "@/nav-items";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-// Type for nav item (imported from nav-items.tsx)
 type NavItem = {
   title: string;
   to: string;
@@ -39,10 +39,19 @@ const Layout = ({ children }: LayoutProps) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Explicit type assertion to fix TS error
-  const sidebarNavItems = navItems.filter(
-    item => item.icon && (!item.desktopOnly || isDesktop)
-  ) as NavItem[];
+  // Only a single "Profile" sidebar nav item.
+  // Remove duplicate ones by filtering by title
+  const sidebarNavItems = navItems
+    .filter(
+      (item) =>
+        item.icon &&
+        (!item.desktopOnly || isDesktop)
+    )
+    .filter((item, idx, arr) =>
+      item.title !== "Profile Page" && // Remove "Profile Page"
+      // For "Profile", only include the first one encountered:
+      !(item.title === "Profile" && arr.findIndex(i => i.title === "Profile") !== idx)
+    ) as NavItem[];
 
   return (
     <div className="min-h-screen bg-white">
@@ -51,10 +60,9 @@ const Layout = ({ children }: LayoutProps) => {
         isSidebarCollapsed ? 'lg:w-[101px]' : 'lg:w-[294px]'
       }`}>
         <div className="flex flex-col h-full">
-          {/* Top blank */}
           <div className="flex items-center justify-between h-16 px-2 border-b border-gray-200">
             <div className="flex items-center justify-center w-full">
-              {/* Logo area (left blank as per previous setup) */}
+              {/* Logo area left blank */}
             </div>
             <Button
               variant="ghost"
@@ -66,25 +74,38 @@ const Layout = ({ children }: LayoutProps) => {
             </Button>
           </div>
           {/* Navigation */}
-          <nav className="flex-1 px-2 py-6 space-y-2">
+          <nav className="flex-1 py-8 space-y-0 flex flex-col gap-0 items-center justify-start">
             {sidebarNavItems.map((item) => (
               <Button
                 key={item.to}
                 variant={isActive(item.to) ? "default" : "ghost"}
-                className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'} text-left h-12 transition-all duration-200 ${
-                  isActive(item.to)
+                className={`
+                  ${isSidebarCollapsed
+                    ? "justify-center !px-0 flex flex-col w-14 h-14 mb-4"
+                    : "justify-start w-[88%] mx-auto flex flex-row items-center h-12 mb-4 px-2"}
+                  transition-all duration-200
+                  ${isActive(item.to)
                     ? "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 shadow-md"
                     : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 hover:text-green-700"
-                }`}
+                  }
+                  relative
+                  group
+                  rounded-lg
+                `}
                 onClick={() => navigate(item.to)}
                 title={isSidebarCollapsed ? item.title : undefined}
+                style={{
+                  minWidth: isSidebarCollapsed ? 56 : undefined,
+                  minHeight: isSidebarCollapsed ? 56 : undefined,
+                }}
               >
-                {item.icon && (
-                  typeof item.icon === "object"
-                    ? item.icon
-                    : <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? "" : "mr-3"}`} />
-                )}
-                {!isSidebarCollapsed && item.title}
+                <span className="flex items-center justify-center w-full">
+                  {item.icon &&
+                    (typeof item.icon === "object"
+                      ? item.icon
+                      : <item.icon className={`w-6 h-6 ${isSidebarCollapsed ? "" : "mr-3"}`} />)}
+                  {!isSidebarCollapsed && <span className="ml-0">{item.title}</span>}
+                </span>
               </Button>
             ))}
           </nav>
