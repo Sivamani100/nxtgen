@@ -3,22 +3,20 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, Menu, X, ChevronLeft, ChevronRight, GitCompare, HelpCircle, Shield, Calendar, MessageCircle, Star } from "lucide-react";
-import { navItems } from "@/nav-items"; // <--- ADDED: import navItems
+import { navItems } from "@/nav-items";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-// Desktop Sidebar only nav (with icons + desktopOnly check)
-// Use navItems for easier sync and avoid code drift
-const navigationItems = navItems.filter(
-  item => item.icon && (!item.desktopOnly || (typeof window !== "undefined" && window.innerWidth >= 1024))
-).map(item => ({
-  icon: item.icon.type,
-  label: item.title,
-  path: item.to,
-  desktopOnly: item.desktopOnly,
-}));
+// Type for nav item (imported from nav-items.tsx)
+type NavItem = {
+  title: string;
+  to: string;
+  icon?: React.ReactElement | ((props: any) => JSX.Element);
+  page?: React.ReactNode;
+  desktopOnly?: boolean;
+};
 
 const mobileNavigationItems = [
   { icon: HomeIcon, label: "Home", path: "/home" },
@@ -41,6 +39,12 @@ const Layout = ({ children }: LayoutProps) => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  // Filter only items that have icons and, if desktopOnly, are currently on desktop
+  const sidebarNavItems: NavItem[] = navItems.filter(
+    (item): item is NavItem =>
+      !!item.icon && (!item.desktopOnly || isDesktop)
+  );
 
   return (
     <div className="min-h-screen bg-white">
@@ -65,29 +69,27 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
           {/* Navigation */}
           <nav className="flex-1 px-2 py-6 space-y-2">
-            {navItems.filter(item => item.icon && (!item.desktopOnly || isDesktop)).map((item) => {
-              return (
-                <Button
-                  key={item.to}
-                  variant={isActive(item.to) ? "default" : "ghost"}
-                  className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'} text-left h-12 transition-all duration-200 ${
-                    isActive(item.to)
-                      ? "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 shadow-md"
-                      : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 hover:text-green-700"
-                  }`}
-                  onClick={() => navigate(item.to)}
-                  title={isSidebarCollapsed ? item.title : undefined}
-                >
-                  {item.icon && (
-                    // If icon in navItems is a JSX element, clone with keys
-                    typeof item.icon === "object"
-                      ? item.icon
-                      : <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? "" : "mr-3"}`} />
-                  )}
-                  {!isSidebarCollapsed && item.title}
-                </Button>
-              );
-            })}
+            {sidebarNavItems.map((item) => (
+              <Button
+                key={item.to}
+                variant={isActive(item.to) ? "default" : "ghost"}
+                className={`w-full ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-start'} text-left h-12 transition-all duration-200 ${
+                  isActive(item.to)
+                    ? "bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 shadow-md"
+                    : "text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 hover:text-green-700"
+                }`}
+                onClick={() => navigate(item.to)}
+                title={isSidebarCollapsed ? item.title : undefined}
+              >
+                {item.icon && (
+                  // If icon in navItems is a JSX element, use directly; otherwise, render as component
+                  typeof item.icon === "object"
+                    ? item.icon
+                    : <item.icon className={`w-5 h-5 ${isSidebarCollapsed ? "" : "mr-3"}`} />
+                )}
+                {!isSidebarCollapsed && item.title}
+              </Button>
+            ))}
           </nav>
         </div>
       </div>
