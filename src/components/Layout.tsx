@@ -39,10 +39,10 @@ const Layout = ({ children }: LayoutProps) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Remove complicated type predicate; only show items with icon and not desktopOnly (or desktopOnly && isDesktop)
+  // Explicit type assertion to fix TS error
   const sidebarNavItems = navItems.filter(
     item => item.icon && (!item.desktopOnly || isDesktop)
-  );
+  ) as NavItem[];
 
   return (
     <div className="min-h-screen bg-white">
