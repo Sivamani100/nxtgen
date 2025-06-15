@@ -56,12 +56,12 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-white">
       {/* Desktop Sidebar */}
-      <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:overflow-y-auto lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
         isSidebarCollapsed ? 'lg:w-16' : 'lg:w-64'
       }`}>
         <div className="flex flex-col h-full">
           {/* Header with toggle button */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center">
               {!isSidebarCollapsed && (
                 <h2 className="text-lg font-semibold text-gray-800">Menu</h2>
@@ -77,9 +77,9 @@ const Layout = ({ children }: LayoutProps) => {
             </Button>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 py-4">
-            <div className="space-y-1">
+          {/* Navigation - Remove scrollbar */}
+          <nav className="flex-1 py-4 overflow-hidden">
+            <div className="space-y-1 h-full overflow-y-auto scrollbar-hide">
               {sidebarNavItems.map((item) => (
                 <Button
                   key={item.to}
@@ -151,6 +151,17 @@ const Layout = ({ children }: LayoutProps) => {
           ))}
         </div>
       </div>
+
+      {/* Custom CSS to hide scrollbar */}
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
