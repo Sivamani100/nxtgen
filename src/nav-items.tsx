@@ -1,4 +1,6 @@
-import { HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, GitCompare } from "lucide-react";
+import {
+  HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, GitCompare, Star, HelpCircle, Calendar, MessageCircle
+} from "lucide-react";
 import Index from "./pages/Index.tsx";
 import Home from "./pages/Home.jsx";
 import Colleges from "./pages/Colleges.jsx";
@@ -20,6 +22,11 @@ import NotFound from "./pages/NotFound.jsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Help from "./pages/Help";
 import Team from "./pages/Team";
+import CollegeRecommendationQuiz from "./pages/CollegeRecommendationQuiz";
+import ScholarshipFinder from "./pages/ScholarshipFinder";
+import ApplicationTracker from "./pages/ApplicationTracker";
+import Forum from "./pages/Forum";
+import CollegeReviews from "./pages/CollegeReviews";
 
 export const navItems = [
   {
@@ -140,5 +147,35 @@ export const navItems = [
     to: "/team",
     page: <Team />,
     desktopOnly: true,
+  },
+  {
+    title: "College Recommendation Quiz",
+    to: "/college-recommendation-quiz",
+    icon: <Star className="h-4 w-4" />,
+    page: <CollegeRecommendationQuiz />,
+  },
+  {
+    title: "Scholarship Finder",
+    to: "/scholarships",
+    icon: <HelpCircle className="h-4 w-4" />,
+    page: <ScholarshipFinder />,
+  },
+  {
+    title: "Application Tracker",
+    to: "/application-tracker",
+    icon: <Calendar className="h-4 w-4" />,
+    page: <ApplicationTracker />,
+  },
+  {
+    title: "Forum",
+    to: "/forum",
+    icon: <MessageCircle className="h-4 w-4" />,
+    page: <Forum />,
+  },
+  {
+    title: "College Reviews",
+    to: "/college-reviews",
+    icon: <Star className="h-4 w-4" />,
+    page: <CollegeReviews />,
   },
 ];

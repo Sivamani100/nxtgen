@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      application_tracker: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+          target_id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          target_id: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          target_id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       college_comparisons: {
         Row: {
           college_ids: number[]
@@ -29,6 +59,57 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      college_recommendation_quiz: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          recommended_colleges: Json | null
+          user_id: string
+        }
+        Insert: {
+          answers: Json
+          created_at?: string
+          id?: string
+          recommended_colleges?: Json | null
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          recommended_colleges?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      college_reviews: {
+        Row: {
+          college_id: number
+          created_at: string
+          id: string
+          rating: number | null
+          review: string | null
+          user_id: string
+        }
+        Insert: {
+          college_id: number
+          created_at?: string
+          id?: string
+          rating?: number | null
+          review?: string | null
+          user_id: string
+        }
+        Update: {
+          college_id?: number
+          created_at?: string
+          id?: string
+          rating?: number | null
+          review?: string | null
           user_id?: string
         }
         Relationships: []
@@ -196,6 +277,62 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      forum_answers: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "forum_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_questions: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -392,6 +529,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scholarships: {
+        Row: {
+          amount: number | null
+          application_link: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          eligible_courses: string[] | null
+          id: string
+          title: string
+        }
+        Insert: {
+          amount?: number | null
+          application_link?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          eligible_courses?: string[] | null
+          id?: string
+          title: string
+        }
+        Update: {
+          amount?: number | null
+          application_link?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          eligible_courses?: string[] | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
       }
       user_college_favorites: {
         Row: {
