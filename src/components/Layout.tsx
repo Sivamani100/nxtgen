@@ -39,10 +39,9 @@ const Layout = ({ children }: LayoutProps) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Ensure correct type for sidebarNavItems so TS knows 'icon' exists
+  // Remove complicated type predicate; only show items with icon and not desktopOnly (or desktopOnly && isDesktop)
   const sidebarNavItems = navItems.filter(
-    (item): item is NavItem & { icon: NonNullable<NavItem["icon"]> } =>
-      !!item.icon && (!item.desktopOnly || isDesktop)
+    item => item.icon && (!item.desktopOnly || isDesktop)
   );
 
   return (

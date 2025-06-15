@@ -447,34 +447,74 @@ const Colleges = () => {
                       <span className="truncate">{college.location}, {college.state}</span>
                     </div>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="p-2 ml-2 flex-shrink-0 hover:bg-red-50"
-                    onClick={(e) => handleSaveCollege(college.id, e)}
-                  >
-                    <Heart 
-                      className={`w-5 h-5 transition-colors ${
-                        savedColleges.includes(college.id) 
-                          ? 'text-red-500 fill-red-500' 
-                          : 'text-gray-400 hover:text-red-500'
-                      }`} 
+                  <div className="flex flex-row items-center ml-2 min-w-0 space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="p-2 flex-shrink-0 hover:bg-red-50"
+                      onClick={(e) => handleSaveCollege(college.id, e)}
+                    >
+                      <Heart 
+                        className={`w-5 h-5 transition-colors ${
+                          savedColleges.includes(college.id) 
+                            ? 'text-red-500 fill-red-500' 
+                            : 'text-gray-400 hover:text-red-500'
+                        }`} 
+                      />
+                    </Button>
+                    {/* Square Checkbox, instant UI update */}
+                    <Checkbox
+                      checked={myColleges.includes(college.id)}
+                      onCheckedChange={async (checked) => {
+                        // Optimistically update UI
+                        if (checked) {
+                          setMyColleges(prev => prev.includes(college.id) ? prev : [...prev, college.id]);
+                        } else {
+                          setMyColleges(prev => prev.filter(id => id !== college.id));
+                        }
+                        // Update Supabase in background
+                        try {
+                          const { data: { user } } = await supabase.auth.getUser();
+                          if (!user) {
+                            toast.error("Please login to manage your list.");
+                            return;
+                          }
+                          if (checked) {
+                            const { error } = await supabase
+                              .from("user_selected_colleges")
+                              .insert({ user_id: user.id, college_id: college.id });
+                            if (error) {
+                              toast.error("Could not add.");
+                              // Rollback UI if failed
+                              setMyColleges(prev => prev.filter(id => id !== college.id));
+                            } else {
+                              toast.success("Added to My Colleges!");
+                            }
+                          } else {
+                            const { error } = await supabase
+                              .from("user_selected_colleges")
+                              .delete()
+                              .eq("user_id", user.id)
+                              .eq("college_id", college.id);
+                            if (error) {
+                              toast.error("Could not remove.");
+                              // Rollback UI if failed
+                              setMyColleges(prev => [...prev, college.id]);
+                            } else {
+                              toast.info("Removed from My Colleges.");
+                            }
+                          }
+                        } catch (err) {
+                          toast.error("Action failed.");
+                        }
+                      }}
+                      onClick={e => e.stopPropagation()}
+                      className="ml-1 w-5 h-5 border-2 border-green-500 rounded-sm 
+                        data-[state=checked]:bg-green-500 data-[state=checked]:text-white 
+                        transition-all duration-150 focus:ring-2 focus:ring-green-400"
+                      aria-label="Add to My Colleges"
                     />
-                  </Button>
-                  {/* Replace AddToMyCollegesButton with a Tick/CheckBox */}
-                  <Checkbox
-                    checked={myColleges.includes(college.id)}
-                    onCheckedChange={(checked) =>
-                      handleToggleMyCollege(
-                        college.id,
-                        Boolean(checked),
-                        event
-                      )
-                    }
-                    onClick={e => e.stopPropagation()}
-                    className="ml-2 w-5 h-5 border-green-500 rounded-full data-[state=checked]:bg-green-500 data-[state=checked]:text-white focus:ring-2 focus:ring-green-400"
-                    aria-label="Add to My Colleges"
-                  />
+                  </div>
                 </div>
                 
                 <div className="space-y-3">
