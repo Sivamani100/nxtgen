@@ -39,16 +39,17 @@ const Layout = ({ children }: LayoutProps) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Only a single "Profile" sidebar nav item.
-  // Remove duplicate ones by filtering by title
+  // Only ONE predictor in sidebar.
+  // Exclude "College Predictor" from the sidebar.
   const sidebarNavItems = navItems
     .filter(
       (item) =>
         item.icon &&
-        (!item.desktopOnly || isDesktop)
+        (!item.desktopOnly || isDesktop) &&
+        item.title !== "Profile Page" &&
+        item.title !== "College Predictor" // Exclude College Predictor from sidebar
     )
     .filter((item, idx, arr) =>
-      item.title !== "Profile Page" && // Remove "Profile Page"
       // For "Profile", only include the first one encountered:
       !(item.title === "Profile" && arr.findIndex(i => i.title === "Profile") !== idx)
     ) as NavItem[];
