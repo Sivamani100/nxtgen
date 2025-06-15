@@ -38,6 +38,14 @@ const App = () => (
                 <Route path="/privacy-policy" element={navItems.find(item => item.to === "/privacy-policy")?.page} />
                 <Route path="/help" element={navItems.find(item => item.to === "/help")?.page} />
                 <Route path="/team" element={navItems.find(item => item.to === "/team")?.page} />
+
+                {/* --- ADDING NEW FEATURES ROUTES HERE --- */}
+                <Route path="/college-recommendation-quiz" element={navItems.find(item => item.to === "/college-recommendation-quiz")?.page} />
+                <Route path="/scholarships" element={navItems.find(item => item.to === "/scholarships")?.page} />
+                <Route path="/application-tracker" element={navItems.find(item => item.to === "/application-tracker")?.page} />
+                <Route path="/forum" element={navItems.find(item => item.to === "/forum")?.page} />
+                <Route path="/college-reviews" element={navItems.find(item => item.to === "/college-reviews")?.page} />
+
                 <Route path="*" element={navItems.find(item => item.to === "/404")?.page} />
               </Routes>
             </Layout>
