@@ -8,76 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Star, MapPin, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type College = Database['public']['Tables']['colleges']['Row'];
-
-const AddToMyCollegesButton = ({ collegeId }: { collegeId: number }) => {
-  const [inList, setInList] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    checkInList();
-  }, []);
-
-  async function checkInList() {
-    // Check if college is in user's selected list
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data } = await supabase
-      .from("user_selected_colleges")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("college_id", collegeId)
-      .maybeSingle();
-    setInList(!!data);
-  }
-
-  const handleClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("Please login to manage your list.");
-      return;
-    }
-    if (inList) {
-      // remove
-      const { error } = await supabase
-        .from("user_selected_colleges")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("college_id", collegeId);
-      if (!error) {
-        toast.info("Removed from My Colleges.");
-        setInList(false);
-      }
-      else toast.error("Could not remove.");
-    } else {
-      // add
-      const { error } = await supabase
-        .from("user_selected_colleges")
-        .insert({ user_id: user.id, college_id: collegeId });
-      if (!error) {
-        toast.success("Added to My Colleges!");
-        setInList(true);
-      }
-      else toast.error("Could not add.");
-    }
-    setLoading(false);
-  };
-
-  return (
-    <Button
-      size="sm"
-      variant={inList ? "secondary" : "ghost"}
-      onClick={handleClick}
-      disabled={loading}
-      className="ml-2"
-    >
-      {inList ? "In My Colleges" : "+ My Colleges"}
-    </Button>
-  );
-};
 
 const Colleges = () => {
   const [colleges, setColleges] = useState<College[]>([]);
@@ -91,10 +24,12 @@ const Colleges = () => {
     sortBy: 'rating'
   });
   const navigate = useNavigate();
+  const [myColleges, setMyColleges] = useState<number[]>([]);
 
   useEffect(() => {
     fetchColleges();
     fetchSavedColleges();
+    fetchMyColleges();
   }, []);
 
   useEffect(() => {
@@ -132,6 +67,21 @@ const Colleges = () => {
       setSavedColleges(data?.map(item => item.college_id) || []);
     } catch (error) {
       console.error('Error fetching saved colleges:', error);
+    }
+  };
+
+  const fetchMyColleges = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("user_selected_colleges")
+        .select("college_id")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      setMyColleges((data || []).map(item => item.college_id));
+    } catch (error) {
+      console.error('Error fetching my colleges:', error);
     }
   };
 
@@ -282,6 +232,40 @@ const Colleges = () => {
       </div>
     );
   }
+
+  const handleToggleMyCollege = async (collegeId: number, isChecked: boolean, event: React.ChangeEvent<HTMLInputElement> | React.MouseEvent) => {
+    event.stopPropagation();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please login to manage your list.");
+      return;
+    }
+    if (isChecked) {
+      // add
+      const { error } = await supabase
+        .from("user_selected_colleges")
+        .insert({ user_id: user.id, college_id: collegeId });
+      if (!error) {
+        toast.success("Added to My Colleges!");
+        setMyColleges(prev => [...prev, collegeId]);
+      } else {
+        toast.error("Could not add.");
+      }
+    } else {
+      // remove
+      const { error } = await supabase
+        .from("user_selected_colleges")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("college_id", collegeId);
+      if (!error) {
+        toast.info("Removed from My Colleges.");
+        setMyColleges(prev => prev.filter(id => id !== collegeId));
+      } else {
+        toast.error("Could not remove.");
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
@@ -477,7 +461,20 @@ const Colleges = () => {
                       }`} 
                     />
                   </Button>
-                  <AddToMyCollegesButton collegeId={college.id} />
+                  {/* Replace AddToMyCollegesButton with a Tick/CheckBox */}
+                  <Checkbox
+                    checked={myColleges.includes(college.id)}
+                    onCheckedChange={(checked) =>
+                      handleToggleMyCollege(
+                        college.id,
+                        Boolean(checked),
+                        event
+                      )
+                    }
+                    onClick={e => e.stopPropagation()}
+                    className="ml-2 w-5 h-5 border-green-500 rounded-full data-[state=checked]:bg-green-500 data-[state=checked]:text-white focus:ring-2 focus:ring-green-400"
+                    aria-label="Add to My Colleges"
+                  />
                 </div>
                 
                 <div className="space-y-3">
