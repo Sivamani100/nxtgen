@@ -31,7 +31,7 @@ const founders = [
     email: "chandrikanellipudi67@gmail.com",
     phone: "+91 7893813298",
     about:
-      "Chief Technology Officer driving NXTGEN's technical vision. Arjun brings expertise in scalable systems and AI-driven solutions to enhance student success platforms.",
+      "Chief Technology Officer driving NXTGEN's technical vision. Chandralakshmi Nellipudi brings expertise in scalable systems and AI-driven solutions to enhance student success platforms.",
   },
 ];
 
