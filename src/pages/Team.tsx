@@ -8,8 +8,8 @@ const founders = [
     title: "Co-founder & Product Lead",
     image: "/lovable-uploads/9602b8f1-9a2f-49b0-8b5a-eea50bc74771.png",
     linkedin: "https://www.linkedin.com/in/chandrika-bogireddy/",
-    email: "chandrika.nxtgen@gmail.com",
-    phone: "+91 9876543210",
+    email: "bogireddychandrika9@gmail.com",
+    phone: "+91 7799387868",
     about:
       "Co-founder and key builder of NXTGEN. Chandrika specializes in product experience and outreach, empowering students with innovative solutions for the education community.",
   },
@@ -24,12 +24,12 @@ const founders = [
       "Visionary founder of NXTGEN. Sivamanikanta leads with a passion for transforming student guidance through technology, focusing on accessible, data-driven insights for academic and career success.",
   },
   {
-    name: "Arjun Patel",
+    name: "Nellipudi. Chandra lakshmi",
     title: "CTO",
     image: "/lovable-uploads/placeholder-arjun.png",
-    linkedin: "https://www.linkedin.com/in/arjun-patel/",
-    email: "arjun.nxtgen@gmail.com",
-    phone: "+91 9123456789",
+    linkedin: "Chandra Lakshmi Nellipudi",
+    email: "chandrikanellipudi67@gmail.com",
+    phone: "+91 7893813298",
     about:
       "Chief Technology Officer driving NXTGEN's technical vision. Arjun brings expertise in scalable systems and AI-driven solutions to enhance student success platforms.",
   },
