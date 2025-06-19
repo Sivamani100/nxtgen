@@ -24,7 +24,7 @@ const founders = [
       "Visionary founder of NXTGEN. Sivamanikanta leads with a passion for transforming student guidance through technology, focusing on accessible, data-driven insights for academic and career success.",
   },
   {
-    name: "Nellipudi. Chandra lakshmi",
+    name: "Chandralakshmi Nellipudi",
     title: "CTO",
     image: "/lovable-uploads/placeholder-arjun.png",
     linkedin: "Chandra Lakshmi Nellipudi",
