@@ -1,317 +1,517 @@
-
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Search, GitCompare, Star, MapPin, DollarSign, TrendingUp, Award, X, Plus } from "lucide-react";
-import { toast } from "sonner";
-
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  type: string;
-  rating: number;
-  total_fees_min: number;
-  total_fees_max: number;
-  placement_percentage: number;
-  highest_package: number;
-  average_package: number;
-  image_url?: string;
-}
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  MapPin, 
+  Users, 
+  GraduationCap, 
+  Star, 
+  Calendar, 
+  ExternalLink, 
+  Phone, 
+  Mail, 
+  Globe,
+  Building,
+  BookOpen,
+  Award,
+  Users2,
+  DollarSign,
+  Target,
+  Trash2,
+  Plus
+} from "lucide-react";
+import SEO from "@/components/SEO";
 
 const Compare = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<College[]>([]);
-  const [selectedColleges, setSelectedColleges] = useState<College[]>([]);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [selectedColleges, setSelectedColleges] = useState<any[]>([]);
 
-  const searchColleges = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('colleges')
-        .select('id, name, location, type, rating, total_fees_min, total_fees_max, placement_percentage, highest_package, average_package, image_url')
-        .or(`name.ilike.%${query}%,location.ilike.%${query}%,type.ilike.%${query}%`)
-        .limit(20);
-
-      if (error) throw error;
-      setSearchResults(data || []);
-    } catch (error) {
-      console.error('Error searching colleges:', error);
-      toast.error('Failed to search colleges');
-    } finally {
-      setLoading(false);
+  // Real college data
+  const collegesData = {
+    "andhra-university": {
+      id: "andhra-university",
+      name: "Andhra University",
+      location: "Visakhapatnam, Andhra Pradesh",
+      type: "State University",
+      category: "Engineering, Arts, Science, Commerce",
+      rating: 4.2,
+      students: "50,000+",
+      established: 1926,
+      description: "Andhra University is one of the oldest and most prestigious universities in India, offering comprehensive education in engineering, arts, science, and commerce.",
+      admissionInfo: "Admissions based on AP EAMCET, AP ICET, and other state-level entrance exams",
+      courses: ["B.Tech", "B.Sc", "B.Com", "B.A", "M.Tech", "M.Sc", "MBA", "Ph.D"],
+      facilities: ["Central Library", "Hostels", "Sports Complex", "Research Labs", "Computer Centers"],
+      website: "https://andhrauniversity.edu.in",
+      contact: {
+        phone: "+91-891-2844000",
+        email: "registrar@andhrauniversity.edu.in",
+        address: "Andhra University, Visakhapatnam, Andhra Pradesh 530003"
+      },
+      fees: {
+        "B.Tech": "₹45,000 - ₹85,000 per year",
+        "B.Sc": "₹15,000 - ₹25,000 per year",
+        "B.Com": "₹12,000 - ₹20,000 per year",
+        "MBA": "₹60,000 - ₹1,20,000 per year"
+      },
+      cutoff: {
+        "B.Tech": "AP EAMCET: 5000-15000 rank",
+        "MBA": "AP ICET: 1000-5000 rank"
+      },
+      placements: {
+        averagePackage: "₹4.5 LPA",
+        highestPackage: "₹12 LPA",
+        topRecruiters: ["TCS", "Infosys", "Wipro", "Tech Mahindra", "HCL", "Cognizant"]
+      }
+    },
+    "iit-delhi": {
+      id: "iit-delhi",
+      name: "Indian Institute of Technology Delhi",
+      location: "New Delhi, Delhi",
+      type: "IIT",
+      category: "Engineering",
+      rating: 4.8,
+      students: "8,000+",
+      established: 1961,
+      description: "IIT Delhi is one of the premier engineering institutions in India, known for its excellence in technical education and research.",
+      admissionInfo: "Admissions through JEE Advanced for B.Tech programs",
+      courses: ["B.Tech", "M.Tech", "M.Sc", "Ph.D", "MBA"],
+      facilities: ["Central Library", "Hostels", "Sports Complex", "Research Labs", "Innovation Center"],
+      website: "https://home.iitd.ac.in",
+      contact: {
+        phone: "+91-11-26591735",
+        email: "deanacad@admin.iitd.ac.in",
+        address: "IIT Delhi, Hauz Khas, New Delhi, Delhi 110016"
+      },
+      fees: {
+        "B.Tech": "₹2,00,000 - ₹2,50,000 per year",
+        "M.Tech": "₹1,50,000 - ₹2,00,000 per year",
+        "MBA": "₹4,00,000 - ₹5,00,000 per year"
+      },
+      cutoff: {
+        "B.Tech": "JEE Advanced: 100-1000 rank",
+        "M.Tech": "GATE: 95+ percentile"
+      },
+      placements: {
+        averagePackage: "₹15 LPA",
+        highestPackage: "₹45 LPA",
+        topRecruiters: ["Google", "Microsoft", "Amazon", "Apple", "Goldman Sachs", "McKinsey"]
+      }
+    },
+    "iit-bombay": {
+      id: "iit-bombay",
+      name: "Indian Institute of Technology Bombay",
+      location: "Mumbai, Maharashtra",
+      type: "IIT",
+      category: "Engineering",
+      rating: 4.9,
+      students: "10,000+",
+      established: 1958,
+      description: "IIT Bombay is one of the most prestigious engineering institutions in India, offering world-class education and research opportunities.",
+      admissionInfo: "Admissions through JEE Advanced for B.Tech programs",
+      courses: ["B.Tech", "M.Tech", "M.Sc", "Ph.D", "MBA"],
+      facilities: ["Central Library", "Hostels", "Sports Complex", "Research Labs", "Innovation Center"],
+      website: "https://www.iitb.ac.in",
+      contact: {
+        phone: "+91-22-25722545",
+        email: "deanacad@iitb.ac.in",
+        address: "IIT Bombay, Powai, Mumbai, Maharashtra 400076"
+      },
+      fees: {
+        "B.Tech": "₹2,00,000 - ₹2,50,000 per year",
+        "M.Tech": "₹1,50,000 - ₹2,00,000 per year",
+        "MBA": "₹4,00,000 - ₹5,00,000 per year"
+      },
+      cutoff: {
+        "B.Tech": "JEE Advanced: 50-500 rank",
+        "M.Tech": "GATE: 98+ percentile"
+      },
+      placements: {
+        averagePackage: "₹18 LPA",
+        highestPackage: "₹50 LPA",
+        topRecruiters: ["Google", "Microsoft", "Amazon", "Apple", "Goldman Sachs", "McKinsey", "Bain"]
+      }
+    },
+    "nit-trichy": {
+      id: "nit-trichy",
+      name: "National Institute of Technology Tiruchirappalli",
+      location: "Tiruchirappalli, Tamil Nadu",
+      type: "NIT",
+      category: "Engineering",
+      rating: 4.5,
+      students: "8,500+",
+      established: 1964,
+      description: "NIT Trichy is one of the top NITs in India, offering excellent engineering education and research opportunities.",
+      admissionInfo: "Admissions through JEE Main for B.Tech programs",
+      courses: ["B.Tech", "M.Tech", "M.Sc", "Ph.D", "MBA"],
+      facilities: ["Central Library", "Hostels", "Sports Complex", "Research Labs", "Innovation Center"],
+      website: "https://www.nitt.edu",
+      contact: {
+        phone: "+91-431-2503000",
+        email: "director@nitt.edu",
+        address: "NIT Trichy, Tanjore Main Road, Tiruchirappalli, Tamil Nadu 620015"
+      },
+      fees: {
+        "B.Tech": "₹1,50,000 - ₹2,00,000 per year",
+        "M.Tech": "₹1,00,000 - ₹1,50,000 per year",
+        "MBA": "₹2,50,000 - ₹3,50,000 per year"
+      },
+      cutoff: {
+        "B.Tech": "JEE Main: 5000-15000 rank",
+        "M.Tech": "GATE: 85+ percentile"
+      },
+      placements: {
+        averagePackage: "₹8 LPA",
+        highestPackage: "₹25 LPA",
+        topRecruiters: ["TCS", "Infosys", "Wipro", "Tech Mahindra", "HCL", "Cognizant", "Amazon"]
+      }
     }
   };
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      searchColleges(searchQuery);
-    }, 300);
+    // Load selected colleges from localStorage
+    const compareList = JSON.parse(localStorage.getItem('compareColleges') || '[]');
+    const colleges = compareList.map((id: string) => collegesData[id as keyof typeof collegesData]).filter(Boolean);
+    setSelectedColleges(colleges);
+  }, []);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
-  const addToComparison = (college: College) => {
-    if (selectedColleges.length >= 4) {
-      toast.error('You can compare maximum 4 colleges at a time');
-      return;
-    }
-
-    if (selectedColleges.find(c => c.id === college.id)) {
-      toast.error('College already added to comparison');
-      return;
-    }
-
-    setSelectedColleges([...selectedColleges, college]);
-    toast.success(`${college.name} added to comparison`);
+  const removeCollege = (collegeId: string) => {
+    const updatedColleges = selectedColleges.filter(college => college.id !== collegeId);
+    setSelectedColleges(updatedColleges);
+    
+    // Update localStorage
+    const compareList = JSON.parse(localStorage.getItem('compareColleges') || '[]');
+    const updatedList = compareList.filter((id: string) => id !== collegeId);
+    localStorage.setItem('compareColleges', JSON.stringify(updatedList));
   };
 
-  const removeFromComparison = (collegeId: number) => {
-    setSelectedColleges(selectedColleges.filter(c => c.id !== collegeId));
+  const clearAll = () => {
+    setSelectedColleges([]);
+    localStorage.removeItem('compareColleges');
   };
 
-  const saveComparison = async () => {
-    if (selectedColleges.length < 2) {
-      toast.error('Please select at least 2 colleges to compare');
-      return;
-    }
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Please login to save comparisons');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('college_comparisons')
-        .insert({
-          user_id: user.id,
-          college_ids: selectedColleges.map(c => c.id)
-        });
-
-      if (error) throw error;
-      toast.success('Comparison saved successfully');
-    } catch (error) {
-      console.error('Error saving comparison:', error);
-      toast.error('Failed to save comparison');
-    }
-  };
+  if (selectedColleges.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <SEO 
+          title="Compare Colleges - NXTGEN | Side-by-Side College Comparison"
+          description="Compare Indian colleges and universities side-by-side. Analyze fees, placements, courses, and admission requirements to make informed decisions."
+          keywords="compare colleges, college comparison, university comparison, Indian colleges comparison, college fees comparison, placement comparison"
+        />
+        
+        <div className="text-center py-12">
+          <div className="mb-6">
+            <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h1 className="text-3xl font-bold mb-4">Compare Colleges</h1>
+            <p className="text-lg text-muted-foreground mb-8">
+              Select colleges from our database to compare them side-by-side
+            </p>
+          </div>
+          
+          <Button onClick={() => navigate('/college-database')} className="text-lg px-8 py-3">
+            <Plus className="w-5 h-5 mr-2" />
+            Browse College Database
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto p-4 lg:p-6">
+    <div className="container mx-auto px-4 py-8">
+      <SEO 
+        title="Compare Colleges - NXTGEN | Side-by-Side College Comparison"
+        description="Compare Indian colleges and universities side-by-side. Analyze fees, placements, courses, and admission requirements to make informed decisions."
+        keywords="compare colleges, college comparison, university comparison, Indian colleges comparison, college fees comparison, placement comparison"
+      />
+
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center mb-4">
-            <GitCompare className="w-8 h-8 text-blue-600 mr-3" />
-            <h1 className="text-3xl font-bold text-gray-900">Compare Colleges</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Compare Colleges</h1>
+            <p className="text-lg text-muted-foreground">
+              Side-by-side comparison of {selectedColleges.length} colleges
+            </p>
           </div>
-          <p className="text-gray-600 text-lg">Select colleges to compare their features side by side</p>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => navigate('/college-database')}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add More
+            </Button>
+            <Button variant="outline" onClick={clearAll}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Clear All
+            </Button>
+          </div>
         </div>
 
-        {/* Search Section */}
-        <Card className="p-6 mb-8 border border-gray-200">
-          <div className="relative mb-4">
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search colleges to add to comparison..."
-              className="h-12 text-lg pl-12 pr-4 border-2 border-gray-200 focus:border-blue-500"
-            />
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            {loading && (
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-              </div>
-            )}
-          </div>
-
-          {searchResults.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-              {searchResults.map((college) => (
-                <div
-                  key={college.id}
-                  className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200"
-                >
-                  <div className="flex items-start justify-between mb-2">
+        {/* College Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+          {selectedColleges.map((college) => (
+            <Card key={college.id} className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 h-8 w-8 p-0"
+                onClick={() => removeCollege(college.id)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+              
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-1">{college.name}</h3>
-                      <p className="text-sm text-gray-600 flex items-center">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {college.location}
-                      </p>
+                    <CardTitle className="text-lg mb-2">{college.name}</CardTitle>
+                    <div className="flex items-center text-muted-foreground mb-2">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      <span className="text-sm">{college.location}</span>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={() => addToComparison(college)}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
+                  <Badge variant={college.type === 'IIT' ? 'default' : 'secondary'} className="text-xs">
+                    {college.type}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                      <span>{college.rating}</span>
+                    <Star className="w-3 h-3 text-yellow-500 mr-1" />
+                    <span>{college.rating}/5</span>
                     </div>
-                    <span className="text-green-600 font-medium">
-                      ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L
-                    </span>
+                  <div className="flex items-center">
+                    <Users className="w-3 h-3 text-muted-foreground mr-1" />
+                    <span>{college.students}</span>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="pt-0">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => navigate(`/college-details/${college.id}`)}
+                >
+                  View Details
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+              </div>
+            </div>
+
+      {/* Comparison Tables */}
+      <div className="space-y-8">
+        {/* Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Criteria</TableHead>
+                  {selectedColleges.map((college) => (
+                    <TableHead key={college.id}>{college.name}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium">Location</TableCell>
+                    {selectedColleges.map((college) => (
+                    <TableCell key={college.id}>{college.location}</TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Type</TableCell>
+                    {selectedColleges.map((college) => (
+                    <TableCell key={college.id}>
+                      <Badge variant={college.type === 'IIT' ? 'default' : 'secondary'}>
+                          {college.type}
+                      </Badge>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Established</TableCell>
+                  {selectedColleges.map((college) => (
+                    <TableCell key={college.id}>{college.established}</TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Rating</TableCell>
+                    {selectedColleges.map((college) => (
+                    <TableCell key={college.id}>
+                      <div className="flex items-center">
+                          <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                        <span>{college.rating}/5</span>
+                        </div>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Student Strength</TableCell>
+                    {selectedColleges.map((college) => (
+                    <TableCell key={college.id}>{college.students}</TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* Fee Structure */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Fee Structure (B.Tech)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>College</TableHead>
+                  <TableHead>B.Tech Fees (per year)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                    {selectedColleges.map((college) => (
+                  <TableRow key={college.id}>
+                    <TableCell className="font-medium">{college.name}</TableCell>
+                    <TableCell>{college.fees["B.Tech"]}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* Placement Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Placement Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>College</TableHead>
+                  <TableHead>Average Package</TableHead>
+                  <TableHead>Highest Package</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                    {selectedColleges.map((college) => (
+                  <TableRow key={college.id}>
+                    <TableCell className="font-medium">{college.name}</TableCell>
+                    <TableCell className="text-green-600 font-semibold">
+                      {college.placements.averagePackage}
+                    </TableCell>
+                    <TableCell className="text-blue-600 font-semibold">
+                      {college.placements.highestPackage}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* Admission Requirements */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Admission Requirements (B.Tech)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>College</TableHead>
+                  <TableHead>Entrance Exam</TableHead>
+                  <TableHead>Cutoff Rank</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                    {selectedColleges.map((college) => (
+                  <TableRow key={college.id}>
+                    <TableCell className="font-medium">{college.name}</TableCell>
+                    <TableCell>
+                      {college.cutoff["B.Tech"]?.includes("JEE Advanced") ? "JEE Advanced" :
+                       college.cutoff["B.Tech"]?.includes("JEE Main") ? "JEE Main" :
+                       college.cutoff["B.Tech"]?.includes("AP EAMCET") ? "AP EAMCET" :
+                       college.cutoff["B.Tech"]?.includes("TS EAMCET") ? "TS EAMCET" :
+                       "State Level"}
+                    </TableCell>
+                    <TableCell>{college.cutoff["B.Tech"]}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* Top Recruiters */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Recruiters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {selectedColleges.map((college) => (
+                <div key={college.id} className="space-y-2">
+                  <h4 className="font-semibold text-sm">{college.name}</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {college.placements.topRecruiters.slice(0, 6).map((recruiter, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {recruiter}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </Card>
-
-        {/* Selected Colleges for Comparison */}
-        {selectedColleges.length > 0 && (
-          <Card className="p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Comparison ({selectedColleges.length}/4)
-              </h2>
-              <div className="space-x-2">
-                <Button onClick={saveComparison} variant="outline" className="border-green-500 text-green-600 hover:bg-green-50">
-                  Save Comparison
-                </Button>
-                <Button onClick={() => setSelectedColleges([])} variant="outline">
-                  Clear All
-                </Button>
-              </div>
-            </div>
-
-            {/* Comparison Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-4 px-2 font-semibold text-gray-900">Feature</th>
-                    {selectedColleges.map((college) => (
-                      <th key={college.id} className="text-center py-4 px-2 min-w-48">
-                        <div className="relative">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => removeFromComparison(college.id)}
-                            className="absolute -top-2 -right-2 w-6 h-6 p-0 bg-red-100 hover:bg-red-200 text-red-600"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                          {college.image_url && (
-                            <img 
-                              src={college.image_url} 
-                              alt={college.name}
-                              className="w-16 h-16 object-cover rounded-lg mx-auto mb-2"
-                            />
-                          )}
-                          <h3 className="font-bold text-gray-900 text-sm">{college.name}</h3>
-                          <p className="text-xs text-gray-600">{college.location}</p>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-4 px-2 font-medium text-gray-900">Type</td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="py-4 px-2 text-center">
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                          {college.type}
-                        </span>
-                      </td>
-                    ))}
-                  </tr>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-4 px-2 font-medium text-gray-900">Rating</td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="py-4 px-2 text-center">
-                        <div className="flex items-center justify-center">
-                          <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                          <span className="font-bold">{college.rating}</span>
-                        </div>
-                      </td>
-                    ))}
-                  </tr>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-4 px-2 font-medium text-gray-900">Fee Range</td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="py-4 px-2 text-center">
-                        <span className="text-green-600 font-bold">
-                          ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - 
-                          ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
-                        </span>
-                      </td>
-                    ))}
-                  </tr>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-4 px-2 font-medium text-gray-900">Placement Rate</td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="py-4 px-2 text-center">
-                        <span className="text-blue-600 font-bold">{college.placement_percentage}%</span>
-                      </td>
-                    ))}
-                  </tr>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-4 px-2 font-medium text-gray-900">Highest Package</td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="py-4 px-2 text-center">
-                        <span className="text-purple-600 font-bold">
-                          ₹{college.highest_package ? (college.highest_package / 100000).toFixed(1) : '0'}L
-                        </span>
-                      </td>
-                    ))}
-                  </tr>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-4 px-2 font-medium text-gray-900">Average Package</td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="py-4 px-2 text-center">
-                        <span className="text-orange-600 font-bold">
-                          ₹{college.average_package ? (college.average_package / 100000).toFixed(1) : '0'}L
-                        </span>
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="py-4 px-2 font-medium text-gray-900">Actions</td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="py-4 px-2 text-center">
-                        <Button
-                          size="sm"
-                          onClick={() => navigate(`/college-details/${college.id}`)}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          View Details
-                        </Button>
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          </CardContent>
           </Card>
-        )}
 
-        {selectedColleges.length === 0 && (
-          <Card className="p-12 text-center border border-gray-200">
-            <GitCompare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No Colleges Selected</h3>
-            <p className="text-gray-600">Search and select colleges above to start comparing them</p>
+        {/* Contact Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Contact Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {selectedColleges.map((college) => (
+                <div key={college.id} className="space-y-2">
+                  <h4 className="font-semibold text-sm">{college.name}</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center">
+                      <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
+                      <span>{college.contact.phone}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Mail className="w-3 h-3 mr-1 text-muted-foreground" />
+                      <span className="truncate">{college.contact.email}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Globe className="w-3 h-3 mr-1 text-muted-foreground" />
+                      <a 
+                        href={college.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline truncate"
+                      >
+                        Website
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
           </Card>
-        )}
       </div>
     </div>
   );
