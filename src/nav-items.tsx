@@ -1,5 +1,5 @@
 import {
-  HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, GitCompare, Star, HelpCircle, Calendar, MessageCircle, Database
+  HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, GitCompare, Star, HelpCircle, Calendar, MessageCircle
 } from "lucide-react";
 import Index from "./pages/Index.tsx";
 import Home from "./pages/Home.jsx";
@@ -28,7 +28,6 @@ import ApplicationTracker from "./pages/ApplicationTracker";
 import Forum from "./pages/Forum";
 import CollegeReviews from "./pages/CollegeReviews";
 import MyColleges from "./pages/MyColleges";
-import CollegeDatabase from "./pages/CollegeDatabase";
 
 export const navItems = [
   {
@@ -186,11 +185,5 @@ export const navItems = [
     icon: <Star className="h-4 w-4" />,
     page: <MyColleges />,
     desktopOnly: true,
-  },
-  {
-    title: "College Database",
-    to: "/college-database",
-    icon: <Database className="h-4 w-4" />,
-    page: <CollegeDatabase />,
   },
 ];
