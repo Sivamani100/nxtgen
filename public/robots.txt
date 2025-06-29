@@ -1,14 +1,33 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Sitemap location
+Sitemap: https://nxtgen-in.vercel.app/sitemap.xml
+
+# Crawl delay (optional - be respectful to servers)
+Crawl-delay: 1
+
+# Disallow admin or private areas (if any)
+Disallow: /admin/
+Disallow: /private/
+Disallow: /api/
+
+# Allow all other content
+Allow: /home
+Allow: /colleges
+Allow: /predictor
+Allow: /college-predictor
+Allow: /news
+Allow: /compare
+Allow: /favorites
+Allow: /profile
+Allow: /search
+Allow: /scholarships
+Allow: /application-tracker
+Allow: /forum
+Allow: /college-reviews
+Allow: /college-recommendation-quiz
+Allow: /my-colleges
+Allow: /help
+Allow: /team
+Allow: /privacy-policy
