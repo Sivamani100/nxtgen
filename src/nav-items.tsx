@@ -191,4 +191,6 @@ export const navItems = [
     title: "College Database",
     to: "/college-database",
     icon: <Database className="h-4 w-4" />,
+    page: <CollegeDatabase />,
+  },
 ];
