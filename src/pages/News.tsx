@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -120,21 +121,8 @@ const News = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold text-gray-900">Latest Updates</h1>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-pink-500 hover:text-pink-600 hover:bg-pink-50"
-          >
-            <Heart className="w-5 h-5 mr-1" />
-            Saved
-          </Button>
-        </div>
-        
-        {/* Mobile Search */}
+      {/* Mobile Search - removed the header div as requested */}
+      <div className="lg:hidden bg-white shadow-sm border-b p-4 mt-16">
         <div className="relative mb-4">
           <Input
             value={searchQuery}
@@ -238,9 +226,12 @@ const News = () => {
                     <Badge className={getCategoryColor(item.category)}>
                       {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                     </Badge>
-                    <div className="flex items-center text-xs text-gray-500">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      {formatDate(item.date || item.created_at)}
+                    <div className="flex items-center space-x-2">
+                      <div className="flex items-center text-xs text-gray-500">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        {formatDate(item.date || item.created_at)}
+                      </div>
+                      <SaveNewsButton newsId={item.id} />
                     </div>
                   </div>
                   {/* Content */}
@@ -251,15 +242,12 @@ const News = () => {
                     {item.description}
                   </p>
                   {/* Footer */}
-                  <div className="flex items-center justify-between">
-                    {item.external_link && (
-                      <div className="flex items-center text-sm text-orange-600 font-medium group-hover:text-orange-700">
-                        <ExternalLink className="w-4 h-4 mr-1" />
-                        <span>Read More</span>
-                      </div>
-                    )}
-                    <SaveNewsButton newsId={item.id} />
-                  </div>
+                  {item.external_link && (
+                    <div className="flex items-center text-sm text-orange-600 font-medium group-hover:text-orange-700">
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      <span>Read More</span>
+                    </div>
+                  )}
                 </div>
               </Card>
             ))}

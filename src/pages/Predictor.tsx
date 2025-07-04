@@ -171,19 +171,22 @@ const Predictor = () => {
   const isEAMCET = exam === 'ap-eamcet' || exam === 'ts-eamcet';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0 mt-16 lg:mt-0">
       <div className="max-w-4xl mx-auto p-4 lg:p-6">
-        {/* Header */}
-        
-
         {/* Tabs */}
         <Tabs defaultValue="college-predictor" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="college-predictor" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-gradient-to-r from-blue-50 to-green-50 rounded-xl">
+            <TabsTrigger 
+              value="college-predictor" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-lg transition-all duration-300"
+            >
               <GraduationCap className="w-4 h-4" />
               College Predictor
             </TabsTrigger>
-            <TabsTrigger value="rank-predictor" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="rank-predictor" 
+              className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-green-600 data-[state=active]:text-white rounded-lg transition-all duration-300"
+            >
               <TrendingUp className="w-4 h-4" />
               Rank Predictor
             </TabsTrigger>
@@ -245,7 +248,7 @@ const Predictor = () => {
 
               <Button 
                 onClick={() => navigate('/college-predictor')}
-                className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium"
+                className="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 text-lg font-medium transition-all duration-300"
               >
                 <GraduationCap className="w-5 h-5 mr-2" />
                 Find Colleges
@@ -331,7 +334,7 @@ const Predictor = () => {
 
               <Button 
                 onClick={predictRank} 
-                className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3 text-lg font-medium"
+                className="w-full mt-6 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 text-lg font-medium transition-all duration-300"
               >
                 <TrendingUp className="w-5 h-5 mr-2" />
                 Predict Rank

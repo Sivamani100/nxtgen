@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -232,34 +233,8 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Mobile Edit Controls */}
-      <div className="lg:hidden bg-white shadow-sm border-b mt-16">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center">
-            <User className="w-6 h-6 text-green-600 mr-2" />
-            <h1 className="text-lg font-bold text-gray-900">Profile</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            {editing ? (
-              <>
-                <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
-                  <X className="w-4 h-4" />
-                </Button>
-                <Button size="sm" onClick={updateProfile} disabled={saving}>
-                  <Save className="w-4 h-4" />
-                </Button>
-              </>
-            ) : (
-              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-                <Edit className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Main Profile Layout */}
-      <div className="max-w-7xl mx-auto p-4 lg:p-8 lg:grid lg:grid-cols-4 lg:gap-8">
+      <div className="max-w-7xl mx-auto p-4 lg:p-8 lg:grid lg:grid-cols-4 lg:gap-8 mt-16 lg:mt-0">
         {/* Left Sidebar/Profile Summary (1 column) */}
         <div className="lg:col-span-1 mb-6 lg:mb-0">
           <Card className="p-6 bg-white shadow-lg flex flex-col items-center">

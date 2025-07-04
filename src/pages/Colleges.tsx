@@ -1,59 +1,93 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Star, MapPin, Heart } from "lucide-react";
+import { 
+  GraduationCap, 
+  MapPin, 
+  Star, 
+  Users, 
+  DollarSign,
+  Search,
+  Filter,
+  Heart,
+  ExternalLink,
+  Building
+} from "lucide-react";
 import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
-import { Checkbox } from "@/components/ui/checkbox";
 
-type College = Database['public']['Tables']['colleges']['Row'];
+interface College {
+  id: number;
+  name: string;
+  location: string;
+  city: string;
+  state: string;
+  type: string;
+  rating: number;
+  total_fees_min: number;
+  total_fees_max: number;
+  image_url: string;
+  description: string;
+  branches_offered: string[];
+  eligible_exams: string[];
+  placement_percentage: number;
+  average_package: number;
+  highest_package: number;
+}
 
 const Colleges = () => {
   const [colleges, setColleges] = useState<College[]>([]);
   const [filteredColleges, setFilteredColleges] = useState<College[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [savedColleges, setSavedColleges] = useState<number[]>([]);
-  const [filters, setFilters] = useState({
-    type: 'all',
-    state: 'all',
-    sortBy: 'rating'
-  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedState, setSelectedState] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
-  const [myColleges, setMyColleges] = useState<number[]>([]);
+
+  const states = [
+    'all', 'Andhra Pradesh', 'Telangana', 'Karnataka', 'Tamil Nadu', 'Kerala',
+    'Maharashtra', 'Delhi', 'Gujarat', 'Rajasthan', 'Uttar Pradesh'
+  ];
+
+  const collegeTypes = [
+    'all', 'Government', 'Private', 'Deemed', 'Autonomous'
+  ];
 
   useEffect(() => {
     fetchColleges();
-    fetchSavedColleges();
-    fetchMyColleges();
+    fetchFavorites();
   }, []);
 
   useEffect(() => {
     filterColleges();
-  }, [searchQuery, filters, colleges]);
+  }, [colleges, searchQuery, selectedState, selectedType]);
 
   const fetchColleges = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('colleges')
         .select('*')
         .order('rating', { ascending: false });
-
+      
       if (error) throw error;
       setColleges(data || []);
     } catch (error) {
-      console.error('Error fetching colleges:', error);
+      console.error('Failed to fetch colleges:', error);
       toast.error('Failed to load colleges');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchSavedColleges = async () => {
+  const fetchFavorites = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -64,111 +98,21 @@ const Colleges = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      setSavedColleges(data?.map(item => item.college_id) || []);
+      setFavorites(new Set(data?.map(fav => fav.college_id) || []));
     } catch (error) {
-      console.error('Error fetching saved colleges:', error);
+      console.error('Failed to fetch favorites:', error);
     }
   };
 
-  const fetchMyColleges = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data, error } = await supabase
-        .from("user_selected_colleges")
-        .select("college_id")
-        .eq("user_id", user.id);
-      if (error) throw error;
-      setMyColleges((data || []).map(item => item.college_id));
-    } catch (error) {
-      console.error('Error fetching my colleges:', error);
-    }
-  };
-
-  const filterColleges = () => {
-    let filtered = [...colleges];
-
-    // Apply search filter
-    if (searchQuery) {
-      filtered = filtered.filter(college =>
-        college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        college.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        college.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        college.state.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply type filter with improved logic for grouping
-    if (filters.type !== 'all') {
-      filtered = filtered.filter(college => {
-        if (!college.type) return false;
-        
-        const collegeType = college.type.toLowerCase();
-        const filterType = filters.type.toLowerCase();
-        
-        switch (filterType) {
-          case 'private':
-            return collegeType.includes('private') || 
-                   collegeType.includes('deemed') ||
-                   collegeType.includes('autonomous');
-          case 'government':
-            return collegeType.includes('government') || 
-                   collegeType.includes('public') ||
-                   collegeType.includes('state') ||
-                   collegeType.includes('central') ||
-                   collegeType.includes('national');
-          case 'university':
-            return collegeType.includes('university');
-          case 'engineering':
-            return collegeType.includes('engineering');
-          case 'medical':
-            return collegeType.includes('medical');
-          case 'polytechnic':
-            return collegeType.includes('polytechnic');
-          default:
-            return collegeType === filterType;
-        }
-      });
-    }
-
-    // Apply state filter
-    if (filters.state !== 'all') {
-      filtered = filtered.filter(college => college.state === filters.state);
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      switch (filters.sortBy) {
-        case 'rating':
-          return (b.rating || 0) - (a.rating || 0);
-        case 'fees_low':
-          return (a.total_fees_min || 0) - (b.total_fees_min || 0);
-        case 'fees_high':
-          return (b.total_fees_min || 0) - (a.total_fees_min || 0);
-        case 'placement':
-          return (b.placement_percentage || 0) - (a.placement_percentage || 0);
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredColleges(filtered);
-  };
-
-  const handleSaveCollege = async (collegeId: number, event: React.MouseEvent) => {
-    event.stopPropagation();
+  const toggleFavorite = async (collegeId: number) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error('Please login to save colleges');
-        navigate('/login');
+        toast.error('Please login to save favorites');
         return;
       }
 
-      const isAlreadySaved = savedColleges.includes(collegeId);
-      
-      if (isAlreadySaved) {
-        // Remove from saved
+      if (favorites.has(collegeId)) {
         const { error } = await supabase
           .from('user_college_favorites')
           .delete()
@@ -176,366 +120,282 @@ const Colleges = () => {
           .eq('college_id', collegeId);
 
         if (error) throw error;
-        setSavedColleges(prev => prev.filter(id => id !== collegeId));
-        toast.success('College removed from favorites');
+        setFavorites(prev => {
+          const newFavorites = new Set(prev);
+          newFavorites.delete(collegeId);
+          return newFavorites;
+        });
+        toast.success('Removed from favorites');
       } else {
-        // Add to saved
         const { error } = await supabase
           .from('user_college_favorites')
-          .insert({
-            user_id: user.id,
-            college_id: collegeId
-          });
+          .insert({ user_id: user.id, college_id: collegeId });
 
-        if (error) {
-          if (error.code === '23505') {
-            toast.error('College already saved');
-          } else {
-            throw error;
-          }
-          return;
-        }
-
-        setSavedColleges(prev => [...prev, collegeId]);
-        toast.success('College saved to favorites');
+        if (error) throw error;
+        setFavorites(prev => new Set([...prev, collegeId]));
+        toast.success('Added to favorites');
       }
     } catch (error) {
-      console.error('Error saving college:', error);
-      toast.error('Failed to save college');
+      console.error('Failed to toggle favorite:', error);
+      toast.error('Failed to update favorites');
     }
   };
 
-  const handleSavedClick = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Please login to view saved colleges');
-        navigate('/login');
-        return;
-      }
-      navigate('/favorites');
-    } catch (error) {
-      console.error('Error checking auth:', error);
-      navigate('/login');
-    }
-  };
+  const filterColleges = () => {
+    let filtered = colleges;
 
-  const getUniqueStates = () => {
-    const states = [...new Set(colleges.map(college => college.state))];
-    return states.sort();
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(college =>
+        college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        college.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        college.city.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (selectedState !== 'all') {
+      filtered = filtered.filter(college => college.state === selectedState);
+    }
+
+    if (selectedType !== 'all') {
+      filtered = filtered.filter(college => college.type === selectedType);
+    }
+
+    setFilteredColleges(filtered);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading colleges...</p>
+        </div>
       </div>
     );
   }
 
-  const handleToggleMyCollege = async (collegeId: number, isChecked: boolean, event: React.ChangeEvent<HTMLInputElement> | React.MouseEvent) => {
-    event.stopPropagation();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("Please login to manage your list.");
-      return;
-    }
-    if (isChecked) {
-      // add
-      const { error } = await supabase
-        .from("user_selected_colleges")
-        .insert({ user_id: user.id, college_id: collegeId });
-      if (!error) {
-        toast.success("Added to My Colleges!");
-        setMyColleges(prev => [...prev, collegeId]);
-      } else {
-        toast.error("Could not add.");
-      }
-    } else {
-      // remove
-      const { error } = await supabase
-        .from("user_selected_colleges")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("college_id", collegeId);
-      if (!error) {
-        toast.info("Removed from My Colleges.");
-        setMyColleges(prev => prev.filter(id => id !== collegeId));
-      } else {
-        toast.error("Could not remove.");
-      }
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
-      {/* Mobile Header */}
-      
-        
-        {/* Mobile Search */}
+    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+      {/* Desktop Header */}
+      <div className="hidden lg:block bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="flex items-center mb-2">
+                <Building className="w-8 h-8 text-blue-600 mr-3" />
+                <h1 className="text-3xl font-bold text-gray-900">Browse Colleges</h1>
+              </div>
+              <p className="text-gray-600">Discover and compare top engineering colleges</p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/favorites')}
+              className="flex items-center space-x-2"
+            >
+              <Heart className="w-4 h-4" />
+              <span>Saved</span>
+            </Button>
+          </div>
+
+          {/* Desktop Search and Filters */}
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search colleges, locations..."
+                className="pl-12 h-12 text-base border-gray-200 focus:border-blue-500"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Select value={selectedState} onValueChange={setSelectedState}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All States" />
+                </SelectTrigger>
+                <SelectContent>
+                  {states.map((state) => (
+                    <SelectItem key={state} value={state}>
+                      {state === 'all' ? 'All States' : state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  {collegeTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type === 'all' ? 'All Types' : type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Search */}
+      <div className="lg:hidden bg-white shadow-sm border-b p-4 mt-16">
         <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search colleges..."
-            className="pl-10 h-12 text-base border-gray-200 focus:border-blue-400 rounded-lg"
+            className="pl-12 h-12 text-base border-gray-200 focus:border-blue-500 rounded-lg"
           />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
 
-        {/* Mobile Filters */}
-        <div className="flex space-x-2">
-          <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
-            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="government">Government</SelectItem>
-              <SelectItem value="private">Private</SelectItem>
-              <SelectItem value="university">University</SelectItem>
-              <SelectItem value="engineering">Engineering</SelectItem>
-              <SelectItem value="medical">Medical</SelectItem>
-              <SelectItem value="polytechnic">Polytechnic</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={filters.state} onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}>
-            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
-              <SelectValue placeholder="All States" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All States</SelectItem>
-              {getUniqueStates().map((state) => (
-                <SelectItem key={state} value={state}>{state}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
-              <SelectValue placeholder="Rating" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="rating">Rating</SelectItem>
-              <SelectItem value="fees_low">Fees (Low to High)</SelectItem>
-              <SelectItem value="fees_high">Fees (High to Low)</SelectItem>
-              <SelectItem value="placement">Placement %</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center space-x-2"
+          >
+            <Filter className="w-4 h-4" />
+            <span>Filters</span>
+          </Button>
+          <span className="text-sm text-gray-600">
+            {filteredColleges.length} colleges found
+          </span>
         </div>
-      </div>
 
-      {/* Desktop Header */}
-      <div className="hidden lg:block bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto p-4 lg:p-6">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Browse Colleges</h1>
-          
-          {/* Search Bar */}
-          <div className="relative mb-6">
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search colleges by name, location, or state..."
-              className="pl-12 h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-lg"
-            />
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          </div>
-
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
-              <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-400">
-                <SelectValue placeholder="Type" />
+        {showFilters && (
+          <div className="space-y-3 mb-4">
+            <Select value={selectedState} onValueChange={setSelectedState}>
+              <SelectTrigger>
+                <SelectValue placeholder="All States" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="government">Government</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
-                <SelectItem value="university">University</SelectItem>
-                <SelectItem value="engineering">Engineering</SelectItem>
-                <SelectItem value="medical">Medical</SelectItem>
-                <SelectItem value="polytechnic">Polytechnic</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.state} onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}>
-              <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-400">
-                <SelectValue placeholder="State" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All States</SelectItem>
-                {getUniqueStates().map((state) => (
-                  <SelectItem key={state} value={state}>{state}</SelectItem>
+                {states.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state === 'all' ? 'All States' : state}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-              <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-400">
-                <SelectValue placeholder="Sort" />
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="rating">Rating</SelectItem>
-                <SelectItem value="fees_low">Fees (Low to High)</SelectItem>
-                <SelectItem value="fees_high">Fees (High to Low)</SelectItem>
-                <SelectItem value="placement">Placement %</SelectItem>
+                {collegeTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type === 'all' ? 'All Types' : type}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Results */}
-      <div className="max-w-7xl mx-auto p-4 lg:p-6">
-        <div className="bg-white rounded-lg p-4 mb-6 shadow-sm border-l-4 border-blue-500">
-          <p className="text-sm font-medium text-gray-700">
-            {filteredColleges.length} colleges found
-          </p>
-        </div>
-        
-        {/* College Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredColleges.map((college) => (
-            <Card 
-              key={college.id} 
-              className="bg-white hover:shadow-xl transition-all duration-300 border hover:border-blue-300 cursor-pointer group overflow-hidden"
-              onClick={() => navigate(`/college-details/${college.id}`)}
-            >
-              {/* College Image */}
-              <div className="h-48 overflow-hidden">
-                {college.image_url ? (
-                  <img 
-                    src={college.image_url} 
-                    alt={college.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <div className="w-16 h-16 mx-auto mb-2 bg-white rounded-full flex items-center justify-center">
-                        <span className="text-2xl font-bold text-blue-600">
-                          {college.name.charAt(0)}
-                        </span>
+      {/* Content */}
+      <div className="max-w-6xl mx-auto p-4 lg:p-6">
+        {filteredColleges.length === 0 ? (
+          <div className="text-center py-12">
+            <Building className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Colleges Found</h3>
+            <p className="text-gray-600">Try adjusting your search terms or filters.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredColleges.map((college) => (
+              <Card 
+                key={college.id} 
+                className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                onClick={() => navigate(`/colleges/${college.id}`)}
+              >
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
+                        {college.name}
+                      </h3>
+                      <div className="flex items-center text-gray-600 mb-2">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        <span className="text-sm">{college.location}</span>
                       </div>
-                      <p className="text-xs">No Image</p>
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Badge variant="secondary" className="text-xs">
+                          {college.type}
+                        </Badge>
+                        {college.rating && (
+                          <div className="flex items-center">
+                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                            <span className="text-sm font-medium ml-1">{college.rating}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                      {college.name}
-                    </h3>
-                    <div className="flex items-center text-sm text-gray-600 mb-3">
-                      <MapPin className="w-4 h-4 mr-2 text-red-500 flex-shrink-0" />
-                      <span className="truncate">{college.location}, {college.state}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-row items-center ml-2 min-w-0 space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="p-2 flex-shrink-0 hover:bg-red-50"
-                      onClick={(e) => handleSaveCollege(college.id, e)}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(college.id);
+                      }}
+                      className="p-2 hover:bg-gray-50 rounded-full transition-colors"
                     >
                       <Heart 
-                        className={`w-5 h-5 transition-colors ${
-                          savedColleges.includes(college.id) 
-                            ? 'text-red-500 fill-red-500' 
-                            : 'text-gray-400 hover:text-red-500'
+                        className={`w-5 h-5 ${
+                          favorites.has(college.id) 
+                            ? 'text-red-500 fill-current' 
+                            : 'text-gray-400'
                         }`} 
                       />
-                    </Button>
-                    {/* Square Checkbox, instant UI update */}
-                    <Checkbox
-                      checked={myColleges.includes(college.id)}
-                      onCheckedChange={async (checked) => {
-                        // Optimistically update UI
-                        if (checked) {
-                          setMyColleges(prev => prev.includes(college.id) ? prev : [...prev, college.id]);
-                        } else {
-                          setMyColleges(prev => prev.filter(id => id !== college.id));
-                        }
-                        // Update Supabase in background
-                        try {
-                          const { data: { user } } = await supabase.auth.getUser();
-                          if (!user) {
-                            toast.error("Please login to manage your list.");
-                            return;
-                          }
-                          if (checked) {
-                            const { error } = await supabase
-                              .from("user_selected_colleges")
-                              .insert({ user_id: user.id, college_id: college.id });
-                            if (error) {
-                              toast.error("Could not add.");
-                              // Rollback UI if failed
-                              setMyColleges(prev => prev.filter(id => id !== college.id));
-                            } else {
-                              toast.success("Added to My Colleges!");
-                            }
-                          } else {
-                            const { error } = await supabase
-                              .from("user_selected_colleges")
-                              .delete()
-                              .eq("user_id", user.id)
-                              .eq("college_id", college.id);
-                            if (error) {
-                              toast.error("Could not remove.");
-                              // Rollback UI if failed
-                              setMyColleges(prev => [...prev, college.id]);
-                            } else {
-                              toast.info("Removed from My Colleges.");
-                            }
-                          }
-                        } catch (err) {
-                          toast.error("Action failed.");
-                        }
-                      }}
-                      onClick={e => e.stopPropagation()}
-                      className="ml-1 w-5 h-5 border-2 border-green-500 rounded-sm 
-                        data-[state=checked]:bg-green-500 data-[state=checked]:text-white 
-                        transition-all duration-150 focus:ring-2 focus:ring-green-400"
-                      aria-label="Add to My Colleges"
-                    />
+                    </button>
                   </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
-                      <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                      <span className="font-bold text-gray-900 text-sm">{college.rating}/5.0</span>
-                    </div>
-                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                      {college.placement_percentage}% placement
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full font-medium border border-blue-200 truncate">
-                      {college.type}
-                    </span>
-                    <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs">
-                      ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
 
-        {filteredColleges.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-lg shadow-sm">
-            <div className="text-lg font-medium text-gray-600 mb-2">No colleges found</div>
-            <div className="text-sm text-gray-500">
-              Try adjusting your search criteria or filters
-            </div>
+                  {college.description && (
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {college.description}
+                    </p>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    {college.total_fees_min && (
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <DollarSign className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                        <div className="text-xs text-blue-700 font-medium">Fees</div>
+                        <div className="text-sm font-bold text-blue-900">
+                          ₹{(college.total_fees_min / 100000).toFixed(1)}L+
+                        </div>
+                      </div>
+                    )}
+                    
+                    {college.placement_percentage && (
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <Users className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                        <div className="text-xs text-green-700 font-medium">Placement</div>
+                        <div className="text-sm font-bold text-green-900">
+                          {college.placement_percentage}%
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center text-blue-600 font-medium text-sm">
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      View Details
+                    </div>
+                    {college.eligible_exams && college.eligible_exams.length > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {college.eligible_exams.slice(0, 2).join(', ')}
+                        {college.eligible_exams.length > 2 && ' +more'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         )}
       </div>

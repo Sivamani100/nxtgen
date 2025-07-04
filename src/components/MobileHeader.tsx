@@ -42,6 +42,14 @@ const MobileHeader = ({ onEditToggle }: MobileHeaderProps) => {
     setIsOpen(false);
   };
 
+  const handleSavedColleges = () => {
+    navigate('/favorites');
+  };
+
+  const handleSavedNews = () => {
+    navigate('/favorites');
+  };
+
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/home':
@@ -96,7 +104,7 @@ const MobileHeader = ({ onEditToggle }: MobileHeaderProps) => {
       case '/colleges':
         return (
           <button 
-            onClick={() => navigate('/favorites')}
+            onClick={handleSavedColleges}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <Bookmark className="w-6 h-6 text-gray-600" />
@@ -105,7 +113,7 @@ const MobileHeader = ({ onEditToggle }: MobileHeaderProps) => {
       case '/news':
         return (
           <button 
-            onClick={() => navigate('/favorites')}
+            onClick={handleSavedNews}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <Bookmark className="w-6 h-6 text-gray-600" />
