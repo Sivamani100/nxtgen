@@ -270,7 +270,11 @@ const Colleges = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
       {/* Mobile Header */}
-      
+      <div className="lg:hidden bg-white shadow-sm border-b p-4">
+        <div className="flex items-center justify-between mb-4">
+
+         
+        </div>
         
         {/* Mobile Search */}
         <div className="relative mb-4">
