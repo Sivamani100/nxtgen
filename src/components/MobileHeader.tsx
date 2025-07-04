@@ -47,7 +47,7 @@ const MobileHeader = ({ onEditToggle }: MobileHeaderProps) => {
   };
 
   const handleSavedNews = () => {
-    navigate('/favorites');
+    navigate('/saved-news');
   };
 
   const getPageTitle = () => {

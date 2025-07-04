@@ -266,6 +266,23 @@ const ProfilePage = () => {
                   ></div>
                 </div>
               </div>
+              
+              {/* Mobile Edit Buttons */}
+              <div className="lg:hidden mb-6">
+                {editing ? (
+                  <div className="flex space-x-2">
+                    <Button variant="outline" onClick={() => setEditing(false)} className="flex-1">
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button onClick={updateProfile} disabled={saving} className="flex-1">
+                      <Save className="w-4 h-4 mr-2" />
+                      {saving ? 'Saving...' : 'Save'}
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+              
               <Button 
                 variant="outline" 
                 onClick={handleSignOut}
@@ -502,58 +519,6 @@ const ProfilePage = () => {
               </div>
             </div>
           </Card>
-        </div>
-      </div>
-
-      {/* Bottom Navigation (Mobile Only) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-evenly gap-2 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
-              onClick={() => navigate('/home')}
-            >
-              <User className="w-6 h-6" />
-              <span className="text-xs">Home</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
-              onClick={() => navigate('/colleges')}
-            >
-              <MapPin className="w-6 h-6" />
-              <span className="text-xs">Colleges</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
-              onClick={() => navigate('/predictor')}
-            >
-              <GraduationCap className="w-6 h-6" />
-              <span className="text-xs">Predictor</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
-              onClick={() => navigate('/news')}
-            >
-              <Bell className="w-6 h-6" />
-              <span className="text-xs">News</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex flex-col items-center space-y-[1px] p-1 text-green-600 bg-green-50 rounded-full"
-            >
-              <Settings className="w-6 h-6" />
-              <span className="text-xs">Profile</span>
-            </Button>
-          </div>
         </div>
       </div>
     </div>

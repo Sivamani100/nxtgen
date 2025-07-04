@@ -224,7 +224,7 @@ const Colleges = () => {
         </div>
       </div>
 
-      {/* Mobile Search - Only show on mobile */}
+      {/* Mobile Search - Only show on mobile - removed spacing */}
       <div className="lg:hidden bg-white shadow-sm border-b p-4 mt-16">
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />

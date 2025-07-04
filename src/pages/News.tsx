@@ -121,7 +121,7 @@ const News = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
-      {/* Mobile Search - removed the header div as requested */}
+      {/* Mobile Search - removed spacing */}
       <div className="lg:hidden bg-white shadow-sm border-b p-4 mt-16">
         <div className="relative mb-4">
           <Input
