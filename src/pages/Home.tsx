@@ -46,6 +46,10 @@ interface NewsItem {
   created_at: string;
 }
 
+interface Profile {
+  full_name: string;
+}
+
 const Home = () => {
   const [colleges, setColleges] = useState<College[]>([]);
   const [searchResults, setSearchResults] = useState<College[]>([]);
@@ -53,14 +57,112 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [userName, setUserName] = useState<string>("");
   const navigate = useNavigate();
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+
+  // College shortcut mappings for better search
+  const collegeShortcuts: Record<string, string[]> = {
+    "ggu": ["godavari global university"],
+    "iit": ["indian institute of technology"],
+    "nit": ["national institute of technology"],
+    "iiit": ["indian institute of information technology"],
+    "vit": ["vellore institute of technology"],
+    "srm": ["srm institute of science and technology"],
+    "lpu": ["lovely professional university"],
+    "mit": ["manipal institute of technology"],
+    "bits": ["birla institute of technology and science"],
+    "dtu": ["delhi technological university"],
+    "nsut": ["netaji subhas university of technology"],
+    "jnu": ["jawaharlal nehru university"],
+    "du": ["delhi university"],
+    "bhu": ["banaras hindu university"],
+    "amu": ["aligarh muslim university"],
+    "jmi": ["jamia millia islamia"],
+    "cbit": ["chaitanya bharathi institute of technology"],
+    "vnit": ["visvesvaraya national institute of technology"],
+    "manit": ["maulana azad national institute of technology"],
+    "nifft": ["national institute of foundry and forge technology"],
+    "pdeu": ["pandit deendayal energy university"],
+    "thapar": ["thapar institute of engineering and technology"],
+    "lnmiit": ["lnm institute of information technology"],
+    "jecrc": ["jecrc university"],
+    "poornima": ["poornima college of engineering"],
+    "rtu": ["rajasthan technical university"],
+    "ktu": ["kerala technological university"],
+    "anna": ["anna university"],
+    "osmania": ["osmania university"],
+    "kakatiya": ["kakatiya university"],
+    "jntu": ["jawaharlal nehru technological university"],
+    "ou": ["osmania university"],
+    "ku": ["kakatiya university"],
+    "svs": ["sri venkateswara university"],
+    "au": ["andhra university"],
+    "gitam": ["gandhi institute of technology and management"],
+    "vignan": ["vignan university"],
+    "klef": ["koneru lakshmaiah education foundation"],
+    "vrsec": ["velagapudi ramakrishna siddhartha engineering college"],
+    "gmrit": ["gmr institute of technology"],
+    "sicet": ["srinivasa institute of engineering and technology"],
+    "cmrit": ["cmr institute of technology"],
+    "mrcet": ["malla reddy college of engineering and technology"],
+    "mgit": ["mahatma gandhi institute of technology"],
+    "cvsr": ["cvr college of engineering"],
+    "snist": ["sreenidhi institute of science and technology"],
+    "vce": ["vardhaman college of engineering"],
+    "mjcet": ["muffakham jah college of engineering and technology"],
+    "hits": ["hyderabad institute of technology and management"],
+    "iare": ["institute of aeronautical engineering"],
+    "mlrit": ["marri laxman reddy institute of technology"],
+    "vnrvjiet": ["vallurupalli nageswara rao vignana jyothi institute of engineering and technology"],
+    "ace": ["anurag college of engineering"],
+    "bvrit": ["b v raju institute of technology"],
+    "griet": ["gokaraju rangaraju institute of engineering and technology"],
+    "mvsr": ["mvsr engineering college"],
+    "cmrtc": ["cmr technical campus"],
+    "kitsw": ["kakatiya institute of technology and science for women"],
+    "uceou": ["university college of engineering osmania university"],
+    "jntuh": ["jawaharlal nehru technological university hyderabad"],
+    "jntuk": ["jawaharlal nehru technological university kakinada"],
+    "jntua": ["jawaharlal nehru technological university anantapur"],
+    "svuce": ["sri venkateswara university college of engineering"],
+    "aucoe": ["andhra university college of engineering"],
+    "rgukt": ["rajiv gandhi university of knowledge technologies"],
+    "iiits": ["indian institute of information technology sri city"],
+    "iiitdm": ["indian institute of information technology design and manufacturing"],
+    "nits": ["national institute of technology srinagar"],
+    "nitw": ["national institute of technology warangal"],
+    "nitk": ["national institute of technology karnataka"],
+    "nitc": ["national institute of technology calicut"],
+    "nitr": ["national institute of technology rourkela"],
+    "nitd": ["national institute of technology durgapur"],
+    "nita": ["national institute of technology agartala"],
+    "nitap": ["national institute of technology arunachal pradesh"],
+    "nitgoa": ["national institute of technology goa"],
+    "nith": ["national institute of technology hamirpur"],
+    "nitj": ["national institute of technology jalandhar"],
+    "nitjsr": ["national institute of technology jamshedpur"],
+    "nitkkr": ["national institute of technology kurukshetra"],
+    "nitm": ["national institute of technology manipur"],
+    "nitp": ["national institute of technology patna"],
+    "nitrr": ["national institute of technology raipur"],
+    "nits": ["national institute of technology silchar"],
+    "nitt": ["national institute of technology tiruchirappalli"],
+    "nitu": ["national institute of technology uttarakhand"],
+    "nitdelhi": ["national institute of technology delhi"],
+    "nitandhra": ["national institute of technology andhra pradesh"],
+    "nitpuducherry": ["national institute of technology puducherry"],
+    "nitmizoram": ["national institute of technology mizoram"],
+    "nitmeghalaya": ["national institute of technology meghalaya"],
+    "nitnagaland": ["national institute of technology nagaland"]
+  };
 
   useEffect(() => {
     Promise.all([
       fetchPopularColleges(),
       fetchLatestNews(),
-      fetchUnreadNotificationCount()
+      fetchUnreadNotificationCount(),
+      fetchUserProfile()
     ]).finally(() => {
       setLoading(false);
     });
@@ -74,6 +176,25 @@ const Home = () => {
       setIsSearching(false);
     }
   }, [searchQuery]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.full_name) {
+        setUserName(profile.full_name.split(' ')[0]); // Get first name only
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const fetchPopularColleges = async () => {
     try {
@@ -100,7 +221,6 @@ const Home = () => {
       const { data, error } = await supabase
         .from('resources')
         .select('id, title, description, category, date, image_url, external_link, created_at')
-        .eq('category', 'news')
         .order('created_at', { ascending: false })
         .limit(3);
 
@@ -118,6 +238,17 @@ const Home = () => {
     
     setIsSearching(true);
     try {
+      const query = searchQuery.toLowerCase().trim();
+      
+      // Check if the search query is a shortcut
+      let expandedQuery = query;
+      for (const [shortcut, expansions] of Object.entries(collegeShortcuts)) {
+        if (query.includes(shortcut)) {
+          expandedQuery = `${query} OR ${expansions.join(' OR ')}`;
+          break;
+        }
+      }
+
       const { data, error } = await supabase
         .from('colleges')
         .select('id, name, location, type, rating, total_fees_min, placement_percentage, image_url')
@@ -129,6 +260,8 @@ const Home = () => {
     } catch (error) {
       console.error('Error searching colleges:', error);
       toast.error('Failed to search colleges');
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -179,20 +312,11 @@ const Home = () => {
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Welcome Back!</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
+                Welcome Back{userName ? `, ${userName}!` : '!'}
+              </h1>
               <p className="text-sm lg:text-base text-gray-600">Find your perfect college</p>
             </div>
-            <button 
-              onClick={handleNotifications}
-              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <Bell className="w-6 h-6 text-gray-600" />
-              {unreadNotificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {unreadNotificationCount}
-                </span>
-              )}
-            </button>
           </div>
           
           {/* Search Bar */}
@@ -201,9 +325,14 @@ const Home = () => {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search colleges, courses, news..."
+              placeholder="Search colleges, courses, news... (try shortcuts like 'ggu', 'iit', 'nit')"
               className="pl-10 h-12 text-base border-gray-200 focus:border-green-500 rounded-lg"
             />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -272,7 +401,7 @@ const Home = () => {
                 {searchQuery.trim() ? 'No colleges found' : 'No colleges available'}
               </h3>
               <p className="text-gray-600">
-                {searchQuery.trim() ? 'Try adjusting your search terms' : 'Check back later for updates'}
+                {searchQuery.trim() ? 'Try adjusting your search terms or use shortcuts like "ggu", "iit", "nit"' : 'Check back later for updates'}
               </p>
             </div>
           ) : (
@@ -364,7 +493,7 @@ const Home = () => {
                   <div className="p-4 lg:p-6">
                     <div className="flex items-start justify-between mb-3">
                       <Badge className={`text-xs font-medium ${getCategoryColor(item.category)}`}>
-                        News
+                        {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                       </Badge>
                       <div className="flex items-center text-xs text-gray-500">
                         <Clock className="w-3 h-3 mr-1" />
@@ -401,7 +530,7 @@ const Home = () => {
           <h2 className="text-xl lg:text-3xl font-bold text-gray-900 mb-6 lg:mb-8 text-center">
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             <Card className="p-4 lg:p-5 bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => navigate('/colleges')}>
               <div className="text-center">
                 <GraduationCap className="w-8 h-8 text-green-600 mx-auto mb-3" />

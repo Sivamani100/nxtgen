@@ -1,14 +1,16 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Home, Users, BookOpen, Newspaper, User, GitCompare, Heart, Search, Bell, HelpCircle, Shield, Star, Calendar, MessageCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const MobileHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const menuItems = [
     { icon: Home, label: "Home", path: "/home" },
@@ -32,9 +34,31 @@ const MobileHeader = () => {
     { icon: User, label: "Profile", path: "/profile" }
   ];
 
+  useEffect(() => {
+    fetchUnreadNotificationCount();
+  }, [location.pathname]);
+
+  const fetchUnreadNotificationCount = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setUnreadNotificationCount(0);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("read", false);
+    setUnreadNotificationCount(data?.length || 0);
+  };
+
   const handleNavigation = (path: string) => {
     navigate(path);
     setIsOpen(false);
+  };
+
+  const handleNotifications = () => {
+    navigate('/notifications');
   };
 
   const getPageTitle = () => {
@@ -53,6 +77,30 @@ const MobileHeader = () => {
         return <span className="text-orange-600 font-bold">News</span>;
       case '/profile':
         return <span className="text-purple-600 font-bold">Profile</span>;
+      case '/search':
+        return <span className="text-purple-600 font-bold">Search</span>;
+      case '/compare':
+        return <span className="text-indigo-600 font-bold">Compare</span>;
+      case '/favorites':
+        return <span className="text-pink-600 font-bold">Favorites</span>;
+      case '/my-colleges':
+        return <span className="text-blue-600 font-bold">My Colleges</span>;
+      case '/college-reviews':
+        return <span className="text-yellow-600 font-bold">Reviews</span>;
+      case '/notifications':
+        return <span className="text-red-600 font-bold">Notifications</span>;
+      case '/scholarships':
+        return <span className="text-purple-600 font-bold">Scholarships</span>;
+      case '/application-tracker':
+        return <span className="text-green-600 font-bold">Applications</span>;
+      case '/forum':
+        return <span className="text-blue-600 font-bold">Forum</span>;
+      case '/team':
+        return <span className="text-indigo-600 font-bold">Team</span>;
+      case '/help':
+        return <span className="text-gray-600 font-bold">Help</span>;
+      case '/privacy-policy':
+        return <span className="text-gray-600 font-bold">Privacy</span>;
       default:
         return (
           <span className="bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent font-bold">
@@ -64,17 +112,15 @@ const MobileHeader = () => {
 
   return (
     <div className="lg:hidden bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between fixed top-0 left-0 right-0 z-50">
-      <h1 className="text-lg">
-        {getPageTitle()}
-      </h1>
+      {/* Left side - Menu button */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="p-2">
             <Menu className="w-6 h-6" />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-80 p-0">
-          <div className="p-6">
+          <div className="p-6 h-full overflow-y-auto">
             <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
               NXTGEN Menu
             </h2>
@@ -94,6 +140,24 @@ const MobileHeader = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Center - Page title */}
+      <h1 className="text-lg font-semibold">
+        {getPageTitle()}
+      </h1>
+
+      {/* Right side - Notifications */}
+      <button 
+        onClick={handleNotifications}
+        className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+      >
+        <Bell className="w-6 h-6 text-gray-600" />
+        {unreadNotificationCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+            {unreadNotificationCount}
+          </span>
+        )}
+      </button>
     </div>
   );
 };

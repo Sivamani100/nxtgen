@@ -40,7 +40,7 @@ const Layout = ({ children }: LayoutProps) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Filter sidebar items - exclude duplicates and profile page
+  // Filter sidebar items - exclude duplicates and profile page, but include Team
   const sidebarNavItems = navItems
     .filter(
       (item) =>
