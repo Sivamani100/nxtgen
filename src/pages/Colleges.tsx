@@ -272,7 +272,7 @@ const Colleges = () => {
       {/* Mobile Header */}
       <div className="lg:hidden bg-white shadow-sm border-b p-4">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold text-gray-900">Browse Colleges</h1>
+          <h1 className="text-xl font-bold text-gray-900">Colleges</h1>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -290,15 +290,15 @@ const Colleges = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search colleges..."
-            className="pl-10 h-12 text-base border-gray-200 focus:border-blue-400 rounded-lg"
+            className="w-full pl-10 h-10 text-base border border-gray-300 rounded-md focus:border-blue-500 focus:outline-none"
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
 
         {/* Mobile Filters */}
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 mb-4">
           <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
-            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
+            <SelectTrigger className="w-1/3 h-10 border border-gray-300 rounded-md text-sm focus:border-blue-500">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -313,7 +313,7 @@ const Colleges = () => {
           </Select>
 
           <Select value={filters.state} onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}>
-            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
+            <SelectTrigger className="w-1/3 h-10 border border-gray-300 rounded-md text-sm focus:border-blue-500">
               <SelectValue placeholder="All States" />
             </SelectTrigger>
             <SelectContent>
@@ -325,7 +325,7 @@ const Colleges = () => {
           </Select>
 
           <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-            <SelectTrigger className="flex-1 h-10 border-gray-200 rounded-full">
+            <SelectTrigger className="w-1/3 h-10 border border-gray-300 rounded-md text-sm focus:border-blue-500">
               <SelectValue placeholder="Rating" />
             </SelectTrigger>
             <SelectContent>
@@ -336,12 +336,19 @@ const Colleges = () => {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Results Count */}
+        <div className="bg-blue-100 p-2 rounded-md mb-4">
+          <p className="text-sm font-medium text-blue-800">
+            {filteredColleges.length} colleges found
+          </p>
+        </div>
       </div>
 
       {/* Desktop Header */}
       <div className="hidden lg:block bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto p-4 lg:p-6">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Browse Colleges</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Colleges</h1>
           
           {/* Search Bar */}
           <div className="relative mb-6">
@@ -349,7 +356,7 @@ const Colleges = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search colleges by name, location, or state..."
-              className="pl-12 h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-lg"
+              className="pl-12 h-12 text-base border border-gray-300 focus:border-blue-500 rounded-md"
             />
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
@@ -357,7 +364,7 @@ const Colleges = () => {
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
-              <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-400">
+              <SelectTrigger className="h-12 border border-gray-300 focus:border-blue-500">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
@@ -372,7 +379,7 @@ const Colleges = () => {
             </Select>
 
             <Select value={filters.state} onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}>
-              <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-400">
+              <SelectTrigger className="h-12 border border-gray-300 focus:border-blue-500">
                 <SelectValue placeholder="State" />
               </SelectTrigger>
               <SelectContent>
@@ -384,7 +391,7 @@ const Colleges = () => {
             </Select>
 
             <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-              <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-blue-400">
+              <SelectTrigger className="h-12 border border-gray-300 focus:border-blue-500">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
               <SelectContent>
@@ -400,79 +407,59 @@ const Colleges = () => {
 
       {/* Results */}
       <div className="max-w-7xl mx-auto p-4 lg:p-6">
-        <div className="bg-white rounded-lg p-4 mb-6 shadow-sm border-l-4 border-blue-500">
-          <p className="text-sm font-medium text-gray-700">
-            {filteredColleges.length} colleges found
-          </p>
-        </div>
-        
         {/* College Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-4">
           {filteredColleges.map((college) => (
             <Card 
               key={college.id} 
-              className="bg-white hover:shadow-xl transition-all duration-300 border hover:border-blue-300 cursor-pointer group overflow-hidden"
+              className="bg-white border rounded-lg overflow-hidden shadow-sm hover:shadow-md cursor-pointer"
               onClick={() => navigate(`/college-details/${college.id}`)}
             >
               {/* College Image */}
-              <div className="h-48 overflow-hidden">
+              <div className="h-40 overflow-hidden">
                 {college.image_url ? (
                   <img 
                     src={college.image_url} 
                     alt={college.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <div className="w-16 h-16 mx-auto mb-2 bg-white rounded-full flex items-center justify-center">
-                        <span className="text-2xl font-bold text-blue-600">
-                          {college.name.charAt(0)}
-                        </span>
-                      </div>
-                      <p className="text-xs">No Image</p>
-                    </div>
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-500 text-sm">No Image</span>
                   </div>
                 )}
               </div>
 
               <div className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-gray-900 line-clamp-2">
                       {college.name}
                     </h3>
-                    <div className="flex items-center text-sm text-gray-600 mb-3">
-                      <MapPin className="w-4 h-4 mr-2 text-red-500 flex-shrink-0" />
-                      <span className="truncate">{college.location}, {college.state}</span>
-                    </div>
+                    <p className="text-sm text-gray-600 flex items-center">
+                      <MapPin className="w-4 h-4 mr-1 text-red-500" />
+                      {college.location}, {college.state}
+                    </p>
                   </div>
-                  <div className="flex flex-row items-center ml-2 min-w-0 space-x-2">
+                  <div className="flex space-x-2">
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="p-2 flex-shrink-0 hover:bg-red-50"
+                      className="p-1 hover:bg-red-50"
                       onClick={(e) => handleSaveCollege(college.id, e)}
                     >
                       <Heart 
-                        className={`w-5 h-5 transition-colors ${
-                          savedColleges.includes(college.id) 
-                            ? 'text-red-500 fill-red-500' 
-                            : 'text-gray-400 hover:text-red-500'
-                        }`} 
+                        className={`w-5 h-5 ${savedColleges.includes(college.id) ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} 
                       />
                     </Button>
-                    {/* Square Checkbox, instant UI update */}
                     <Checkbox
                       checked={myColleges.includes(college.id)}
                       onCheckedChange={async (checked) => {
-                        // Optimistically update UI
                         if (checked) {
                           setMyColleges(prev => prev.includes(college.id) ? prev : [...prev, college.id]);
                         } else {
                           setMyColleges(prev => prev.filter(id => id !== college.id));
                         }
-                        // Update Supabase in background
                         try {
                           const { data: { user } } = await supabase.auth.getUser();
                           if (!user) {
@@ -485,7 +472,6 @@ const Colleges = () => {
                               .insert({ user_id: user.id, college_id: college.id });
                             if (error) {
                               toast.error("Could not add.");
-                              // Rollback UI if failed
                               setMyColleges(prev => prev.filter(id => id !== college.id));
                             } else {
                               toast.success("Added to My Colleges!");
@@ -498,7 +484,6 @@ const Colleges = () => {
                               .eq("college_id", college.id);
                             if (error) {
                               toast.error("Could not remove.");
-                              // Rollback UI if failed
                               setMyColleges(prev => [...prev, college.id]);
                             } else {
                               toast.info("Removed from My Colleges.");
@@ -509,33 +494,22 @@ const Colleges = () => {
                         }
                       }}
                       onClick={e => e.stopPropagation()}
-                      className="ml-1 w-5 h-5 border-2 border-green-500 rounded-sm 
-                        data-[state=checked]:bg-green-500 data-[state=checked]:text-white 
-                        transition-all duration-150 focus:ring-2 focus:ring-green-400"
-                      aria-label="Add to My Colleges"
+                      className="w-5 h-5 border-2 border-green-500 rounded-sm data-[state=checked]:bg-green-500 data-[state=checked]:text-white"
                     />
                   </div>
                 </div>
                 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
-                      <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                      <span className="font-bold text-gray-900 text-sm">{college.rating}/5.0</span>
-                    </div>
-                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                      {college.placement_percentage}% placement
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full font-medium border border-blue-200 truncate">
-                      {college.type}
-                    </span>
-                    <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs">
-                      ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L
-                    </span>
-                  </div>
+                <div className="flex items-center justify-between text-sm text-gray-700 mb-2">
+                  <span className="flex items-center">
+                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                    {college.rating}/5.0
+                  </span>
+                  <span>{college.placement_percentage}% placement</span>
+                </div>
+                
+                <div className="text-sm text-gray-600">
+                  <span className="text-blue-600 mr-2">{college.type}</span>
+                  <span className="text-green-600">₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L - ₹{college.total_fees_max ? (college.total_fees_max / 100000).toFixed(1) : '0'}L</span>
                 </div>
               </div>
             </Card>
