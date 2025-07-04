@@ -178,9 +178,6 @@ const Predictor = () => {
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
             College & Rank Predictor
           </h1>
-          <p className="text-sm lg:text-base text-gray-600">
-            Predict your rank and find suitable colleges based on your exam scores
-          </p>
         </div>
 
         {/* Tabs */}
