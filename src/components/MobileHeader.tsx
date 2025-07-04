@@ -3,14 +3,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Home, Users, BookOpen, Newspaper, User, GitCompare, Heart, Search, Bell, HelpCircle, Shield, Star, Calendar, MessageCircle } from "lucide-react";
+import { Menu, Home, Users, BookOpen, Newspaper, User, GitCompare, Heart, Search, Bell, HelpCircle, Shield, Star, Calendar, MessageCircle, Edit, Bookmark } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const MobileHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const menuItems = [
     { icon: Home, label: "Home", path: "/home" },
@@ -34,31 +33,9 @@ const MobileHeader = () => {
     { icon: User, label: "Profile", path: "/profile" }
   ];
 
-  useEffect(() => {
-    fetchUnreadNotificationCount();
-  }, [location.pathname]);
-
-  const fetchUnreadNotificationCount = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setUnreadNotificationCount(0);
-      return;
-    }
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("read", false);
-    setUnreadNotificationCount(data?.length || 0);
-  };
-
   const handleNavigation = (path: string) => {
     navigate(path);
     setIsOpen(false);
-  };
-
-  const handleNotifications = () => {
-    navigate('/notifications');
   };
 
   const getPageTitle = () => {
@@ -110,6 +87,47 @@ const MobileHeader = () => {
     }
   };
 
+  const getRightIcon = () => {
+    switch (location.pathname) {
+      case '/colleges':
+        return (
+          <button 
+            onClick={() => navigate('/favorites')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Bookmark className="w-6 h-6 text-gray-600" />
+          </button>
+        );
+      case '/news':
+        return (
+          <button 
+            onClick={() => navigate('/favorites')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Bookmark className="w-6 h-6 text-gray-600" />
+          </button>
+        );
+      case '/profile':
+        return (
+          <button 
+            onClick={() => navigate('/profile')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Edit className="w-6 h-6 text-gray-600" />
+          </button>
+        );
+      default:
+        return (
+          <button 
+            onClick={() => navigate('/notifications')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Bell className="w-6 h-6 text-gray-600" />
+          </button>
+        );
+    }
+  };
+
   return (
     <div className="lg:hidden bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between fixed top-0 left-0 right-0 z-50">
       {/* Left side - Menu button */}
@@ -141,23 +159,15 @@ const MobileHeader = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Center - Page title */}
-      <h1 className="text-lg font-semibold">
-        {getPageTitle()}
-      </h1>
+      {/* Center - Page title (left aligned) */}
+      <div className="flex-1 flex justify-start ml-4">
+        <h1 className="text-lg font-semibold">
+          {getPageTitle()}
+        </h1>
+      </div>
 
-      {/* Right side - Notifications */}
-      <button 
-        onClick={handleNotifications}
-        className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-      >
-        <Bell className="w-6 h-6 text-gray-600" />
-        {unreadNotificationCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-            {unreadNotificationCount}
-          </span>
-        )}
-      </button>
+      {/* Right side - Context specific icon */}
+      {getRightIcon()}
     </div>
   );
 };

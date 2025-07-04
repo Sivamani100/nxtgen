@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calculator, TrendingUp, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,7 +17,6 @@ interface PredictionResult {
 }
 
 const Predictor = () => {
-  const [activeTab, setActiveTab] = useState('college-predictor');
   const [exam, setExam] = useState('');
   const [marks, setMarks] = useState('');
   const [rank, setRank] = useState('');
@@ -183,107 +183,85 @@ const Predictor = () => {
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="mb-6 lg:mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card 
-              className={`p-4 lg:p-6 cursor-pointer hover:shadow-md transition-all duration-300 border-2 ${
-                activeTab === 'college-predictor' 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-blue-300 bg-white'
-              }`}
-              onClick={() => setActiveTab('college-predictor')}
-            >
-              <div className="text-center space-y-3">
-                <GraduationCap className="w-10 h-10 lg:w-12 lg:h-12 text-blue-600 mx-auto" />
-                <h3 className="text-lg lg:text-xl font-bold text-blue-700">College Predictor</h3>
-                <p className="text-sm text-gray-600">Find colleges based on your rank</p>
+        {/* Tabs */}
+        <Tabs defaultValue="college-predictor" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="college-predictor" className="flex items-center gap-2">
+              <GraduationCap className="w-4 h-4" />
+              College Predictor
+            </TabsTrigger>
+            <TabsTrigger value="rank-predictor" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Rank Predictor
+            </TabsTrigger>
+          </TabsList>
+
+          {/* College Predictor Tab */}
+          <TabsContent value="college-predictor">
+            <Card className="p-6 bg-white shadow-sm border">
+              <div className="flex items-center mb-6">
+                <GraduationCap className="w-6 h-6 lg:w-8 lg:h-8 text-blue-600 mr-3" />
+                <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Find Your Colleges</h2>
               </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="exam" className="text-base font-medium text-gray-900 mb-2 block">Select Exam</Label>
+                  <Select value={exam} onValueChange={setExam}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Choose exam" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {exams.map((examOption) => (
+                        <SelectItem key={examOption.value} value={examOption.value}>
+                          {examOption.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="rank" className="text-base font-medium text-gray-900 mb-2 block">Your Rank</Label>
+                  <Input
+                    id="rank"
+                    type="number"
+                    value={rank}
+                    onChange={(e) => setRank(e.target.value)}
+                    placeholder="Enter your rank"
+                    className="h-12"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="category" className="text-base font-medium text-gray-900 mb-2 block">Category</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => navigate('/college-predictor')}
+                className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium"
+              >
+                <GraduationCap className="w-5 h-5 mr-2" />
+                Find Colleges
+              </Button>
             </Card>
-            <Card 
-              className={`p-4 lg:p-6 cursor-pointer hover:shadow-md transition-all duration-300 border-2 ${
-                activeTab === 'rank-predictor' 
-                  ? 'border-green-500 bg-green-50' 
-                  : 'border-gray-200 hover:border-green-300 bg-white'
-              }`}
-              onClick={() => setActiveTab('rank-predictor')}
-            >
-              <div className="text-center space-y-3">
-                <TrendingUp className="w-10 h-10 lg:w-12 lg:h-12 text-green-600 mx-auto" />
-                <h3 className="text-lg lg:text-xl font-bold text-green-700">Rank Predictor</h3>
-                <p className="text-sm text-gray-600">Predict your rank based on marks</p>
-              </div>
-            </Card>
-          </div>
-        </div>
+          </TabsContent>
 
-        {/* College Predictor */}
-        {activeTab === 'college-predictor' && (
-          <Card className="p-6 mb-6 bg-white shadow-sm border">
-            <div className="flex items-center mb-6">
-              <GraduationCap className="w-6 h-6 lg:w-8 lg:h-8 text-blue-600 mr-3" />
-              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Find Your Colleges</h2>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="exam" className="text-base font-medium text-gray-900 mb-2 block">Select Exam</Label>
-                <Select value={exam} onValueChange={setExam}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Choose exam" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {exams.map((examOption) => (
-                      <SelectItem key={examOption.value} value={examOption.value}>
-                        {examOption.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="rank" className="text-base font-medium text-gray-900 mb-2 block">Your Rank</Label>
-                <Input
-                  id="rank"
-                  type="number"
-                  value={rank}
-                  onChange={(e) => setRank(e.target.value)}
-                  placeholder="Enter your rank"
-                  className="h-12"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="category" className="text-base font-medium text-gray-900 mb-2 block">Category</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Button 
-              onClick={() => navigate('/college-predictor')}
-              className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium"
-            >
-              <GraduationCap className="w-5 h-5 mr-2" />
-              Find Colleges
-            </Button>
-          </Card>
-        )}
-
-        {/* Rank Predictor */}
-        {activeTab === 'rank-predictor' && (
-          <>
+          {/* Rank Predictor Tab */}
+          <TabsContent value="rank-predictor">
             <Card className="p-6 mb-6 bg-white shadow-sm border">
               <div className="flex items-center mb-6">
                 <Calculator className="w-6 h-6 lg:w-8 lg:h-8 text-green-600 mr-3" />
@@ -428,8 +406,8 @@ const Predictor = () => {
                 </Card>
               </div>
             )}
-          </>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

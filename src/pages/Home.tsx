@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,7 +59,6 @@ const Home = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [userName, setUserName] = useState<string>("");
   const navigate = useNavigate();
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   // College shortcut mappings for better search
   const collegeShortcuts: Record<string, string[]> = {
@@ -159,7 +159,6 @@ const Home = () => {
     Promise.all([
       fetchPopularColleges(),
       fetchLatestNews(),
-      fetchUnreadNotificationCount(),
       fetchUserProfile()
     ]).finally(() => {
       setLoading(false);
@@ -268,20 +267,6 @@ const Home = () => {
     }
   };
 
-  const fetchUnreadNotificationCount = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setUnreadNotificationCount(0);
-      return;
-    }
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("read", false);
-    setUnreadNotificationCount(data?.length || 0);
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -300,10 +285,6 @@ const Home = () => {
       case 'notification': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const handleNotifications = () => {
-    navigate('/notifications');
   };
 
   const displayedColleges = searchQuery.trim() ? searchResults : colleges;
@@ -498,9 +479,12 @@ const Home = () => {
                       <Badge className={`text-xs font-medium ${getCategoryColor(item.category)}`}>
                         {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                       </Badge>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {formatDate(item.date || item.created_at)}
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center text-xs text-gray-500">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {formatDate(item.date || item.created_at)}
+                        </div>
+                        <SaveNewsButton newsId={item.id} />
                       </div>
                     </div>
 
@@ -516,9 +500,6 @@ const Home = () => {
                         <ExternalLink className="w-4 h-4 ml-1" />
                       </div>
                     )}
-                    <div className="absolute top-4 right-4">
-                      <SaveNewsButton newsId={item.id} />
-                    </div>
                   </div>
                 </Card>
               ))}
