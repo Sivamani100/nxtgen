@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -130,7 +129,6 @@ const Home = () => {
     "rgukt": ["rajiv gandhi university of knowledge technologies"],
     "iiits": ["indian institute of information technology sri city"],
     "iiitdm": ["indian institute of information technology design and manufacturing"],
-    "nits": ["national institute of technology srinagar"],
     "nitw": ["national institute of technology warangal"],
     "nitk": ["national institute of technology karnataka"],
     "nitc": ["national institute of technology calicut"],
@@ -146,7 +144,7 @@ const Home = () => {
     "nitm": ["national institute of technology manipur"],
     "nitp": ["national institute of technology patna"],
     "nitrr": ["national institute of technology raipur"],
-    "nits": ["national institute of technology silchar"],
+    "nitsilchar": ["national institute of technology silchar"],
     "nitt": ["national institute of technology tiruchirappalli"],
     "nitu": ["national institute of technology uttarakhand"],
     "nitdelhi": ["national institute of technology delhi"],
@@ -217,7 +215,7 @@ const Home = () => {
 
   const fetchLatestNews = async () => {
     try {
-      // Fetch from resources table where category is 'news'
+      // Fetch from resources table
       const { data, error } = await supabase
         .from('resources')
         .select('id, title, description, category, date, image_url, external_link, created_at')
@@ -241,18 +239,23 @@ const Home = () => {
       const query = searchQuery.toLowerCase().trim();
       
       // Check if the search query is a shortcut
-      let expandedQuery = query;
+      let searchTerms = [query];
       for (const [shortcut, expansions] of Object.entries(collegeShortcuts)) {
         if (query.includes(shortcut)) {
-          expandedQuery = `${query} OR ${expansions.join(' OR ')}`;
+          searchTerms = [...searchTerms, ...expansions];
           break;
         }
       }
 
+      // Create OR condition for all search terms
+      const orConditions = searchTerms.map(term => 
+        `name.ilike.%${term}%,location.ilike.%${term}%,type.ilike.%${term}%`
+      ).join(',');
+
       const { data, error } = await supabase
         .from('colleges')
         .select('id, name, location, type, rating, total_fees_min, placement_percentage, image_url')
-        .or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%`)
+        .or(orConditions)
         .limit(10);
 
       if (error) throw error;
