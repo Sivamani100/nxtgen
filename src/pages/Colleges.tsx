@@ -20,25 +20,9 @@ import {
   Building
 } from "lucide-react";
 import { toast } from "sonner";
+import { Tables } from "@/integrations/supabase/types";
 
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  city: string;
-  state: string;
-  type: string;
-  rating: number;
-  total_fees_min: number;
-  total_fees_max: number;
-  image_url: string;
-  description: string;
-  branches_offered: string[];
-  eligible_exams: string[];
-  placement_percentage: number;
-  average_package: number;
-  highest_package: number;
-}
+type College = Tables<"colleges">;
 
 const Colleges = () => {
   const [colleges, setColleges] = useState<College[]>([]);
@@ -98,7 +82,7 @@ const Colleges = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      setFavorites(new Set(data?.map(fav => fav.college_id) || []));
+      setFavorites(new Set(data?.map(fav => fav.college_id).filter(Boolean) || []));
     } catch (error) {
       console.error('Failed to fetch favorites:', error);
     }
@@ -240,7 +224,7 @@ const Colleges = () => {
         </div>
       </div>
 
-      {/* Mobile Search */}
+      {/* Mobile Search - Only show on mobile */}
       <div className="lg:hidden bg-white shadow-sm border-b p-4 mt-16">
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
