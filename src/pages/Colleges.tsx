@@ -268,6 +268,22 @@ const Colleges = () => {
   };
 
   return (
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm border-b p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold text-gray-900">Colleges</h1>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-pink-500 hover:text-pink-600 hover:bg-pink-50"
+            onClick={handleSavedClick}
+          >
+            <Heart className="w-5 h-5 mr-1" />
+            Saved
+          </Button>
+        </div>
+        
         {/* Mobile Search */}
         <div className="relative mb-4">
           <Input
