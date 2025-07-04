@@ -91,6 +91,22 @@ const MobileHeader = ({ onEditToggle }: MobileHeaderProps) => {
     }
   };
 
+  const handleSavedNewsClick = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        // For now, navigate to a saved news page (we can create this route later)
+        // or show saved news in a modal/separate component
+        navigate('/saved-news'); // This route needs to be created or handled
+        return;
+      }
+      // Navigate to saved news specifically, not college favorites
+      navigate('/saved-news'); // This should be a dedicated saved news page
+    } catch (error) {
+      console.error('Error checking auth:', error);
+    }
+  };
+
   const getRightIcon = () => {
     switch (location.pathname) {
       case '/colleges':
@@ -105,7 +121,7 @@ const MobileHeader = ({ onEditToggle }: MobileHeaderProps) => {
       case '/news':
         return (
           <button 
-            onClick={() => navigate('/favorites')}
+            onClick={handleSavedNewsClick}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <Bookmark className="w-6 h-6 text-gray-600" />

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -269,9 +270,8 @@ const Colleges = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
-      {/* Mobile Header */}
-      
-        
+      {/* Mobile Search and Filters - Only show these on mobile, remove the header div */}
+      <div className="lg:hidden bg-white shadow-sm border-b p-4 mt-16">
         {/* Mobile Search */}
         <div className="relative mb-4">
           <Input
