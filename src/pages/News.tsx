@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -121,8 +120,20 @@ const News = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
-      {/* Mobile Search and Filters - Remove the header div, only show search/filters */}
-      <div className="lg:hidden bg-white shadow-sm border-b p-4 mt-16">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm border-b p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold text-gray-900">Latest Updates</h1>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-pink-500 hover:text-pink-600 hover:bg-pink-50"
+          >
+            <Heart className="w-5 h-5 mr-1" />
+            Saved
+          </Button>
+        </div>
+        
         {/* Mobile Search */}
         <div className="relative mb-4">
           <Input
@@ -227,12 +238,9 @@ const News = () => {
                     <Badge className={getCategoryColor(item.category)}>
                       {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                     </Badge>
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center text-xs text-gray-500">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        {formatDate(item.date || item.created_at)}
-                      </div>
-                      <SaveNewsButton newsId={item.id} />
+                    <div className="flex items-center text-xs text-gray-500">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {formatDate(item.date || item.created_at)}
                     </div>
                   </div>
                   {/* Content */}
@@ -250,6 +258,7 @@ const News = () => {
                         <span>Read More</span>
                       </div>
                     )}
+                    <SaveNewsButton newsId={item.id} />
                   </div>
                 </div>
               </Card>
