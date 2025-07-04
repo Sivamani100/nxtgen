@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import MobileHeader from "@/components/MobileHeader";
 
 interface Profile {
   id: string;
@@ -167,6 +168,10 @@ const ProfilePage = () => {
     navigate('/login');
   };
 
+  const handleEditToggle = () => {
+    setEditing(!editing);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -189,29 +194,8 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center">
-            <User className="w-6 h-6 text-green-600 mr-2" />
-            <h1 className="text-lg font-bold text-gray-900">Profile</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            {editing ? (
-              <>
-                <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
-                  <X className="w-4 h-4" />
-                </Button>
-                <Button size="sm" onClick={updateProfile} disabled={saving}>
-                  <Save className="w-4 h-4" />
-                </Button>
-              </>
-            ) : (
-              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-                <Edit className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        </div>
+      <div className="lg:hidden">
+        <MobileHeader onEditToggle={handleEditToggle} />
       </div>
 
       {/* Desktop Header */}
@@ -244,6 +228,32 @@ const ProfilePage = () => {
                 </Button>
               )}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Edit Controls */}
+      <div className="lg:hidden bg-white shadow-sm border-b mt-16">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center">
+            <User className="w-6 h-6 text-green-600 mr-2" />
+            <h1 className="text-lg font-bold text-gray-900">Profile</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            {editing ? (
+              <>
+                <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+                <Button size="sm" onClick={updateProfile} disabled={saving}>
+                  <Save className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

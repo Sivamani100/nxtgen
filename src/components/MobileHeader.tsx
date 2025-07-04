@@ -6,7 +6,11 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Home, Users, BookOpen, Newspaper, User, GitCompare, Heart, Search, Bell, HelpCircle, Shield, Star, Calendar, MessageCircle, Edit, Bookmark } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-const MobileHeader = () => {
+interface MobileHeaderProps {
+  onEditToggle?: () => void;
+}
+
+const MobileHeader = ({ onEditToggle }: MobileHeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -110,7 +114,7 @@ const MobileHeader = () => {
       case '/profile':
         return (
           <button 
-            onClick={() => navigate('/profile')}
+            onClick={onEditToggle}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <Edit className="w-6 h-6 text-gray-600" />
