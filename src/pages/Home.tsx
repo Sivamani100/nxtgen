@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,9 +48,11 @@ interface NewsItem {
 
 const Home = () => {
   const [colleges, setColleges] = useState<College[]>([]);
+  const [searchResults, setSearchResults] = useState<College[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
@@ -61,9 +64,16 @@ const Home = () => {
     ]).finally(() => {
       setLoading(false);
     });
-    // Re-fetch unread count when returning to page
-    // Optionally, listen to visibilitychange, omitted for brevity
   }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      handleSearch();
+    } else {
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  }, [searchQuery]);
 
   const fetchPopularColleges = async () => {
     try {
@@ -86,20 +96,39 @@ const Home = () => {
 
   const fetchLatestNews = async () => {
     try {
-      // Always pull from resources where category === 'news'
-      let { data, error } = await supabase
+      // Fetch from resources table where category is 'news'
+      const { data, error } = await supabase
         .from('resources')
         .select('id, title, description, category, date, image_url, external_link, created_at')
         .eq('category', 'news')
         .order('created_at', { ascending: false })
-        .limit(2);
+        .limit(3);
 
       if (error) throw error;
-
+      console.log('Latest news fetched:', data?.length || 0);
       setNews(data || []);
     } catch (error) {
       console.error('Error fetching news:', error);
-      setNews([]); // fallback to empty, don't crash
+      setNews([]);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const { data, error } = await supabase
+        .from('colleges')
+        .select('id, name, location, type, rating, total_fees_min, placement_percentage, image_url')
+        .or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%`)
+        .limit(10);
+
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error) {
+      console.error('Error searching colleges:', error);
+      toast.error('Failed to search colleges');
     }
   };
 
@@ -115,33 +144,6 @@ const Home = () => {
       .eq("user_id", user.id)
       .eq("read", false);
     setUnreadNotificationCount(data?.length || 0);
-  };
-
-  const createSampleNews = async () => {
-    const sampleNews = [
-      {
-        title: 'JEE Main 2024 Registration Opens',
-        description: 'National Testing Agency (NTA) has opened the registration for JEE Main 2024. Students can apply online through the official website.',
-        category: 'news',
-        date: '2024-01-15',
-        external_link: 'https://jeemain.nta.nic.in'
-      },
-      {
-        title: 'NEET 2024 Exam Date Announced',
-        description: 'The National Eligibility cum Entrance Test (NEET) 2024 will be conducted on May 5, 2024. Registration starts from February 9, 2024.',
-        category: 'news',
-        date: '2024-01-10',
-        external_link: 'https://neet.nta.nic.in'
-      }
-    ];
-
-    try {
-      for (const newsItem of sampleNews) {
-        await supabase.from('resources').insert([newsItem]);
-      }
-    } catch (error) {
-      console.error('Error creating sample news:', error);
-    }
   };
 
   const formatDate = (dateString: string) => {
@@ -164,21 +166,11 @@ const Home = () => {
     }
   };
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
   const handleNotifications = () => {
     navigate('/notifications');
   };
+
+  const displayedColleges = searchQuery.trim() ? searchResults : colleges;
 
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
@@ -209,7 +201,6 @@ const Home = () => {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
               placeholder="Search colleges, courses, news..."
               className="pl-10 h-12 text-base border-gray-200 focus:border-green-500 rounded-lg"
             />
@@ -241,21 +232,27 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Popular Colleges Section */}
+      {/* Search Results or Popular Colleges Section */}
       <section className="py-8 lg:py-12 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between mb-6 lg:mb-8">
             <div>
-              <h2 className="text-xl lg:text-3xl font-bold text-gray-900 mb-2">Popular Colleges</h2>
-              <p className="text-sm lg:text-base text-gray-600">Discover top-rated institutions</p>
+              <h2 className="text-xl lg:text-3xl font-bold text-gray-900 mb-2">
+                {searchQuery.trim() ? `Search Results (${searchResults.length})` : 'Popular Colleges'}
+              </h2>
+              <p className="text-sm lg:text-base text-gray-600">
+                {searchQuery.trim() ? `Results for "${searchQuery}"` : 'Discover top-rated institutions'}
+              </p>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/colleges')}
-              className="text-sm lg:text-base hover:bg-green-50 hover:border-green-300"
-            >
-              View All <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+            {!searchQuery.trim() && (
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/colleges')}
+                className="text-sm lg:text-base hover:bg-green-50 hover:border-green-300"
+              >
+                View All <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            )}
           </div>
 
           {loading ? (
@@ -268,9 +265,19 @@ const Home = () => {
                 </Card>
               ))}
             </div>
+          ) : displayedColleges.length === 0 ? (
+            <div className="text-center py-12">
+              <GraduationCap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {searchQuery.trim() ? 'No colleges found' : 'No colleges available'}
+              </h3>
+              <p className="text-gray-600">
+                {searchQuery.trim() ? 'Try adjusting your search terms' : 'Check back later for updates'}
+              </p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-              {colleges.map((college) => (
+              {displayedColleges.map((college) => (
                 <Card 
                   key={college.id} 
                   className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer group"
@@ -347,7 +354,7 @@ const Home = () => {
               <p className="text-gray-600">No news available at the moment</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
               {news.map((item) => (
                 <Card 
                   key={item.id} 

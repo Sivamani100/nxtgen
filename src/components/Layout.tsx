@@ -123,7 +123,7 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Main Content */}
       <div className={`lg:transition-all lg:duration-300 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
-        <div className="pb-[70px] lg:pb-0 min-h-screen">
+        <div className="pt-[60px] lg:pt-0 pb-[70px] lg:pb-0 min-h-screen">
           {children}
         </div>
       </div>

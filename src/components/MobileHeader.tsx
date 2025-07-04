@@ -37,18 +37,47 @@ const MobileHeader = () => {
     setIsOpen(false);
   };
 
+  const getPageTitle = () => {
+    switch (location.pathname) {
+      case '/home':
+        return (
+          <span className="bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent font-bold">
+            NXTGEN
+          </span>
+        );
+      case '/colleges':
+        return <span className="text-blue-600 font-bold">Colleges</span>;
+      case '/predictor':
+        return <span className="text-green-600 font-bold">Predictor</span>;
+      case '/news':
+        return <span className="text-orange-600 font-bold">News</span>;
+      case '/profile':
+        return <span className="text-purple-600 font-bold">Profile</span>;
+      default:
+        return (
+          <span className="bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent font-bold">
+            NXTGEN
+          </span>
+        );
+    }
+  };
+
   return (
-    <div className="lg:hidden bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between">
-      <h1 className="text-lg font-bold text-gray-900">NXTGEN</h1>
+    <div className="lg:hidden bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between fixed top-0 left-0 right-0 z-50">
+      <h1 className="text-lg">
+        {getPageTitle()}
+      </h1>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="sm">
             <Menu className="w-6 h-6" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-80 p-0">
+        <SheetContent side="left" className="w-80 p-0">
           <div className="p-6">
-            <h2 className="text-xl font-bold mb-6">Menu</h2>
+            <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent">
+              NXTGEN Menu
+            </h2>
             <div className="space-y-2">
               {menuItems.map((item) => (
                 <Button
