@@ -175,12 +175,8 @@ const Predictor = () => {
       <div className="max-w-4xl mx-auto p-4 lg:p-6">
         {/* Header */}
         <div className="mb-6 lg:mb-8 text-center lg:text-left">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-            College & Rank Predictor
-          </h1>
-          <p className="text-sm lg:text-base text-gray-600">
-            Predict your rank and find suitable colleges based on your exam scores
-          </p>
+          
+          
         </div>
 
         {/* Tabs */}
