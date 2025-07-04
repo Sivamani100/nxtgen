@@ -233,8 +233,24 @@ const ProfilePage = () => {
         </div>
       </div>
 
+      {/* Mobile Save/Cancel buttons - Only show when editing */}
+      {editing && (
+        <div className="lg:hidden bg-white shadow-sm border-b mt-16">
+          <div className="flex items-center justify-between p-4">
+            <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
+              <X className="w-4 h-4 mr-1" />
+              Cancel
+            </Button>
+            <Button size="sm" onClick={updateProfile} disabled={saving}>
+              <Save className="w-4 h-4 mr-1" />
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Main Profile Layout */}
-      <div className="max-w-7xl mx-auto p-4 lg:p-8 lg:grid lg:grid-cols-4 lg:gap-8 mt-16 lg:mt-0">
+      <div className={`max-w-7xl mx-auto p-4 lg:p-8 lg:grid lg:grid-cols-4 lg:gap-8 ${editing ? 'mt-32 lg:mt-0' : 'mt-16 lg:mt-0'}`}>
         {/* Left Sidebar/Profile Summary (1 column) */}
         <div className="lg:col-span-1 mb-6 lg:mb-0">
           <Card className="p-6 bg-white shadow-lg flex flex-col items-center">
@@ -266,23 +282,6 @@ const ProfilePage = () => {
                   ></div>
                 </div>
               </div>
-              
-              {/* Mobile Edit Buttons */}
-              <div className="lg:hidden mb-6">
-                {editing ? (
-                  <div className="flex space-x-2">
-                    <Button variant="outline" onClick={() => setEditing(false)} className="flex-1">
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button onClick={updateProfile} disabled={saving} className="flex-1">
-                      <Save className="w-4 h-4 mr-2" />
-                      {saving ? 'Saving...' : 'Save'}
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-              
               <Button 
                 variant="outline" 
                 onClick={handleSignOut}
@@ -519,6 +518,58 @@ const ProfilePage = () => {
               </div>
             </div>
           </Card>
+        </div>
+      </div>
+
+      {/* Bottom Navigation (Mobile Only) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-evenly gap-2 py-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
+              onClick={() => navigate('/home')}
+            >
+              <User className="w-6 h-6" />
+              <span className="text-xs">Home</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
+              onClick={() => navigate('/colleges')}
+            >
+              <MapPin className="w-6 h-6" />
+              <span className="text-xs">Colleges</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
+              onClick={() => navigate('/predictor')}
+            >
+              <GraduationCap className="w-6 h-6" />
+              <span className="text-xs">Predictor</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-gray-600 hover:text-green-600"
+              onClick={() => navigate('/news')}
+            >
+              <Bell className="w-6 h-6" />
+              <span className="text-xs">News</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center space-y-[1px] p-1 text-green-600 bg-green-50 rounded-full"
+            >
+              <Settings className="w-6 h-6" />
+              <span className="text-xs">Profile</span>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

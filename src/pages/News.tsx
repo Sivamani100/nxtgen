@@ -121,8 +121,9 @@ const News = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
-      {/* Mobile Search - removed spacing */}
+      {/* Mobile Search and Filters - Remove the header div, only show search/filters */}
       <div className="lg:hidden bg-white shadow-sm border-b p-4 mt-16">
+        {/* Mobile Search */}
         <div className="relative mb-4">
           <Input
             value={searchQuery}
@@ -226,7 +227,7 @@ const News = () => {
                     <Badge className={getCategoryColor(item.category)}>
                       {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                     </Badge>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3">
                       <div className="flex items-center text-xs text-gray-500">
                         <Calendar className="w-3 h-3 mr-1" />
                         {formatDate(item.date || item.created_at)}
@@ -242,12 +243,14 @@ const News = () => {
                     {item.description}
                   </p>
                   {/* Footer */}
-                  {item.external_link && (
-                    <div className="flex items-center text-sm text-orange-600 font-medium group-hover:text-orange-700">
-                      <ExternalLink className="w-4 h-4 mr-1" />
-                      <span>Read More</span>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between">
+                    {item.external_link && (
+                      <div className="flex items-center text-sm text-orange-600 font-medium group-hover:text-orange-700">
+                        <ExternalLink className="w-4 h-4 mr-1" />
+                        <span>Read More</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </Card>
             ))}
