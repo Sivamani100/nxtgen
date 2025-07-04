@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home as HomeIcon, Users, BookOpen, Newspaper, User, Bell, Heart, Search, ChevronLeft, ChevronRight, GitCompare, HelpCircle, Shield, Calendar, MessageCircle, Star } from "lucide-react";
 import { navItems } from "@/nav-items";
+import MobileHeader from "./MobileHeader";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -55,6 +56,9 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Mobile Header */}
+      <MobileHeader />
+
       {/* Desktop Sidebar */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-lg transition-all duration-300 ${
         isSidebarCollapsed ? 'lg:w-16' : 'lg:w-64'

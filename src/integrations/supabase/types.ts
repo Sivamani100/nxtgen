@@ -126,6 +126,7 @@ export type Database = {
           campus_area: string | null
           campus_tour_video_url: string | null
           city: string
+          college_code: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string | null
@@ -170,6 +171,7 @@ export type Database = {
           campus_area?: string | null
           campus_tour_video_url?: string | null
           city: string
+          college_code?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
@@ -214,6 +216,7 @@ export type Database = {
           campus_area?: string | null
           campus_tour_video_url?: string | null
           city?: string
+          college_code?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null

@@ -1,15 +1,19 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CollegeReviews() {
   const [colleges, setColleges] = useState<any[]>([]);
+  const [filteredColleges, setFilteredColleges] = useState<any[]>([]);
   const [selectedCollege, setSelectedCollege] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [myRating, setMyRating] = useState(0);
   const [myReview, setMyReview] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -18,6 +22,19 @@ export default function CollegeReviews() {
     fetchColleges();
   }, []);
 
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const filtered = colleges.filter(college =>
+        college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        college.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        college.state.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredColleges(filtered);
+    } else {
+      setFilteredColleges(colleges);
+    }
+  }, [searchQuery, colleges]);
+
   async function fetchColleges() {
     setLoading(true);
     const { data, error } = await supabase.from("colleges").select("id,name,city,state");
@@ -25,6 +42,7 @@ export default function CollegeReviews() {
       toast.error("Failed to load colleges");
     } else {
       setColleges(data || []);
+      setFilteredColleges(data || []);
     }
     setLoading(false);
   }
@@ -116,13 +134,25 @@ export default function CollegeReviews() {
       <div className="md:min-w-[260px] md:max-w-xs md:w-1/3">
         <Card className="p-3 sticky top-20">
           <div className="font-semibold mb-2 text-green-700">Colleges</div>
+          
+          {/* Search Bar */}
+          <div className="relative mb-3">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search colleges..."
+              className="pl-8 h-8 text-sm"
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          </div>
+
           <ul className="space-y-1 max-h-[480px] overflow-auto">
-            {colleges.map(college => (
+            {filteredColleges.map(college => (
               <li key={college.id}>
                 <Button
                   variant={selectedCollege?.id === college.id ? "default" : "secondary"}
                   size="sm"
-                  className="w-full justify-start"
+                  className="w-full justify-start text-left"
                   onClick={() => fetchReviews(college.id)}
                 >
                   <div className="truncate">{college.name} <span className="text-xs text-gray-400">({college.city}, {college.state})</span></div>

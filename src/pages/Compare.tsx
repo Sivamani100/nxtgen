@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, GitCompare, Star, MapPin, DollarSign, TrendingUp, Award, X, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +13,8 @@ interface College {
   id: number;
   name: string;
   location: string;
+  state: string;
+  city: string;
   type: string;
   rating: number;
   total_fees_min: number;
@@ -23,26 +25,100 @@ interface College {
   image_url?: string;
 }
 
+const stateDistrictMap: Record<string, string[]> = {
+  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool", "Rajahmundry", "Tirupati", "Anantapur"],
+  "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur", "Puri", "Balasore", "Baripada"],
+  "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Khammam", "Karimnagar", "Ramagundam", "Mahbubnagar", "Nalgonda"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Erode", "Vellore"],
+  "Karnataka": ["Bangalore", "Mysore", "Hubli", "Mangalore", "Belgaum", "Gulbarga", "Davangere", "Bellary"],
+  "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Solapur", "Amravati", "Kolhapur"]
+};
+
 const Compare = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<College[]>([]);
   const [selectedColleges, setSelectedColleges] = useState<College[]>([]);
+  const [defaultColleges, setDefaultColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    state: 'all',
+    district: 'all',
+    type: 'all',
+    sortBy: 'rating'
+  });
   const navigate = useNavigate();
 
-  const searchColleges = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  useEffect(() => {
+    fetchDefaultColleges();
+  }, []);
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchColleges(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  const fetchDefaultColleges = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('colleges')
-        .select('id, name, location, type, rating, total_fees_min, total_fees_max, placement_percentage, highest_package, average_package, image_url')
-        .or(`name.ilike.%${query}%,location.ilike.%${query}%,type.ilike.%${query}%`)
+        .select('id, name, location, state, city, type, rating, total_fees_min, total_fees_max, placement_percentage, highest_package, average_package, image_url')
+        .order('rating', { ascending: false })
         .limit(20);
+
+      if (error) throw error;
+      setDefaultColleges(data || []);
+    } catch (error) {
+      console.error('Error fetching default colleges:', error);
+      toast.error('Failed to load default colleges');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchColleges = async (query: string) => {
+    setLoading(true);
+    try {
+      let queryBuilder = supabase
+        .from('colleges')
+        .select('id, name, location, state, city, type, rating, total_fees_min, total_fees_max, placement_percentage, highest_package, average_package, image_url')
+        .or(`name.ilike.%${query}%,location.ilike.%${query}%,type.ilike.%${query}%`);
+
+      // Apply filters
+      if (filters.state !== 'all') {
+        queryBuilder = queryBuilder.eq('state', filters.state);
+      }
+      if (filters.district !== 'all') {
+        queryBuilder = queryBuilder.eq('city', filters.district);
+      }
+      if (filters.type !== 'all') {
+        queryBuilder = queryBuilder.ilike('type', `%${filters.type}%`);
+      }
+
+      // Apply sorting
+      switch (filters.sortBy) {
+        case 'rating':
+          queryBuilder = queryBuilder.order('rating', { ascending: false });
+          break;
+        case 'fees_low':
+          queryBuilder = queryBuilder.order('total_fees_min', { ascending: true });
+          break;
+        case 'fees_high':
+          queryBuilder = queryBuilder.order('total_fees_min', { ascending: false });
+          break;
+        case 'placement':
+          queryBuilder = queryBuilder.order('placement_percentage', { ascending: false });
+          break;
+      }
+
+      const { data, error } = await queryBuilder.limit(20);
 
       if (error) throw error;
       setSearchResults(data || []);
@@ -53,14 +129,6 @@ const Compare = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      searchColleges(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
 
   const addToComparison = (college: College) => {
     if (selectedColleges.length >= 4) {
@@ -109,6 +177,12 @@ const Compare = () => {
     }
   };
 
+  const getDistrictsForState = (state: string) => {
+    return stateDistrictMap[state] || [];
+  };
+
+  const collegeList = searchQuery.trim() ? searchResults : defaultColleges;
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto p-4 lg:p-6">
@@ -121,9 +195,85 @@ const Compare = () => {
           <p className="text-gray-600 text-lg">Select colleges to compare their features side by side</p>
         </div>
 
-        {/* Search Section */}
-        <Card className="p-6 mb-8 border border-gray-200">
-          <div className="relative mb-4">
+        {/* Filters */}
+        <Card className="p-4 mb-6 border border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <Select value={filters.state} onValueChange={(value) => {
+              setFilters(prev => ({ ...prev, state: value, district: 'all' }));
+              if (searchQuery.trim()) {
+                searchColleges(searchQuery);
+              }
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select State" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All States</SelectItem>
+                {Object.keys(stateDistrictMap).map((state) => (
+                  <SelectItem key={state} value={state}>{state}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select 
+              value={filters.district} 
+              onValueChange={(value) => {
+                setFilters(prev => ({ ...prev, district: value }));
+                if (searchQuery.trim()) {
+                  searchColleges(searchQuery);
+                }
+              }}
+              disabled={filters.state === 'all'}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select District" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Districts</SelectItem>
+                {getDistrictsForState(filters.state).map((district) => (
+                  <SelectItem key={district} value={district}>{district}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filters.type} onValueChange={(value) => {
+              setFilters(prev => ({ ...prev, type: value }));
+              if (searchQuery.trim()) {
+                searchColleges(searchQuery);
+              }
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="College Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="government">Government</SelectItem>
+                <SelectItem value="private">Private</SelectItem>
+                <SelectItem value="university">University</SelectItem>
+                <SelectItem value="engineering">Engineering</SelectItem>
+                <SelectItem value="medical">Medical</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filters.sortBy} onValueChange={(value) => {
+              setFilters(prev => ({ ...prev, sortBy: value }));
+              if (searchQuery.trim()) {
+                searchColleges(searchQuery);
+              }
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort By" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">Rating</SelectItem>
+                <SelectItem value="fees_low">Fees (Low to High)</SelectItem>
+                <SelectItem value="fees_high">Fees (High to Low)</SelectItem>
+                <SelectItem value="placement">Placement %</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="relative">
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -137,10 +287,16 @@ const Compare = () => {
               </div>
             )}
           </div>
+        </Card>
 
-          {searchResults.length > 0 && (
+        {/* College List */}
+        {collegeList.length > 0 && (
+          <Card className="p-6 mb-8 border border-gray-200">
+            <h3 className="text-xl font-bold mb-4">
+              {searchQuery.trim() ? 'Search Results' : 'Popular Colleges'}
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-              {searchResults.map((college) => (
+              {collegeList.map((college) => (
                 <div
                   key={college.id}
                   className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200"
@@ -150,7 +306,7 @@ const Compare = () => {
                       <h3 className="font-semibold text-gray-900 mb-1">{college.name}</h3>
                       <p className="text-sm text-gray-600 flex items-center">
                         <MapPin className="w-4 h-4 mr-1" />
-                        {college.location}
+                        {college.city}, {college.state}
                       </p>
                     </div>
                     <Button
@@ -173,8 +329,8 @@ const Compare = () => {
                 </div>
               ))}
             </div>
-          )}
-        </Card>
+          </Card>
+        )}
 
         {/* Selected Colleges for Comparison */}
         {selectedColleges.length > 0 && (
