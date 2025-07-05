@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +14,8 @@ import {
   BookOpen
 } from "lucide-react";
 import { toast } from "sonner";
+import FilterModal, { FilterOptions } from "@/components/FilterModal";
+import { useCollegeFilters } from "@/hooks/useCollegeFilters";
 
 interface College {
   id: number;
@@ -36,6 +37,8 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const navigate = useNavigate();
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const { filters: advancedFilters, applyFilters: applyAdvancedFilters, updateFilters } = useCollegeFilters();
 
   const collegeTypes = [
     { value: 'all', label: 'All Types' },
@@ -78,7 +81,7 @@ const Search = () => {
 
       // Add search conditions
       if (searchQuery.trim()) {
-        query = query.or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+        query = query.or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,state.ilike.%${searchQuery}%`);
       }
 
       const { data, error } = await query.limit(50);
@@ -99,14 +102,24 @@ const Search = () => {
   };
 
   const filterByType = () => {
+    let filtered = [...colleges];
+    
     if (selectedType === 'all') {
-      setFilteredColleges(colleges);
+      filtered = colleges;
     } else {
-      const filtered = colleges.filter(college => 
+      filtered = colleges.filter(college => 
         college.type.toLowerCase().includes(selectedType.toLowerCase())
       );
-      setFilteredColleges(filtered);
     }
+
+    // Apply advanced filters
+    filtered = applyAdvancedFilters(filtered, advancedFilters);
+    
+    setFilteredColleges(filtered);
+  };
+
+  const handleApplyAdvancedFilters = (newFilters: FilterOptions) => {
+    updateFilters(newFilters);
   };
 
   return (
@@ -141,10 +154,18 @@ const Search = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by college name, location, or type..."
-              className="pl-10 lg:pl-12 h-12 lg:h-14 text-sm lg:text-base border-gray-200 focus:border-green-500 shadow-sm"
+              className="pl-10 lg:pl-12 pr-12 h-12 lg:h-14 text-sm lg:text-base border-gray-200 focus:border-green-500 shadow-sm"
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilterModal(true)}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100"
+            >
+              <Filter className="w-4 h-4 text-gray-500" />
+            </Button>
             {loading && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
                 <div className="animate-spin rounded-full h-4 w-4 lg:h-5 lg:w-5 border-b-2 border-green-500"></div>
               </div>
             )}
@@ -264,6 +285,14 @@ const Search = () => {
           )}
         </div>
       </div>
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        onApplyFilters={handleApplyAdvancedFilters}
+        currentFilters={advancedFilters}
+      />
     </div>
   );
 };

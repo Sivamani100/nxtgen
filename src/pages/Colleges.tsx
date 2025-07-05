@@ -9,6 +9,9 @@ import { Search, Star, MapPin, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 import { Checkbox } from "@/components/ui/checkbox";
+import FilterModal, { FilterOptions } from "@/components/FilterModal";
+import { useCollegeFilters } from "@/hooks/useCollegeFilters";
+import { Filter } from "lucide-react";
 
 type College = Database['public']['Tables']['colleges']['Row'];
 
@@ -25,6 +28,8 @@ const Colleges = () => {
   });
   const navigate = useNavigate();
   const [myColleges, setMyColleges] = useState<number[]>([]);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const { filters: advancedFilters, applyFilters: applyAdvancedFilters, updateFilters } = useCollegeFilters();
 
   useEffect(() => {
     fetchColleges();
@@ -98,7 +103,7 @@ const Colleges = () => {
       );
     }
 
-    // Apply type filter with improved logic for grouping
+    // Apply existing type filter with improved logic for grouping
     if (filters.type !== 'all') {
       filtered = filtered.filter(college => {
         if (!college.type) return false;
@@ -135,6 +140,9 @@ const Colleges = () => {
     if (filters.state !== 'all') {
       filtered = filtered.filter(college => college.state === filters.state);
     }
+
+    // Apply advanced filters
+    filtered = applyAdvancedFilters(filtered, advancedFilters);
 
     // Apply sorting
     filtered.sort((a, b) => {
@@ -267,6 +275,10 @@ const Colleges = () => {
     }
   };
 
+  const handleApplyAdvancedFilters = (newFilters: FilterOptions) => {
+    updateFilters(newFilters);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
       {/* Mobile Header */}
@@ -281,9 +293,17 @@ const Colleges = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search colleges..."
-            className="pl-10 h-12 text-base border-gray-200 focus:border-blue-400 rounded-lg"
+            className="pl-10 pr-12 h-12 text-base border-gray-200 focus:border-blue-400 rounded-lg"
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFilterModal(true)}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100"
+          >
+            <Filter className="w-4 h-4 text-gray-500" />
+          </Button>
         </div>
 
         {/* Mobile Filters */}
@@ -340,9 +360,17 @@ const Colleges = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search colleges by name, location, or state..."
-              className="pl-12 h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-lg"
+              className="pl-12 pr-12 h-12 text-base border-2 border-gray-200 focus:border-blue-400 rounded-lg"
             />
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilterModal(true)}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100"
+            >
+              <Filter className="w-4 h-4 text-gray-500" />
+            </Button>
           </div>
 
           {/* Filters */}
@@ -542,6 +570,14 @@ const Colleges = () => {
           </div>
         )}
       </div>
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        onApplyFilters={handleApplyAdvancedFilters}
+        currentFilters={advancedFilters}
+      />
     </div>
   );
 };
