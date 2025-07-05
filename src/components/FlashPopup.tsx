@@ -17,15 +17,21 @@ interface FlashPopupProps {
 
 const importantResources = [
   {
-    title: 'Engineering Admission Guide 2024',
+    title: 'Top Engineering colleges list',
+    description: 'We have select the top colleges for you',
+    link: 'https://example.com/admission-guide.pdf',
+    type: 'PDF',
+  },
+  {
+    title: 'Engineering Admission Guide 2025',
     description: 'Complete guide for engineering admissions',
     link: 'https://example.com/admission-guide.pdf',
     type: 'PDF',
   },
   {
-    title: 'Scholarship Opportunities',
-    description: 'Latest scholarship information for students',
-    link: 'https://example.com/scholarships',
+    title: 'Check out the notification',
+    description: 'Eapcet council has released important updates',
+    link: 'https://cets.apsche.ap.gov.in/EAPCET/Eapcet/EAPCET_HomePage.aspxs',
     type: 'Link',
   },
 ];
