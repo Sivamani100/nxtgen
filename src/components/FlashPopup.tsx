@@ -57,7 +57,7 @@ const FlashPopup = ({ isOpen, onClose }: FlashPopupProps) => {
             </h3>
             <div className="space-y-3">
               {importantResources.map((resource, index) => (
-                <Card key={index} className="p-3 bg-white shadow-sm rounded-lg">
+                <Card key={index} className="p-3 bg-blue-100 shadow-sm rounded-lg border border-blue-300">
                   <div className="space-y-2">
                     <div className="flex items-start justify-between">
                       <Badge variant="outline" className="text-xs text-blue-700 border-blue-300">
@@ -74,12 +74,12 @@ const FlashPopup = ({ isOpen, onClose }: FlashPopupProps) => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleOpenLink(resource.link)}
-                      className="w-full text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
+                      className="w-full text-xs border-green-300 text-green-700 hover:bg-green-50"
                     >
                       {resource.type === 'PDF' ? (
-                        <FileText className="w-3 h-3 mr-1 text-blue-500" />
+                        <FileText className="w-3 h-3 mr-1 text-green-500" />
                       ) : (
-                        <ExternalLink className="w-3 h-3 mr-1 text-blue-500" />
+                        <ExternalLink className="w-3 h-3 mr-1 text-green-500" />
                       )}
                       Open {resource.type}
                     </Button>
