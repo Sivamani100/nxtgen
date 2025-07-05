@@ -23,7 +23,7 @@ const importantResources = [
     id: 1,
     title: 'Top Engineering colleges list',
     description: 'We have select the top colleges for you',
-    link: 'https://example.com/admission-guide.pdf',
+    link: 'https://aqmsxrqybxsjsigqnimp.supabase.co/storage/v1/object/public/files//AP%20TOP%20ENGINEERING%20COLLEGES.pdf',
     type: 'PDF',
   },
  
