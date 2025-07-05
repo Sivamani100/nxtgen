@@ -25,6 +25,7 @@ import SaveNewsButton from "@/components/SaveNewsButton";
 import FilterModal, { FilterOptions } from "@/components/FilterModal";
 import { useCollegeFilters } from "@/hooks/useCollegeFilters";
 import { Database } from "@/integrations/supabase/types";
+import FlashPopup from "@/components/FlashPopup";
 
 type College = Database['public']['Tables']['colleges']['Row'];
 
@@ -51,6 +52,7 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [userName, setUserName] = useState<string>("");
+  const [showFlashPopup, setShowFlashPopup] = useState(false);
   const navigate = useNavigate();
   const [showFilterModal, setShowFilterModal] = useState(false);
   const { filters: collegeFilters, applyFilters, updateFilters } = useCollegeFilters();
@@ -157,6 +159,8 @@ const Home = () => {
       fetchUserProfile()
     ]).finally(() => {
       setLoading(false);
+      // Show flash popup when app loads
+      setShowFlashPopup(true);
     });
   }, []);
 
@@ -297,6 +301,12 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
+      {/* Flash Popup */}
+      <FlashPopup 
+        isOpen={showFlashPopup} 
+        onClose={() => setShowFlashPopup(false)} 
+      />
+
       {/* Welcome Header with Search */}
       <section className="bg-white border-b border-gray-100 py-4 lg:py-6">
         <div className="max-w-6xl mx-auto px-4">
