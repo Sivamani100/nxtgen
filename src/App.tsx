@@ -1,9 +1,11 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { navItems } from "./nav-items";
 import Layout from "./components/Layout";
+import SharedContent from "./pages/SharedContent";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +21,9 @@ const App = () => (
           <Route path="/signup" element={navItems.find(item => item.to === "/signup")?.page} />
           <Route path="/forgot-password" element={navItems.find(item => item.to === "/forgot-password")?.page} />
           <Route path="/processing" element={navItems.find(item => item.to === "/processing")?.page} />
+          
+          {/* Shared content route - standalone without layout */}
+          <Route path="/shared/:itemType/:itemId" element={<SharedContent />} />
           
           {/* Routes with layout */}
           <Route path="/*" element={

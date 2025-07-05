@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import SaveNewsButton from "@/components/SaveNewsButton";
+import ShareButton from "@/components/ShareButton";
 
 interface NewsItem {
   id: number;
@@ -250,7 +252,14 @@ const News = () => {
                         <span>Read More</span>
                       </div>
                     )}
-                    <SaveNewsButton newsId={item.id} />
+                    <div className="flex items-center space-x-2">
+                      <SaveNewsButton newsId={item.id} />
+                      <ShareButton 
+                        itemId={item.id}
+                        itemType="news"
+                        title={item.title}
+                      />
+                    </div>
                   </div>
                 </div>
               </Card>
