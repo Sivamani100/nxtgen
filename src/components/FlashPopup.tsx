@@ -36,7 +36,7 @@ const FlashPopup = ({ isOpen, onClose }: FlashPopupProps) => {
         <DialogHeader className="text-center">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold text-blue-900">
-              Welcome! Important Updates
+               Important Updates
             </DialogTitle>
             <Button
               variant="ghost"
@@ -53,7 +53,7 @@ const FlashPopup = ({ isOpen, onClose }: FlashPopupProps) => {
           <div>
             <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center justify-center">
               <FileText className="w-5 h-5 text-blue-500 mr-2" />
-              Important Resources
+              Resources
             </h3>
             <div className="space-y-3">
               {importantResources.map((resource, index) => (
