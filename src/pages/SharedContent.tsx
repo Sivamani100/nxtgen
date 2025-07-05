@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,11 +46,18 @@ const SharedContent = () => {
       setLoading(true);
       let data = null;
       
+      // Convert itemId string to number
+      const numericItemId = parseInt(itemId!, 10);
+      if (isNaN(numericItemId)) {
+        navigate('/404');
+        return;
+      }
+      
       if (itemType === 'news' || itemType === 'resource') {
         const { data: resourceData, error } = await supabase
           .from('resources')
           .select('*')
-          .eq('id', itemId)
+          .eq('id', numericItemId)
           .single();
         
         if (error) throw error;
@@ -60,7 +66,7 @@ const SharedContent = () => {
         const { data: collegeData, error } = await supabase
           .from('colleges')
           .select('*')
-          .eq('id', itemId)
+          .eq('id', numericItemId)
           .single();
         
         if (error) throw error;
