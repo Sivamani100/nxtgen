@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,11 +22,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import SaveNewsButton from "@/components/SaveNewsButton";
+import FilterModal, { FilterOptions } from "@/components/FilterModal";
+import { useCollegeFilters } from "@/hooks/useCollegeFilters";
 
 interface College {
   id: number;
   name: string;
   location: string;
+  city: string;
+  state: string;
   type: string;
   rating: number;
   total_fees_min: number;
@@ -59,6 +62,8 @@ const Home = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [userName, setUserName] = useState<string>("");
   const navigate = useNavigate();
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const { filters, setFilters, filteredColleges } = useCollegeFilters(colleges);
 
   // College shortcut mappings for better search
   const collegeShortcuts: Record<string, string[]> = {
@@ -248,12 +253,12 @@ const Home = () => {
 
       // Create OR condition for all search terms
       const orConditions = searchTerms.map(term => 
-        `name.ilike.%${term}%,location.ilike.%${term}%,type.ilike.%${term}%`
+        `name.ilike.%${term}%,location.ilike.%${term}%,type.ilike.%${term}%,city.ilike.%${term}%,state.ilike.%${term}%`
       ).join(',');
 
       const { data, error } = await supabase
         .from('colleges')
-        .select('id, name, location, type, rating, total_fees_min, placement_percentage, image_url')
+        .select('id, name, location, city, state, type, rating, total_fees_min, placement_percentage, image_url')
         .or(orConditions)
         .limit(10);
 
@@ -287,7 +292,9 @@ const Home = () => {
     }
   };
 
-  const displayedColleges = searchQuery.trim() ? searchResults : colleges;
+  const displayedColleges = searchQuery.trim() ? filteredColleges.filter(college => 
+    searchResults.some(result => result.id === college.id)
+  ) : filteredColleges;
 
   return (
     <div className="min-h-screen bg-white pb-16 lg:pb-0">
@@ -310,10 +317,18 @@ const Home = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search colleges, courses, news... (try shortcuts like 'ggu', 'iit', 'nit')"
-              className="pl-10 h-12 text-base border-gray-200 focus:border-green-500 rounded-lg"
+              className="pl-10 pr-12 h-12 text-base border-gray-200 focus:border-green-500 rounded-lg"
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-10 w-10 p-0"
+              onClick={() => setShowFilterModal(true)}
+            >
+              <Filter className="w-4 h-4 text-gray-400" />
+            </Button>
             {isSearching && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
               </div>
             )}
@@ -562,6 +577,14 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={showFilterModal}
+        onOpenChange={setShowFilterModal}
+        onFiltersApply={setFilters}
+        currentFilters={filters}
+      />
     </div>
   );
 };
