@@ -1,18 +1,16 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, ExternalLink, FileText, Star, MapPin } from 'lucide-react';
+import { X, ExternalLink, FileText } from 'lucide-react';
 
 interface FlashPopupProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-
- 
+const FlashPopup = ({ isOpen, onClose }: FlashPopupProps) => {
   const importantResources = [
     {
       title: "Engineering Admission Guide 2024",
@@ -37,9 +35,8 @@ interface FlashPopupProps {
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center">
-              <Star className="w-6 h-6 text-yellow-500 mr-2" />
-              Welcome! Important Updates & Top Colleges
+            <DialogTitle className="text-2xl font-bold text-gray-900">
+              Welcome! Important Updates
             </DialogTitle>
             <Button
               variant="ghost"
@@ -53,49 +50,6 @@ interface FlashPopupProps {
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Top Colleges Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Star className="w-5 h-5 text-yellow-500 mr-2" />
-              Top Recommended Colleges
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {topColleges.map((college, index) => (
-                <Card key={index} className="p-4 hover:shadow-md transition-shadow">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <Badge className="bg-blue-100 text-blue-800 text-xs">
-                        {college.type}
-                      </Badge>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                        <span className="text-sm font-medium">{college.rating}</span>
-                      </div>
-                    </div>
-                    
-                    <h4 className="font-semibold text-gray-900 text-sm line-clamp-2">
-                      {college.name}
-                    </h4>
-                    
-                    <div className="flex items-center text-xs text-gray-600">
-                      <MapPin className="w-3 h-3 mr-1 text-green-500" />
-                      {college.location}
-                    </div>
-                    
-                    <Button
-                      size="sm"
-                      onClick={() => handleOpenLink(college.link)}
-                      className="w-full text-xs"
-                    >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      Visit Website
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-
           {/* Important Resources Section */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
