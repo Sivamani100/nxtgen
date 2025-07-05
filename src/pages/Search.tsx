@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,18 +17,9 @@ import {
 import { toast } from "sonner";
 import FilterModal, { FilterOptions } from "@/components/FilterModal";
 import { useCollegeFilters } from "@/hooks/useCollegeFilters";
+import { Database } from "@/integrations/supabase/types";
 
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  type: string;
-  rating: number;
-  total_fees_min: number;
-  placement_percentage: number;
-  image_url?: string;
-  description?: string;
-}
+type College = Database['public']['Tables']['colleges']['Row'];
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');

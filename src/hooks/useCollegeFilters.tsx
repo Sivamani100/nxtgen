@@ -1,19 +1,9 @@
 
 import { useState, useMemo } from "react";
 import { FilterOptions } from "@/components/FilterModal";
+import { Database } from "@/integrations/supabase/types";
 
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  city: string;
-  state: string;
-  type: string;
-  rating: number;
-  total_fees_min: number;
-  placement_percentage: number;
-  image_url?: string;
-}
+type College = Database['public']['Tables']['colleges']['Row'];
 
 export const useCollegeFilters = (colleges: College[]) => {
   const [filters, setFilters] = useState<FilterOptions>({
@@ -106,7 +96,7 @@ export const useCollegeFilters = (colleges: College[]) => {
 
     // Top colleges filter (based on rating)
     if (filters.showTopColleges) {
-      filtered = filtered.filter(college => college.rating >= 4.0);
+      filtered = filtered.filter(college => college.rating && college.rating >= 4.0);
       filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
 

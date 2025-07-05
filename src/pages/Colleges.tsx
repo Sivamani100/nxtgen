@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Star, MapPin, Heart } from "lucide-react";
+import { Search, Star, MapPin, Heart, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -240,7 +241,7 @@ const Colleges = () => {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     );
-  }
+  };
 
   const handleToggleMyCollege = async (collegeId: number, isChecked: boolean, event: React.ChangeEvent<HTMLInputElement> | React.MouseEvent) => {
     event.stopPropagation();
