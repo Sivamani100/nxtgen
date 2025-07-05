@@ -15,11 +15,18 @@ import {
   BookOpen
 } from "lucide-react";
 import { toast } from "sonner";
-import FilterModal, { FilterOptions } from "@/components/FilterModal";
-import { useCollegeFilters } from "@/hooks/useCollegeFilters";
-import { Database } from "@/integrations/supabase/types";
 
-type College = Database['public']['Tables']['colleges']['Row'];
+interface College {
+  id: number;
+  name: string;
+  location: string;
+  type: string;
+  rating: number;
+  total_fees_min: number;
+  placement_percentage: number;
+  image_url?: string;
+  description?: string;
+}
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,8 +36,6 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const navigate = useNavigate();
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const { filters: advancedFilters, setFilters: setAdvancedFilters, filteredColleges: advancedFilteredColleges } = useCollegeFilters(colleges);
 
   const collegeTypes = [
     { value: 'all', label: 'All Types' },
@@ -71,9 +76,9 @@ const Search = () => {
         .not('type', 'ilike', '%polytechnic%')
         .not('type', 'ilike', '%medical%');
 
-      // Add search conditions including city and state
+      // Add search conditions
       if (searchQuery.trim()) {
-        query = query.or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,state.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+        query = query.or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
 
       const { data, error } = await query.limit(50);
@@ -94,21 +99,14 @@ const Search = () => {
   };
 
   const filterByType = () => {
-    let filtered = colleges;
-    
-    // Apply type filter
-    if (selectedType !== 'all') {
-      filtered = colleges.filter(college => 
+    if (selectedType === 'all') {
+      setFilteredColleges(colleges);
+    } else {
+      const filtered = colleges.filter(college => 
         college.type.toLowerCase().includes(selectedType.toLowerCase())
       );
+      setFilteredColleges(filtered);
     }
-
-    // Apply advanced filters
-    const advancedFiltered = advancedFilteredColleges.filter(college => 
-      filtered.some(f => f.id === college.id)
-    );
-    
-    setFilteredColleges(advancedFiltered);
   };
 
   return (
@@ -142,19 +140,11 @@ const Search = () => {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by college name, location, city, state, or type..."
-              className="pl-10 lg:pl-12 pr-12 h-12 lg:h-14 text-sm lg:text-base border-gray-200 focus:border-green-500 shadow-sm"
+              placeholder="Search by college name, location, or type..."
+              className="pl-10 lg:pl-12 h-12 lg:h-14 text-sm lg:text-base border-gray-200 focus:border-green-500 shadow-sm"
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-10 w-10 p-0"
-              onClick={() => setShowFilterModal(true)}
-            >
-              <Filter className="w-4 h-4 text-gray-400" />
-            </Button>
             {loading && (
-              <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <div className="animate-spin rounded-full h-4 w-4 lg:h-5 lg:w-5 border-b-2 border-green-500"></div>
               </div>
             )}
@@ -274,14 +264,6 @@ const Search = () => {
           )}
         </div>
       </div>
-
-      {/* Filter Modal */}
-      <FilterModal
-        isOpen={showFilterModal}
-        onOpenChange={setShowFilterModal}
-        onFiltersApply={setAdvancedFilters}
-        currentFilters={advancedFilters}
-      />
     </div>
   );
 };
