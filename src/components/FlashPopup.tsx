@@ -22,12 +22,7 @@ const importantResources = [
     link: 'https://example.com/admission-guide.pdf',
     type: 'PDF',
   },
-  {
-    title: 'Engineering Admission Guide 2025',
-    description: 'Complete guide for engineering admissions',
-    link: 'https://example.com/admission-guide.pdf',
-    type: 'PDF',
-  },
+ 
   {
     title: 'Check out the notification',
     description: 'Eapcet council has released important updates',
