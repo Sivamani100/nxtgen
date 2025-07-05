@@ -4,14 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import OnboardingTutorial from "@/components/OnboardingTutorial";
-import FlashPopup from "@/components/FlashPopup";
 import { Session } from "@supabase/supabase-js";
 
 const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showFlashPopup, setShowFlashPopup] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,12 +45,7 @@ const Index = () => {
       if (!profile?.tutorial_completed) {
         setShowOnboarding(true);
       } else {
-        // Show flash popup for returning users
-        setShowFlashPopup(true);
-        // Navigate to home after a short delay
-        setTimeout(() => {
-          navigate('/home');
-        }, 100);
+        navigate('/home');
       }
     } catch (error) {
       console.error('Error checking tutorial status:', error);
@@ -68,20 +61,8 @@ const Index = () => {
         .update({ tutorial_completed: true })
         .eq('id', session.user.id);
       
-      // Show flash popup after tutorial completion
-      setShowOnboarding(false);
-      setShowFlashPopup(true);
-      
-      // Navigate to home after a short delay
-      setTimeout(() => {
-        navigate('/home');
-      }, 100);
+      navigate('/home');
     }
-  };
-
-  const handleFlashPopupClose = () => {
-    setShowFlashPopup(false);
-    navigate('/home');
   };
 
   if (loading) {
@@ -94,14 +75,6 @@ const Index = () => {
 
   if (session && showOnboarding) {
     return <OnboardingTutorial onComplete={handleTutorialComplete} />;
-  }
-
-  if (session && showFlashPopup) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-        <FlashPopup isOpen={showFlashPopup} onClose={handleFlashPopupClose} />
-      </div>
-    );
   }
 
   if (session) {
