@@ -12,33 +12,7 @@ interface FlashPopupProps {
 }
 
 const FlashPopup = ({ isOpen, onClose }: FlashPopupProps) => {
-  const topColleges = [
-    {
-      name: "Indian Institute of Technology (IIT) Delhi",
-      location: "New Delhi",
-      rating: 4.8,
-      type: "Government",
-      link: "https://home.iitd.ac.in/",
-      featured: true
-    },
-    {
-      name: "Indian Institute of Technology (IIT) Bombay",
-      location: "Mumbai",
-      rating: 4.9,
-      type: "Government",
-      link: "https://www.iitb.ac.in/",
-      featured: true
-    },
-    {
-      name: "National Institute of Technology (NIT) Warangal",
-      location: "Warangal, Telangana",
-      rating: 4.6,
-      type: "Government",
-      link: "https://www.nitw.ac.in/",
-      featured: true
-    }
-  ];
-
+ 
   const importantResources = [
     {
       title: "Engineering Admission Guide 2024",
