@@ -11,7 +11,7 @@ interface FlashPopupProps {
   onClose: () => void;
 }
 
-const FlashPopup = ({ isOpen, onClose }: FlashPopupProps) => {
+
  
   const importantResources = [
     {
