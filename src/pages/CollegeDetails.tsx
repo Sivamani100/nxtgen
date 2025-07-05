@@ -195,7 +195,7 @@ const CollegeDetails = () => {
                   <div className="text-xl font-bold text-green-600">
                     ₹{college.total_fees_min ? (college.total_fees_min / 100000).toFixed(1) : '0'}L
                   </div>
-                  <span className="text-sm text-gray-600">Min Fees</span>
+                  <span className="text-sm text-gray-600">Tution Fee/Year</span>
                 </div>
                 <div className="text-center">
                   <div className="text-xl font-bold text-blue-600">{college.placement_percentage}%</div>
