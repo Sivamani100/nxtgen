@@ -8,7 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, FileText, ExternalLink } from 'lucide-react';
+import { FileText, ExternalLink } from 'lucide-react';
 
 interface FlashPopupProps {
   isOpen: boolean;
@@ -39,14 +39,9 @@ const FlashPopup: React.FC<FlashPopupProps> = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[90vh] bg-white rounded-2xl p-6 shadow-xl border border-blue-100">
         <DialogHeader>
-          <div className="flex items-center justify-between mb-4">
-            <DialogTitle className="text-xl font-bold text-blue-900">
-              📢 Important Updates
-            </DialogTitle>
-            <button onClick={onClose}>
-              <X className="w-5 h-5 text-blue-700 hover:text-red-500" />
-            </button>
-          </div>
+          <DialogTitle className="text-xl font-bold text-blue-900">
+            📢 Important Updates
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -62,18 +57,18 @@ const FlashPopup: React.FC<FlashPopupProps> = ({ isOpen, onClose }) => {
                   className="p-4 bg-blue-50 rounded-xl border border-blue-200 shadow-sm transition hover:shadow-md"
                 >
                   <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <Badge
-                        variant="outline"
-                        className="text-xs text-blue-800 border-blue-400"
-                      >
-                        {resource.type}
-                      </Badge>
-                    </div>
+                    <Badge
+                      variant="outline"
+                      className="self-start text-xs text-blue-800 border-blue-400"
+                    >
+                      {resource.type}
+                    </Badge>
                     <h4 className="font-medium text-sm text-blue-900">
                       {resource.title}
                     </h4>
-                    <p className="text-sm text-blue-700">{resource.description}</p>
+                    <p className="text-sm text-blue-700">
+                      {resource.description}
+                    </p>
                     <Button
                       size="sm"
                       variant="outline"
