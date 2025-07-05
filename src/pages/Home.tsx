@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Newspaper,
   Calendar,
@@ -24,18 +24,9 @@ import { toast } from "sonner";
 import SaveNewsButton from "@/components/SaveNewsButton";
 import FilterModal, { FilterOptions } from "@/components/FilterModal";
 import { useCollegeFilters } from "@/hooks/useCollegeFilters";
-import { Filter } from "lucide-react";
+import { Database } from "@/integrations/supabase/types";
 
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  type: string;
-  rating: number;
-  total_fees_min: number;
-  placement_percentage: number;
-  image_url?: string;
-}
+type College = Database['public']['Tables']['colleges']['Row'];
 
 interface NewsItem {
   id: number;
@@ -202,7 +193,7 @@ const Home = () => {
       console.log('Fetching popular colleges...');
       const { data, error } = await supabase
         .from('colleges')
-        .select('id, name, location, type, rating, total_fees_min, placement_percentage, image_url')
+        .select('*')
         .not('type', 'ilike', '%polytechnic%')
         .not('type', 'ilike', '%medical%')
         .order('rating', { ascending: false })
@@ -257,7 +248,7 @@ const Home = () => {
 
       const { data, error } = await supabase
         .from('colleges')
-        .select('id, name, location, city, state, type, rating, total_fees_min, placement_percentage, image_url')
+        .select('*')
         .or(orConditions)
         .limit(50);
 
