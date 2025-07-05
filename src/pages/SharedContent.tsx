@@ -54,14 +54,39 @@ const SharedContent = () => {
       }
       
       if (itemType === 'news' || itemType === 'resource') {
-        const { data: resourceData, error } = await supabase
-          .from('resources')
-          .select('*')
-          .eq('id', numericItemId)
-          .single();
-        
-        if (error) throw error;
-        data = resourceData;
+        // For flash popup resources, we can use mock data if it's one of our predefined resources
+        if (itemType === 'resource' && (numericItemId === 1 || numericItemId === 2)) {
+          const mockResources = [
+            {
+              id: 1,
+              title: 'Top Engineering colleges list',
+              description: 'We have select the top colleges for you',
+              external_link: 'https://example.com/admission-guide.pdf',
+              category: 'admission',
+              created_at: new Date().toISOString(),
+            },
+            {
+              id: 2,
+              title: 'Check out the notification',
+              description: 'Eapcet council has released important updates',
+              external_link: 'https://cets.apsche.ap.gov.in/EAPCET/Eapcet/EAPCET_HomePage.aspxs',
+              category: 'notification',
+              created_at: new Date().toISOString(),
+            },
+          ];
+          
+          data = mockResources.find(r => r.id === numericItemId);
+        } else {
+          // Try to fetch from database for other resources
+          const { data: resourceData, error } = await supabase
+            .from('resources')
+            .select('*')
+            .eq('id', numericItemId)
+            .single();
+          
+          if (error) throw error;
+          data = resourceData;
+        }
       } else if (itemType === 'college') {
         const { data: collegeData, error } = await supabase
           .from('colleges')

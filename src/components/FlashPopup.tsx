@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -8,7 +9,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, ExternalLink } from 'lucide-react';
+import { FileText, ExternalLink, Share2 } from 'lucide-react';
+import ShareButton from './ShareButton';
+import { toast } from 'sonner';
 
 interface FlashPopupProps {
   isOpen: boolean;
@@ -17,6 +20,7 @@ interface FlashPopupProps {
 
 const importantResources = [
   {
+    id: 1,
     title: 'Top Engineering colleges list',
     description: 'We have select the top colleges for you',
     link: 'https://example.com/admission-guide.pdf',
@@ -24,6 +28,7 @@ const importantResources = [
   },
  
   {
+    id: 2,
     title: 'Check out the notification',
     description: 'Eapcet council has released important updates',
     link: 'https://cets.apsche.ap.gov.in/EAPCET/Eapcet/EAPCET_HomePage.aspxs',
@@ -32,8 +37,12 @@ const importantResources = [
 ];
 
 const FlashPopup: React.FC<FlashPopupProps> = ({ isOpen, onClose }) => {
-  const handleOpenLink = (url: string) => {
+  const handleOpenLink = (url: string, title: string, id: number) => {
+    // Open the original link
     window.open(url, '_blank');
+    
+    // Show success message for sharing
+    toast.success(`${title} opened! Share link has been generated.`);
   };
 
   return (
@@ -57,13 +66,21 @@ const FlashPopup: React.FC<FlashPopupProps> = ({ isOpen, onClose }) => {
                   key={index}
                   className="p-4 bg-blue-50 rounded-xl border border-blue-200 shadow-sm transition hover:shadow-md"
                 >
-                  <div className="flex flex-col gap-2">
-                    <Badge
-                      variant="outline"
-                      className="self-start text-xs text-blue-800 border-blue-400"
-                    >
-                      {resource.type}
-                    </Badge>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <Badge
+                        variant="outline"
+                        className="self-start text-xs text-blue-800 border-blue-400"
+                      >
+                        {resource.type}
+                      </Badge>
+                      <ShareButton
+                        itemId={resource.id}
+                        itemType="resource"
+                        title={resource.title}
+                        className="ml-2"
+                      />
+                    </div>
                     <h4 className="font-medium text-sm text-blue-900">
                       {resource.title}
                     </h4>
@@ -73,7 +90,7 @@ const FlashPopup: React.FC<FlashPopupProps> = ({ isOpen, onClose }) => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleOpenLink(resource.link)}
+                      onClick={() => handleOpenLink(resource.link, resource.title, resource.id)}
                       className="mt-2 text-sm border-green-400 text-green-700 hover:bg-green-100 flex items-center gap-1"
                     >
                       {resource.type === 'PDF' ? (
