@@ -32,6 +32,65 @@ const Search = () => {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const { filters: advancedFilters, applyFilters: applyAdvancedFilters, updateFilters } = useCollegeFilters();
 
+  // College shortcut names mapping
+  const collegeShortcuts: { [key: string]: string[] } = {
+    'ABR COLLEGE OF ENGG AND TECHNOLOGY': ['ABR', 'ABRK'],
+    'ADARSH COLLEGE OF ENGINEERING': ['ACEE'],
+    'ADITYA COLLEGE OF ENGINEERING': ['ACEM'],
+    'ADITYA COLLEGE OF ENGINEERING AND TECHNOLOGY': ['ACET'],
+    'ADITYA INSTITUTE OF TECHNOLOGY AND MGMT': ['ADIT'],
+    'ADITYA UNIVERSITY': ['ADTPPU', 'Aditya Univ'],
+    'ANDHRA ENGINEERING COLLEGE': ['AECN'],
+    'ANNAMACHARYA INST OF TECH AND SCI': ['AITK'],
+    'ANNAMACHARYA UNIVERSITY': ['AITSPU', 'Annamacharya Univ'],
+    'ANNAMACHARYA INST OF TECHNOLOGYAND SCIENCES': ['AITT'],
+    'ANDHRA LOYOLA INSTT OF ENGG AND TECHNOLOGY': ['ALIT'],
+    'ANANTHA LAKSHMI INST OF TECHNOLOGY AND SCI': ['ALTS'],
+    'A.M.REDDY MEMORIAL COLL. OF ENGINEERING': ['AMRN'],
+    'DR.YSR COLLEGE OF ENGINEERING & TECHNOLOGY-SELF FINANCE': ['ANCUSF'],
+    'ANIL NEERUKONDA INSTITUTE OF TECHNOLOGY AND SCI': ['ANITS', 'ANIL'],
+    'ST. ANNS COLLEGE OF ENGG. AND TECHNOLOGY': ['ANSN'],
+    'ADI KAVI NANNAYA UNIVERSITY COLLEGE OF ENGG.-SELF FINANCE': ['ANURSF'],
+    'APOLLO UNIVERSITY': ['APUCPU', 'Apollo Univ'],
+    'AVANTHIS RESEARCH AND TECHNOLOGICAL ACADEMY': ['ARTB'],
+    'AMRITA SAI INST. OF SCIENCE AND TECHNOLOGY': ['ASIP'],
+    'ASHOKA WOMEN\'S ENGINEERING COLLEGE': ['ASKW'],
+    'BAPATLA ENGINEERING COLLEGE': ['BEC'],
+    'BONAM VENKATA CHALAMAYYA INST OF TECHNOLOGY & SCI': ['BVCIT'],
+    'CHAITANYA BHARATHI INSTITUTE OF TECHNOLOGY': ['CBIT'],
+    'CHALAPATHI INSTITUTE OF ENGINEERING AND TECHNOLOGY': ['CIET'],
+    'DNR COLLEGE OF ENGINEERING AND TECHNOLOGY': ['DNRCET'],
+    'DR. LANKAPALLI BULLAYYA COLLEGE OF ENGINEERING': ['LBRCE'],
+    'GAYATRI VIDYA PARISHAD COLLEGE OF ENGINEERING': ['GVPCE'],
+    'GODAVARI GLOBAL UNIVERSITY': ['GGU'],
+    'GUDLAVALLERU ENGINEERING COLLEGE': ['GEC'],
+    'JNTU COLLEGE OF ENGINEERING, KAKINADA': ['JNTUK'],
+    'JNTU COLLEGE OF ENGINEERING, ANANTAPUR': ['JNTUA'],
+    'JNTU COLLEGE OF ENGINEERING, PULIVENDULA': ['JNTUP'],
+    'JNTU COLLEGE OF ENGINEERING, VIZIANAGARAM': ['JNTUV'],
+    'KAKINADA INSTITUTE OF ENGINEERING AND TECHNOLOGY': ['KIET'],
+    'LAKIREDDY BALI REDDY COLLEGE OF ENGINEERING': ['LBRCE'],
+    'NARASARAOPETA ENGINEERING COLLEGE': ['NEC'],
+    'PRAGATI ENGINEERING COLLEGE': ['PEC'],
+    'RAGHU ENGINEERING COLLEGE': ['REC'],
+    'SAI TIRUMALA NVR ENGINEERING COLLEGE': ['STNVR'],
+    'SAGI RAMA KRISHNAM RAJU ENGINEERING COLLEGE': ['SRKR'],
+    'SANKETIKA VIDYA PARISHAD ENGINEERING COLLEGE': ['SVPEC'],
+    'SIR C R REDDY COLLEGE OF ENGINEERING': ['CRRCE'],
+    'SRI VASAVI ENGINEERING COLLEGE': ['SVEC'],
+    'SRI VIDYANIKETHAN ENGINEERING COLLEGE': ['SVEC', 'SVNEC'],
+    'SRI VISHNU ENGINEERING COLLEGE FOR WOMEN': ['SVECW'],
+    'SREE VIDYANIKETHAN ENGINEERING COLLEGE': ['SVNEC'],
+    'VASIREDDY VENKATADRI INSTITUTE OF TECHNOLOGY': ['VVIT'],
+    'VELAGAPUDI RAMAKRISHNA SIDDHARTHA ENGINEERING COLLEGE': ['VRSEC'],
+    'VIGNAN\'S FOUNDATION FOR SCIENCE, TECHNOLOGY & RESEARCH': ['VFSTR', 'Vignan Univ'],
+    'VIGNAN\'S INSTITUTE OF INFORMATION TECHNOLOGY': ['VIIT'],
+    'VIGNAN\'S LARA INSTITUTE OF TECHNOLOGY & SCIENCE': ['VLITS'],
+    'VIGNAN\'S NIRULA INSTITUTE OF TECHNOLOGY & SCIENCE': ['VNITS'],
+    'VIGNAN\'S UNIVERSITY': ['VU', 'Vignan Univ'],
+    'VISHNU INSTITUTE OF TECHNOLOGY': ['VIT']
+  };
+
   const collegeTypes = [
     { value: 'all', label: 'All Types' },
     { value: 'engineering', label: 'Engineering' },
@@ -71,9 +130,25 @@ const Search = () => {
         .not('type', 'ilike', '%polytechnic%')
         .not('type', 'ilike', '%medical%');
 
-      // Add search conditions
+      // Add search conditions including shortcut names
       if (searchQuery.trim()) {
-        query = query.or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,state.ilike.%${searchQuery}%`);
+        // Check if search query matches any shortcut name
+        const matchingColleges = Object.entries(collegeShortcuts).filter(([collegeName, shortcuts]) => 
+          shortcuts.some(shortcut => 
+            shortcut.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            searchQuery.toLowerCase().includes(shortcut.toLowerCase())
+          )
+        );
+
+        if (matchingColleges.length > 0) {
+          // Search by matching college names from shortcuts
+          const collegeNames = matchingColleges.map(([name]) => name);
+          const nameConditions = collegeNames.map(name => `name.ilike.%${name}%`).join(',');
+          query = query.or(`${nameConditions},name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,state.ilike.%${searchQuery}%`);
+        } else {
+          // Regular search
+          query = query.or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,state.ilike.%${searchQuery}%`);
+        }
       }
 
       const { data, error } = await query.limit(50);
@@ -145,7 +220,7 @@ const Search = () => {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by college name, location, or type..."
+              placeholder="Search by college name, location, type, or shortcut (e.g., CBIT, JNTUK)..."
               className="pl-10 lg:pl-12 pr-12 h-12 lg:h-14 text-sm lg:text-base border-gray-200 focus:border-green-500 shadow-sm"
             />
             <Button
@@ -193,7 +268,7 @@ const Search = () => {
               <SearchIcon className="w-12 h-12 lg:w-16 lg:h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-2">Search for Colleges</h3>
               <p className="text-sm lg:text-base text-gray-600">
-                Enter a college name, location, or type to get started
+                Enter a college name, location, type, or shortcut name (e.g., CBIT, JNTUK) to get started
               </p>
             </div>
           )}

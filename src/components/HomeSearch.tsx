@@ -12,7 +12,7 @@ const HomeSearch = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/colleges?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -23,7 +23,7 @@ const HomeSearch = () => {
         <div className="relative flex-1">
           <Input
             type="text"
-            placeholder="Search colleges..."
+            placeholder="Search colleges or shortcut names (e.g., CBIT, JNTUK)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-12 text-lg border-0 bg-white"
